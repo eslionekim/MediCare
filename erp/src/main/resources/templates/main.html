@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>/* 전체 리셋 및 기본 배경 */
+	body {
+	    margin: 0;
+	    padding: 0;
+	    font-family: 'Inter', '맑은 고딕', sans-serif;
+	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	}
+	
+	
+	/* 상단 헤더 배경 및 레이아웃 */
+	.top-bar {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    padding: 5px 15px;
+	    background-color: #ffffff; /* 흰색 배경 */
+	    font-size: 14px;
+	}
+	
+	/* 상단 헤더 텍스트 스타일 */
+	.user-info {
+	    color: #555;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 배열 */
+	.action-buttons {
+	    display: flex;
+	    gap: 5px;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 공통스타일 */
+	.action-buttons button {
+	    padding: 4px 12px;
+	    border: none;
+	    border-radius: 4px;
+	    cursor: pointer;
+	    font-weight: 500;
+	    font-size: 13px;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 버튼 스타일 */
+	.btn-logout {
+		padding: 4px 12px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		font-size: 13px;
+		color: white;
+	    background-color: #FF4B4B;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 출근 버튼 스타일 */
+	.time-in {
+	    background-color: #879BD5;
+		color:#ffffff;
+	}
+	
+	/* 상단 헤더 -> 퇴근 버튼 스타일 */
+	.time-out {
+	    background-color: #D5DDED;
+	    color: #000;
+	}
+
+	/* 중앙 헤더 -> 카테고리 배치 */
+	.tab-list {
+	    list-style: none; /* 앞에 점 제거*/
+	    margin: 0;
+	    padding: 0;
+	    display: flex; /* 가로 나열*/
+	}
+	
+	/* 중앙 헤더 -> 카테고리 요소 스타일 */
+	.tab-item a {
+	    display: block;
+	    padding: 8px 15px;
+	    text-decoration: none; /* 카테고리 밑줄 제거*/
+	    color: #333; /* 글자 색*/
+	    background-color: transparent; /* 배경색 투명 (nav-tabs의 배경색 사용) */
+	    border: none; /* 경계선 제거 */
+	    font-size: 14px;
+	    font-weight: normal;
+	}
+	
+	/* 2. 중앙 헤더 공통 ⭐ */
+	.nav-tabs {
+		background-color: #D5DDED; /* 이미지의 균일한 하늘색 배경 */
+		padding: 0 10px;
+	}
+	
+	/* 중앙 헤더 -> 카테고리 호버 */
+	.tab-item:hover {
+	    background-color: rgba(255, 255, 255, 0.3); /* 마지막 숫자가 컬러 세기 정도*/
+	}
+	
+	/* 중앙 헤더 -> 선택된 카테고리 스타일 */
+	.tab-item.active a {
+	    color: #333; /* 텍스트 색상은 검은색 유지 (사진처럼) */
+	    font-weight: 550;
+	    /* 하단에 진한 파란색 선으로 강조 */
+	}
+	
+	
+	/* 3. 하단 헤더  */
+	.sub-menu {
+	    background-color: #BACCFF; /* 흰색 배경 */
+	    padding: 5px 15px; /* 패딩을 줄여서 메뉴와 붙은 느낌 */
+	    font-size: 14px;
+	    color: #555;
+		font-weight: 530;
+	    /* 이미지처럼 '금일 진료 리스트' 텍스트를 진하게 표현 */
+	}
+	
+	/* 컨텐츠 영역 (전체 배경색 확인용) */
+	.content-area {
+	    min-height: 700px; /* 임시 높이 */
+	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	}
+	</style>
+</head>
+<body>
+    <header class="main-header">
+		<!-- 상단 헤더 -->
+        <div class="top-bar">
+            <div class="user-info">
+                <span>(아이콘)</span>
+                <span>MediCare |</span>
+                <span>사용자ID: </span>
+            </div>
+            <div class="user-info">
+                <span>진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout">로그아웃</button>
+			</div>
+            <div class="action-buttons">
+                <button class="time-in">출근</button>
+                <button class="time-out">퇴근</button>
+            </div>
+        </div>
+		<!-- 상단 헤더 끝-->
+		
+		<!-- 중앙 헤더-->
+        <nav class="nav-tabs">
+            <ul class="tab-list">
+                <li class="tab-item active"><a href="#">기능1</a></li>
+                <li class="tab-item"><a href="#">기능2</a></li>
+                <li class="tab-item"><a href="#">기능3</a></li>
+                <li class="tab-item"><a href="#">기능4</a></li>
+            </ul>
+        </nav>
+		<!-- 중앙 헤더 끝-->
+		
+		<!-- 하단 헤더-->
+        <div class="sub-menu">
+            <span>클릭한 기능</span>
+        </div>
+		<!-- 하단 헤더 끝-->
+    </header>
+
+	<!-- 콘텐츠 영역 시작-->
+    <div class="content-area">
+    </div>
+	<!-- 콘텐츠 영역 끝-->
+</body>
+</html>
