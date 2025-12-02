@@ -1,0 +1,584 @@
+<!-- src/main/resources/templates/patient-register.html -->
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>환자 등록 및 수정</title>
+  <link rel="stylesheet" href="/css/erp-common.css" />
+  <style>
+    /* 공통 배경 */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', '맑은 고딕', sans-serif;
+      background-color: #D5DDED;
+    }
+
+    /* 상단 헤더 배경 및 레이아웃 */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 15px;
+      background-color: #ffffff;
+      font-size: 14px;
+    }
+
+    .user-info { color: #555; }
+
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    .action-buttons button {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      border: 1px solid #7B7B7B;
+    }
+
+    .btn-logout {
+      padding: 4px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 13px;
+      color: white;
+      background-color: #FF4B4B;
+      border: 1px solid #7B7B7B;
+    }
+
+    .time-in {
+      background-color: #879BD5;
+      color:#ffffff;
+    }
+
+    .time-out {
+      background-color: #D5DDED;
+      color: #000;
+    }
+
+    .tab-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+    }
+
+    .tab-item a {
+      display: block;
+      padding: 8px 15px;
+      text-decoration: none;
+      color: #333;
+      background-color: transparent;
+      border: none;
+      font-size: 14px;
+      font-weight: normal;
+    }
+
+    .nav-tabs {
+      background-color: #D5DDED;
+      padding: 0 10px;
+    }
+
+    .tab-item:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .tab-item.active a {
+      color: #333;
+      font-weight: 550;
+    }
+
+    .sub-menu {
+      background-color: #BACCFF;
+      padding: 5px 15px;
+      font-size: 14px;
+      color: #555;
+      font-weight: 530;
+    }
+
+    .content-area {
+      min-height: 700px;
+      background-color: #D5DDED;
+    }
+
+    /* ============================
+       환자 등록 및 수정 전용 레이아웃
+       ============================ */
+
+    .layout-two-column {
+      display: flex;
+      gap: 12px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .left-panel {
+      flex: 2.5;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .right-panel {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 999px;
+      border: 1px solid #b0b7c7;
+      padding: 4px 10px;
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      flex: 1;
+    }
+
+    .search-icon {
+      margin-right: 4px;
+      color: #9ca3af;
+    }
+
+    .btn-small {
+      padding: 5px 12px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #7B7B7B;
+      background-color: #879BD5;
+      color: #fff;
+      cursor: pointer;
+    }
+
+    .patient-table-box {
+      border: 1px solid #b0b7c7;
+      border-radius: 4px;
+      overflow: hidden;
+      background-color: #ffffff;
+      height: 520px;
+      box-sizing: border-box;
+    }
+
+    .patient-table-box table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .patient-table-box thead tr {
+      background-color: #f3f6ff;
+    }
+
+    .patient-table-box th,
+    .patient-table-box td {
+      border: 1px solid #d1d5db;
+      padding: 4px 6px;
+      text-align: left;
+    }
+
+    .patient-table-box tbody tr:nth-child(even) {
+      background-color: #fafbff;
+    }
+
+    .card {
+      border: 1px solid #b0b7c7;
+      border-radius: 4px;
+      background-color: #f7f9ff;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 600;
+      background-color: #BACCFF;
+    }
+
+    .card-header.blue {
+      background-color: #879BD5;
+      color: #ffffff;
+    }
+
+    .card-body {
+      padding: 8px 10px;
+      background-color: #ffffff;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+      gap: 6px;
+      font-size: 13px;
+    }
+
+    .form-row label {
+      width: 65px;
+      color: #333;
+    }
+
+    .form-row input {
+      flex: 1;
+      padding: 4px 6px;
+      font-size: 13px;
+      border-radius: 3px;
+      border: 1px solid #cbd2e1;
+      box-sizing: border-box;
+    }
+
+    .right-top-row {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-new {
+      padding: 6px 14px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: 1px solid #7B7B7B;
+      background-color: #879BD5;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .btn-xs {
+      padding: 4px 10px;
+      font-size: 12px;
+      border-radius: 4px;
+      border: 1px solid #7B7B7B;
+      background-color: #D5DDED;
+      cursor: pointer;
+    }
+
+    .quick-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .quick-buttons .btn-small {
+      flex: 1;
+      text-align: center;
+    }
+
+    .card-body table {
+      width: 100%;
+      font-size: 12px;
+    }
+
+    .erp-page {
+      width: 1280px;
+      margin: 24px auto;
+      background: #ffffff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body>
+<div class="erp-page">
+  <header class="main-header">
+    <!-- 상단 헤더 -->
+    <div class="top-bar">
+      <div class="user-info">
+        <span>(아이콘)</span>
+        <span>MediCare |</span>
+        <span>사용자ID: </span>
+      </div>
+      <div class="user-info">
+        <span>진료과 ㅇㅇㅇ</span>
+        <button class="btn-logout">로그아웃</button>
+      </div>
+      <div class="action-buttons">
+        <button class="time-in">출근</button>
+        <button class="time-out">퇴근</button>
+      </div>
+    </div>
+
+    <!-- 중앙 헤더-->
+    <nav class="nav-tabs">
+      <ul class="tab-list">
+        <li class="tab-item active"><a href="#">환자 등록 및 수정</a></li>
+        <li class="tab-item"><a href="#">접수</a></li>
+        <li class="tab-item"><a href="#">예약 받기</a></li>
+        <li class="tab-item"><a href="#">수납</a></li>
+        <li class="tab-item"><a href="#">휴가 신청</a></li>
+        <li class="tab-item"><a href="#">스케줄 조회</a></li>
+      </ul>
+    </nav>
+
+    <!-- 하단 헤더-->
+    <div class="sub-menu">
+      <span>환자 등록 및 수정</span>
+    </div>
+  </header>
+
+  <!-- 메인 콘텐츠 -->
+  <div class="content-area">
+    <div class="layout-two-column">
+      <!-- 왼쪽: 검색 + 환자 리스트 -->
+      <section class="left-panel">
+        <!-- 검색 영역 -->
+        <div class="search-row">
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" placeholder="환자 검색" />
+          </div>
+          <button class="btn-small">조회</button>
+        </div>
+
+        <!-- 환자 리스트 테이블 -->
+        <div class="patient-table-box">
+          <table>
+            <thead>
+            <tr>
+              <th>환자ID</th>
+              <th>환자명</th>
+              <th>성별</th>
+              <th>생년월일</th>
+              <th>최종 내원일</th>
+              <th>메모</th>
+              <th>휴대전화</th>
+              <th>선택 검사 상태</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- 실제 환자 리스트 -->
+            <tr th:each="p : ${patients != null ? patients : {}}">
+              <td th:text="${p.patientId}">P0001</td>
+              <td th:text="${p.name}">홍길동</td>
+              <td th:text="${p.gender}">M</td>
+              <td th:text="${p.birth}">2000.01.01</td>
+              <td th:text="${p.lastVisit}">2025.01.01</td>
+              <td th:text="${p.memo}">없음</td>
+              <td th:text="${p.phone}">010-0000-0000</td>
+              <td>
+                <span th:text="${p.examStatus}">해당 없음</span>
+                <!-- 상세정보 버튼 -->
+                <button type="button"
+                        class="btn-xs"
+                        style="margin-left:4px;"
+                        th:onclick="|location.href='@{/patients(mode=${'detail'}, patientId=${p.patientId})}'|">
+                  상세정보
+                </button>
+              </td>
+            </tr>
+
+            <!-- 빈 줄 채우기 -->
+            <tr th:with="count=${patients != null ? patients.size() : 0}"
+                th:each="i : ${#numbers.sequence(1, 20 - (patients != null ? patients.size() : 0))}">
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+              <td>&nbsp;</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 오른쪽: 환자 정보 + history -->
+      <section class="right-panel">
+        <!-- 상단: 신규 등록 버튼 -->
+        <div class="right-top-row">
+          <button class="btn-new" type="button"
+                  th:onclick="|location.href='@{/patients(mode=${'register'})}'|">
+            신규 등록
+          </button>
+        </div>
+
+        <!-- 환자 정보 카드 -->
+        <section class="card">
+          <div class="card-header blue">
+            <span>환자 정보</span>
+
+            <!-- 상세보기 모드: 수정 버튼 -->
+            <button class="btn-xs" th:if="${mode == 'detail'}">수정</button>
+            <!-- 등록 모드: 등록 버튼 -->
+            <button class="btn-xs" th:if="${mode == 'register'}">등록</button>
+          </div>
+          <div class="card-body">
+            <!-- 환자ID -->
+            <div class="form-row">
+              <label>환자ID</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.patientId : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="patientId"/>
+            </div>
+
+            <!-- 환자명 -->
+            <div class="form-row">
+              <label>환자명</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.name : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="name"/>
+            </div>
+
+            <!-- 성별 -->
+            <div class="form-row">
+              <label>성별</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.gender : ''}" readonly/>
+              <select th:if="${mode == 'register'}" name="gender"
+                      style="flex:1; padding:4px 6px; border:1px solid #cbd2e1; border-radius:3px;">
+                <option value="">선택</option>
+                <option value="M">남</option>
+                <option value="F">여</option>
+              </select>
+            </div>
+
+            <!-- 생년월일 -->
+            <div class="form-row">
+              <label>생년월일</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.birth : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="birth"/>
+            </div>
+
+            <!-- 전화번호 -->
+            <div class="form-row">
+              <label>전화번호</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.phone : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="phone"/>
+            </div>
+
+            <!-- 연락처 -->
+            <div class="form-row">
+              <label>연락처</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.subPhone : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="subPhone"/>
+            </div>
+
+            <!-- 주소1 -->
+            <div class="form-row">
+              <label>주소1</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.address1 : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="address1"/>
+            </div>
+
+            <!-- 주소2 -->
+            <div class="form-row">
+              <label>주소2</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.address2 : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="address2"/>
+            </div>
+
+            <!-- 메모 -->
+            <div class="form-row">
+              <label>메모</label>
+              <input type="text" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.memo : ''}" readonly/>
+              <input type="text" th:if="${mode == 'register'}" name="memo"/>
+            </div>
+
+            <!-- 이메일 -->
+            <div class="form-row">
+              <label>이메일</label>
+              <input type="email" th:if="${mode == 'detail'}"
+                     th:value="${selected != null ? selected.email : ''}" readonly/>
+              <input type="email" th:if="${mode == 'register'}" name="email"/>
+            </div>
+          </div>
+        </section>
+
+        <!-- 예약/접수 바로가기 -->
+        <div class="quick-buttons">
+          <button class="btn-small">예약 바로가기</button>
+          <button class="btn-small">접수 바로가기</button>
+        </div>
+
+        <!-- 의뢰 history 정보 -->
+        <section class="card">
+          <div class="card-header">
+            의뢰 history 정보
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+              <tr>
+                <th>내원일자</th>
+                <th>진료의사</th>
+                <th>초/재진</th>
+                <th>증상</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="h : ${outHistories != null ? outHistories : {}}">
+                <td th:text="${h.visitDate}"></td>
+                <td th:text="${h.doctorName}"></td>
+                <td th:text="${h.firstOrReturn}"></td>
+                <td th:text="${h.symptom}"></td>
+              </tr>
+              <tr th:if="${outHistories == null or #lists.isEmpty(outHistories)}">
+                <td colspan="4">&nbsp;</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 입원 history 정보 -->
+        <section class="card">
+          <div class="card-header">
+            입원 history 정보
+          </div>
+          <div class="card-body">
+            <table>
+              <thead>
+              <tr>
+                <th>입원일자</th>
+                <th>퇴원일자</th>
+                <th>진료의사</th>
+                <th>증상</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="h : ${inHistories != null ? inHistories : {}}">
+                <td th:text="${h.admissionDate}"></td>
+                <td th:text="${h.dischargeDate}"></td>
+                <td th:text="${h.doctorName}"></td>
+                <td th:text="${h.symptom}"></td>
+              </tr>
+              <tr th:if="${inHistories == null or #lists.isEmpty(inHistories)}">
+                <td colspan="4">&nbsp;</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
