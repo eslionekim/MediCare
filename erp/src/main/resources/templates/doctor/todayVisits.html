@@ -126,51 +126,53 @@
 	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
 	}
 	
-	table {
-	        width: 100%;
-	        border-collapse: collapse;
-	        font-size: 14px;
-	        background-color: white;
-	    }
-
-	    th, td {
-	        border: 1px solid #ccc;
-	        padding: 0;
-			height: 30px; /* 원하는 셀 높이 */
-	        text-align: center;
-	    }
-
-	    th {
-	        background-color: #f3f6ff; 
-	        font-weight: 600;
-	    }
-
-	    tr:nth-child(even) {
-	        background-color: #fafbff;
-	    }
-
-	    /* 화면을 꽉 채우는 긴 표 느낌 */
-	    .table-container {
-	        width: 100%;
-	        height: 600px; /* 원하는 전체 높이 */
-	        overflow-y: auto;
-	        background-color: #D5DDED;
-	        padding: 10px;
-	        box-sizing: border-box;
-	    }
+	/* 금일 진료 리스트 */
+	#table{ /* div 영역 및 레이아웃 */
+		margin:5px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	table { 
+	    width: 98%; /* 너비 */
+	    border-collapse: collapse; /* 표 한줄로 합치기 */
+	    font-size: 14px;
+	    background-color: white;
 		
-		.btn-start {
-			display: flex;             /* flex로 변환 */
-			    justify-content: center;   /* 가로 중앙 */
-			    align-items: center;       /* 세로 중앙 */
-			    width: 100%;               /* 가로 꽉 */
-			    height: 100%;              /* 세로 꽉 */
-			    box-sizing: border-box;    /* 패딩 포함 계산 */
-			    border: none;
-			    background-color: #00FF08;
-			    color: black;
-			    cursor: pointer;
-		}
+	 }
+
+	 th, td {
+	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+	     padding: 0;
+		 height: 25px; /* 원하는 셀 높이 */
+	     text-align: center; /* 텍스트 중앙 */
+	 }
+
+	 th {
+	     background-color: #879BD5; 
+		 font-weight: normal; /* 글씨 굵기 보통으로 */
+		 color: rgb(31, 31, 31);
+	 }
+
+	 tr:nth-child(even) {
+	     background-color: #ffffffff;
+	 }
+
+	 /* 접수 시작 */
+	 .first {
+		 display: flex;             /* flex로 변환 */
+		 justify-content: center;   /* 가로 중앙 */
+		 align-items: center;       /* 세로 중앙 */
+		 width: 100%;               /* 가로 꽉 */
+		 height: 100%;              /* 세로 꽉 */
+		 box-sizing: border-box;    /* 패딩 포함 계산 */
+		 border: none;
+		 background-color: #00FF08;
+		 color: black;
+		 cursor: pointer;
+		 font-size: 15px;
+		 font-weight: 300 /* 글씨 굵기 보통으로 */
+	  }
 
 	
 	</style>
@@ -215,7 +217,17 @@
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
-		<table border="1">
+		<div style="width:98%; margin: 5px auto; display:flex; justify-content:flex-end;">
+		    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
+		        <option value="">전체 보기</option>
+		        <option value="대기 중">대기 중</option>
+		        <option value="진료중">진료중</option>
+		        <option value="진료종료">진료종료</option>
+		        <option value="수납/청구완료">수납/청구완료</option>
+		    </select>
+		</div>
+
+		<table id="table" border="1">
 			<thead>
 			    <tr>
 			        <th>접수시간</th>
@@ -225,6 +237,7 @@
 			        <th>생년월일</th>
 			        <th>진료구분</th>
 					<th>최종내원일</th>
+					<th>선행 검사 상태</th>
 					<th>내원사유</th>
 			        <th>상태</th>
 			    </tr>
@@ -244,9 +257,10 @@
 						<td th:text="${v.visit_type}"></td>
 				        <!-- 최종내원일 없으면 ‘초진’ -->
 				        <td th:text="${v.last_visit != null ? v.last_visit : '초진'}"></td>
-				        <td th:text="${v.note}"></td>
+				        <td>없음</td>
+						<td th:text="${v.note}"></td>
 						<td>
-					        <button th:if="${v.first}" class="btn-start">접수시작</button>
+					        <button th:if="${v.first}" class="first">접수시작</button>
 						    <span th:if="${!v.first}" th:text="${v.status_name}"></span>
 						</td>
 				    </tr>
