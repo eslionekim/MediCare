@@ -33,7 +33,7 @@ public class Fee_item { //수가항목
 
     private boolean is_active = true; //사용여부 필드
     
-    @OneToMany(mappedBy = "fee_item_code") //fee_item_code : 다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "fee_item") //fee_item_code : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Claim_item> claim_item = new ArrayList<>(); // 청구항목 리스트
 
 }

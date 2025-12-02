@@ -43,9 +43,9 @@ public class Patient { //환자
 
     private LocalDateTime created_at; //생성일시 필드
     
-    @OneToMany(mappedBy = "patient_id") // patient_id : 다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "patient") // patient_id : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Visit> visit = new ArrayList<>(); //방문 리스트
 
-    @OneToMany(mappedBy = "patient_id") 
+    @OneToMany(mappedBy = "patient") 
     private List<Reservation> reservation = new ArrayList<>(); //예약 리스트
 }

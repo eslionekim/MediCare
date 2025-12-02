@@ -32,15 +32,15 @@ public class Department { //진료과
 
     private boolean is_active = true; //사용여부 필드
     
-    @OneToMany(mappedBy = "department_code")  //department_code : 다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "department")  //department_code : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Staff_profile> staff_profile = new ArrayList<>(); // 의료진 프로필 리스트
     
-    @OneToMany(mappedBy = "department_code")
+    @OneToMany(mappedBy = "department")
     private List<Reservation> reservation = new ArrayList<>(); //예약 리스트
 
-    @OneToMany(mappedBy = "department_code")
+    @OneToMany(mappedBy = "department")
     private List<Visit> visit = new ArrayList<>(); // 방문 리스트
 
-    @OneToMany(mappedBy = "department_code")
+    @OneToMany(mappedBy = "department")
     private List<Work_schedule> work_schedule = new ArrayList<>(); //근무스케줄 리스트
 }

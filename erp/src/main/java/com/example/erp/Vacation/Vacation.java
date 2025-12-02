@@ -32,11 +32,11 @@ public class Vacation { //휴가
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) //user_id : 외래키로 받아올 자바 필드명
-    private User_account user_id; //사용자번호 필드
+    private User_account user_account; //사용자번호 필드
 
     @ManyToOne
     @JoinColumn(name = "vacation_type_code", nullable = false) //vacation_type_code:외래키로 받아올 자바 필드명
-    private Vacation_type vacation_type_code; //휴가분류코드 필드
+    private Vacation_type vacation_type; //휴가분류코드 필드
 
     @Column(nullable = false)
     private LocalDate start_date; //시작일자 필드

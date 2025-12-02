@@ -35,17 +35,17 @@ public class VisitService { //의사->금일 진료 리스트
         
         for (Visit v : todayVisits) { // 금일 진료 리스트에 담긴거 하나씩 뽑기
             TodayVisitDTO dto = new TodayVisitDTO(); // 금일 진료 컬럼 dto
-            dto.setPatient_id(v.getPatient_id().getPatient_id()); // 환자번호
-            dto.setName(v.getPatient_id().getName());             // 환자명
-            dto.setGender(v.getPatient_id().getGender());         // 성별
-            dto.setBirth_date(v.getPatient_id().getBirth_date());// 생년월일
+            dto.setPatient_id(v.getPatient().getPatient_id()); // 환자번호
+            dto.setName(v.getPatient().getName());             // 환자명
+            dto.setGender(v.getPatient().getGender());         // 성별
+            dto.setBirth_date(v.getPatient().getBirth_date());// 생년월일
             dto.setVisit_time(v.getVisit_datetime().toLocalTime());// 접수시간
             dto.setVisit_type(v.getVisit_type());                // 진료 구분
             dto.setNote(v.getNote());                             // 내원 사유
             dto.setStatus_name(v.getStatus_code().getName()); // 상태 코드
             
             // 최종 내원일 조회 (오늘 방문 제외)
-            LocalDateTime lastVisit = visitRepository.findLastVisitBeforeToday(v.getPatient_id().getPatient_id(), today);
+            LocalDateTime lastVisit = visitRepository.findLastVisitBeforeToday(v.getPatient().getPatient_id(), today);
             dto.setLast_visit(lastVisit != null ? lastVisit.toLocalDate() : null); // 초진이면 null
 
             dto.setFirst(

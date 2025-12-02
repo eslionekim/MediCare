@@ -25,7 +25,7 @@ public class Claim { //청구
 
     @OneToOne(fetch = FetchType.LAZY) //LAZY: 지연 로딩 -> 필요할때만
     @JoinColumn(name = "visit_id", nullable = false) // visit_id : 외래키로 받아올 자바 필드명
-    private Visit visit_id; // 방문번호 필드
+    private Visit visit; // 방문번호 필드
 
     private int total_amount; //총액 필드
     private int discount_amount; //할인액 필드
@@ -33,7 +33,7 @@ public class Claim { //청구
 
     private LocalDateTime created_at; //생성일시 필드
     
-    @OneToMany(mappedBy = "claim_id") // claim_id : 다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "claim") // claim_id : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Claim_item> claim_item = new ArrayList<>(); // 청구 항목 리스트
 
 }

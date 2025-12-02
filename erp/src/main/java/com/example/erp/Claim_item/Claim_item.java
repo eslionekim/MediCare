@@ -29,11 +29,11 @@ public class Claim_item {
 
     @ManyToOne(fetch = FetchType.LAZY) // LAZY: 지연 로딩 -> 필요할때만
     @JoinColumn(name = "claim_id", nullable = false) //claim_id: 외래키로 받아올 자바 필드명
-    private Claim claim_id; // 청구번호 필드
+    private Claim claim; // 청구번호 필드
 
     @ManyToOne(fetch = FetchType.LAZY) // LAZY: 지연 로딩 -> 필요할때만
     @JoinColumn(name = "fee_item_code", nullable = false) //fee_item_code: 외래키로 받아올 자바 필드명
-    private Fee_item fee_item_code; //수가항목 코드 필드
+    private Fee_item fee_item; //수가항목 코드 필드
 
     private int unit_price; //단가 필드
     private int quantity; //수량 필드

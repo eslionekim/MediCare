@@ -16,7 +16,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Payment_method { //결제 수단
 	@Id
-    private String paymentMethodCode; //결제수단코드 필드
+    private String payment_method_code; //결제수단코드 필드
     
     private String name; //명칭 필드
     

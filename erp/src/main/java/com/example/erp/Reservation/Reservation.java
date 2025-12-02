@@ -34,15 +34,15 @@ public class Reservation { //예약
 
     @ManyToOne(fetch = FetchType.LAZY) //LAZY: 지연 로딩 -> 필요할때만
     @JoinColumn(name = "patient_id", nullable = false) //patient_id: 외래키로 받아올 자바 필드명
-    private Patient patient_id; // 환자번호 필드
+    private Patient patient; // 환자번호 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User_account user_id; //사용자번호 필드
+    private User_account user_account; //사용자번호 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_code", nullable = false)
-    private Department department_code; //진료과코드 필드
+    private Department department; //진료과코드 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "status_code", nullable = false)
