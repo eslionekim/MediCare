@@ -32,11 +32,11 @@ public class Payment { //결제
 
     @ManyToOne(fetch = FetchType.LAZY) ////LAZY: 지연 로딩 -> 필요할때만
     @JoinColumn(name = "visit_id", nullable = false) //visit_id: 외래키로 받아올 자바 필드명
-    private Visit visit_id; //방문번호 필드
+    private Visit visit; //방문번호 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "payment_method_code", nullable = false) //payment_method_code: 외래키로 받아올 자바 필드명
-    private Payment_method payment_method_code; //결제수단 필드
+    private Payment_method payment_method; //결제수단 필드
 
     private int amount; //금액 필드
 

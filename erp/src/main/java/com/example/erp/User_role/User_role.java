@@ -27,7 +27,7 @@ public class User_role { //사용자역할
 
     @OneToOne
     @JoinColumn(name = "user_id") //user_id: 외래키로 받아올 자바 필드명
-    private User_account user_id; //사용자번호
+    private User_account user_account; //사용자번호
 
     @ManyToOne
     @JoinColumn(name = "role_code") //role_code: 외래키로 받아올 자바 필드명

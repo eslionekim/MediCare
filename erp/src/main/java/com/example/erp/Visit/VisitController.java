@@ -16,10 +16,7 @@ public class VisitController {
 	@GetMapping("/doctor/todayVisits")
 	public String getTodayVisitList(Model model) { //의사 -> 금일 진료 리스트
         List<TodayVisitDTO> todayList = visitService.getTodayVisitList();
-        // 콘솔에 찍어보기
-        todayList.forEach(v -> {
-            System.out.println("환자: " + v.getName() + ", 시간: " + v.getVisit_time());
-        });
+        
         model.addAttribute("todayList", todayList);
         return "doctor/todayVisits";  // 타임리프 HTML 파일 경로
     }

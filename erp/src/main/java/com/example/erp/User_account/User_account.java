@@ -42,11 +42,11 @@ public class User_account { //사용자
 
     private LocalDateTime created_at = LocalDateTime.now(); //생성일시 필드
     
-    @OneToMany(mappedBy = "user_id", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "user_account", cascade = CascadeType.ALL, orphanRemoval = true)
     // user_id : 다른 엔터티에서 나를 참조할 자바 필드명 , cascade = CascadeType.ALL :여기에 무슨일 일어나면 자식엔터티도 영향(삭제 제외) , orphanRemoval = true: 삭제시 자식 엔터티 자동삭제
     private List<Staff_profile> staff_profile = new ArrayList<>(); //의료진 프로필
 
-    @OneToMany(mappedBy = "user_id")
+    @OneToMany(mappedBy = "user_account")
     private List<Vacation> vacation = new ArrayList<>(); //
 
 }

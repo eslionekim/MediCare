@@ -33,11 +33,11 @@ public class Work_schedule { //근무스케줄
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false) //user_id: 외래키로 받아올 자바 필드명
-    private User_account user_id; //사용자번호 필드
+    private User_account user_account; //사용자번호 필드
 
     @ManyToOne
     @JoinColumn(name = "department_code") //department_code: 외래키로 받아올 자바 필드명
-    private Department department_code; //진료과코드 필드
+    private Department department; //진료과코드 필드
 
     @Column(nullable = false)
     private LocalDate work_date; //근무일자 필드
@@ -50,7 +50,7 @@ public class Work_schedule { //근무스케줄
 
     @ManyToOne
     @JoinColumn(name = "work_type_code") //work_type_code: 외래키로 받아올 자바 필드명
-    private Work_type work_type_code;  //근무종류 필드
+    private Work_type work_type;  //근무종류 필드
 
     @ManyToOne
     @JoinColumn(name = "status_code") //status_code: 외래키로 받아올 자바 필드명

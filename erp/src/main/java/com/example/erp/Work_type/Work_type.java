@@ -41,6 +41,6 @@ public class Work_type { //근무 종류
 
     private String note; //비고 필드
     
-    @OneToMany(mappedBy = "work_type_code") //work_type_code : 다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "work_type") //work_type_code : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Work_schedule> work_schedule = new ArrayList<>(); //근무스케줄 리스트
 }

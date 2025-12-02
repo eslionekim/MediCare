@@ -28,6 +28,6 @@ public class Vacation_type { //휴가분류
 
     private boolean is_active = true; //사용여부 필드
     
-    @OneToMany(mappedBy = "vacation_type_code") //vacation_type_code:다른 엔터티에서 나를 참조할 자바 필드명
+    @OneToMany(mappedBy = "vacation_type") //vacation_type_code:다른 엔터티에서 나를 참조할 자바 필드명
     private List<Vacation> vacation = new ArrayList<>();//휴가 리스트
 }
