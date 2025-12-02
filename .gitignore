@@ -1,1 +1,8 @@
 /.metadata/
+/bin/
+/build/
+/.gradle/
+/.idea/
+/out/
+/target/
+*.log

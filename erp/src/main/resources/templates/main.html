@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>MediCare</title>
@@ -125,6 +125,39 @@
 	    min-height: 700px; /* 임시 높이 */
 	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
 	}
+	
+	table {
+	        width: 100%;
+	        border-collapse: collapse;
+	        font-size: 14px;
+	        background-color: white;
+	    }
+
+	    th, td {
+	        border: 1px solid #ccc;
+	        padding: 6px 8px;
+	        text-align: center;
+	    }
+
+	    th {
+	        background-color: #f3f6ff; 
+	        font-weight: 600;
+	    }
+
+	    tr:nth-child(even) {
+	        background-color: #fafbff;
+	    }
+
+	    /* 화면을 꽉 채우는 긴 표 느낌 */
+	    .table-container {
+	        width: 100%;
+	        height: 600px; /* 원하는 전체 높이 */
+	        overflow-y: auto;
+	        background-color: #D5DDED;
+	        padding: 10px;
+	        box-sizing: border-box;
+	    }
+	
 	</style>
 </head>
 <body>
@@ -167,6 +200,42 @@
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
+		<table border="1">
+		    <tr>
+		        <th>접수시간</th>
+		        <th>환자ID</th>
+		        <th>환자명</th>
+		        <th>성별</th>
+		        <th>생년월일</th>
+		        <th>진료구분</th>
+		        <th>상태</th>
+		    </tr>
+
+			<!-- 실제 데이터 출력: patients가 null이면 빈 리스트 처리 -->
+			<tr th:each="p : ${patients != null ? patients : {}}"> 
+			    <td th:text="${p.receptionTime}"></td>
+			    <td th:text="${p.patientId}"></td>
+			    <td th:text="${p.name}"></td>
+			    <td th:text="${p.gender}"></td>
+			    <td th:text="${p.birth}"></td>
+			    <td th:text="${p.visitType}"></td>
+			    <td th:text="${p.status}"></td>
+			</tr>
+
+			<!-- 빈 줄 채우기 -->
+			<tr th:with="count=${patients != null ? patients.size() : 0}"
+			    th:each="i : ${#numbers.sequence(1, 20 - (patients != null ? patients.size() : 0))}">
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			    <td>&nbsp;</td>
+			</tr>
+
+		</table>
+
     </div>
 	<!-- 콘텐츠 영역 끝-->
 </body>
