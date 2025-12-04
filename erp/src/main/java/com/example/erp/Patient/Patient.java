@@ -8,6 +8,7 @@ import java.util.List;
 import com.example.erp.Reservation.Reservation;
 import com.example.erp.Visit.Visit;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,27 +26,36 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class Patient { //환자
+public class Patient { // 환자
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) //자동 생성
-    private Long patient_id;  //환자번호 필드
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 생성
+    private Long patient_id; // 환자번호 필드
 
-    private String rrn;  // 주민등록번호 필드
-    private String name; //성명 필드
-    private LocalDate birth_date; //생년월일 필드
-    private String gender; //성별 필드
-    private String phone; //휴대전화 필드
-    private String email; //이메일 필드
-    private String address1; //주소1 필드
-    private String address2; //주소2 필드
+    private String rrn; // 주민등록번호 필드
+    private String name; // 성명 필드
+    private LocalDate birth_date; // 생년월일 필드
+    private String gender; // 성별 필드
+    private String phone; // 휴대전화 필드
+    private String email; // 이메일 필드
+    private String address1; // 주소1 필드
+    private String address2; // 주소2 필드
     private String note; // 메모 필드
 
-    private LocalDateTime created_at; //생성일시 필드
-    
-    @OneToMany(mappedBy = "patient") // patient_id : 다른 엔터티에서 나를 참조할 자바 필드명
-    private List<Visit> visit = new ArrayList<>(); //방문 리스트
+    @Column(name = "created_at", insertable = false, updatable = false)
+    private LocalDateTime created_at; // 생성일시 필드
 
-    @OneToMany(mappedBy = "patient") 
-    private List<Reservation> reservation = new ArrayList<>(); //예약 리스트
+    public LocalDateTime getCreatedAt() {
+        return created_at;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.created_at = created_at;
+    }
+
+    @OneToMany(mappedBy = "patient") // patient_id : 다른 엔터티에서 나를 참조할 자바 필드명
+    private List<Visit> visit = new ArrayList<>(); // 방문 리스트
+
+    @OneToMany(mappedBy = "patient")
+    private List<Reservation> reservation = new ArrayList<>(); // 예약 리스트
 }

@@ -1,0 +1,127 @@
+package com.example.erp.Patient;
+
+import com.example.erp.Visit.OutHistoryDTO;
+import com.example.erp.Visit.Visit;
+import com.example.erp.Visit.VisitRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Controller
+@RequestMapping("/patients")
+@RequiredArgsConstructor
+public class PatientRegistrationAndInquiry {
+
+    private final PatientRepository patientRepository;
+    private final VisitRepository visitRepository;
+
+    // 목록/조회 화면
+    @GetMapping
+    public String patientList(
+            @RequestParam(value = "patientId", required = false) Long patientId,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            Model model) {
+
+        addPatientList(keyword, model);
+
+        Patient selected = null;
+        List<OutHistoryDTO> outHistories = Collections.emptyList();
+        if (patientId != null) {
+            selected = patientRepository.findById(patientId).orElse(null);
+
+            List<Visit> visits = visitRepository.findRecentByPatient(patientId);
+            outHistories = visits.stream()
+                    .map(v -> new OutHistoryDTO(
+                            v.getVisit_datetime() != null ? v.getVisit_datetime().toLocalDate() : null,
+                            v.getUser_account() != null ? v.getUser_account().getName() : "",
+                            v.getVisit_type(),
+                            v.getNote()))
+                    .collect(Collectors.toList());
+        }
+
+        model.addAttribute("selected", selected);
+        model.addAttribute("mode", "detail");
+        model.addAttribute("outHistories", outHistories);
+        model.addAttribute("inHistories", Collections.emptyList());
+
+        return "staff/patient-register";
+    }
+
+    // 등록 화면
+    @GetMapping("/register")
+    public String patientRegister(
+            @RequestParam(value = "keyword", required = false) String keyword,
+            Model model) {
+
+        addPatientList(keyword, model);
+        model.addAttribute("selected", null);
+        model.addAttribute("mode", "register");
+        model.addAttribute("outHistories", Collections.emptyList());
+        model.addAttribute("inHistories", Collections.emptyList());
+
+        return "staff/patient-register";
+    }
+
+    // 등록 + 수정 공통 처리
+    @PostMapping("/save")
+    public String savePatient(
+            @RequestParam(value = "patientId", required = false) Long patientId,
+            @RequestParam String name,
+            @RequestParam(required = false) String rrn,
+            @RequestParam(required = false) String gender,
+            @RequestParam(value = "birth_date", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false) String address1,
+            @RequestParam(required = false) String address2,
+            @RequestParam(required = false) String note,
+            RedirectAttributes redirectAttributes) {
+
+        Patient patient;
+
+        if (patientId != null) {
+            patient = patientRepository.findById(patientId).orElse(new Patient());
+        } else {
+            patient = new Patient();
+        }
+
+        patient.setName(name);
+        patient.setRrn(rrn);
+        patient.setGender(gender);
+        patient.setBirth_date(birthDate);
+        patient.setPhone(phone);
+        patient.setEmail(email);
+        patient.setAddress1(address1);
+        patient.setAddress2(address2);
+        patient.setNote(note);
+
+        Patient saved = patientRepository.save(patient);
+
+        redirectAttributes.addFlashAttribute("message", "환자 정보가 저장되었습니다.");
+
+        return "redirect:/patients?mode=detail&patientId=" + saved.getPatient_id();
+    }
+
+    private void addPatientList(String keyword, Model model) {
+        List<Patient> patients;
+        if (keyword != null && !keyword.isBlank()) {
+            patients = patientRepository.findByNameContainingIgnoreCaseOrPhoneContainingOrRrnContaining(
+                    keyword, keyword, keyword);
+        } else {
+            patients = patientRepository.findAll();
+        }
+        model.addAttribute("patients", patients);
+        model.addAttribute("keyword", keyword);
+    }
+}
