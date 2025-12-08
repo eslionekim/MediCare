@@ -12,11 +12,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface VisitRepository extends JpaRepository<Visit, Long> {
 
-    // ?? -> ?? ?? ??? -> ?? ???(?? ??? ??)
+    // 의사->금일 진료 리스트
     @Query("select max(v.visit_datetime) from Visit v where v.patient.patient_id = :patient_id and date(v.visit_datetime) < :today")
     LocalDateTime findLastVisitBeforeToday(@Param("patient_id") Long patient_id, @Param("today") LocalDate today);
 
-    // ?? ??? ?? ?? ??
+    // 의사->금일 진료 리스트 -> 최종내원일 (오늘 방문은 제외)
     @Query("select v from Visit v left join fetch v.user_account ua where v.patient.patient_id = :patientId order by v.visit_datetime desc")
     List<Visit> findRecentByPatient(@Param("patientId") Long patientId);
 

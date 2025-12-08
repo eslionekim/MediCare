@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>상병코드 검색</title>
+    <style>
+        .container {
+            width: 560px;
+            padding: 10px;
+        }
+        .scroll-table {
+            max-height: 300px; 
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            margin-top: 10px;
+        }
+		table { 
+			    width: 100%; /* 너비 */
+			    border-collapse: collapse; /* 표 한줄로 합치기 */
+			    font-size: 13px;
+			    background-color: white;
+				margin:5px 0px;
+		}
+
+		th, td {
+			     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+			     padding: 0;
+				 height: 25px; /* 원하는 셀 높이 */
+			     text-align: center; /* 텍스트 중앙 */
+		}
+
+		th {
+			     background-color: #879BD5; 
+				 font-weight: normal; /* 글씨 굵기 보통으로 */
+				 color: rgb(31, 31, 31);
+		}
+
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- 검색창 -->
+    <form method="get" action="/doctor/popup/diseases">
+        <input type="text" name="keyword" placeholder="증상명 검색" th:value="${keyword}">
+        <button type="submit">검색</button>
+    </form>
+
+    <!-- 결과 테이블 -->
+    <div class="scroll-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>코드</th>
+                    <th>증상명</th>
+                    <th>선택</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                <tr th:each="d : ${list}">
+                    <td th:text="${d.diseases_code}"></td>
+                    <td th:text="${d.name_kor}"></td>
+                    <td> <!-- 타임리프에서 렌더링시 아래를 html로 바꿔줌 kebab-case -->
+						<button type="button" class="select"
+						th:data-diseases-code="${d.diseases_code}" 
+						th:data-name-kor="${d.name_kor}"
+						th:data-name-eng="${d.name_eng}"
+						th:data-department="${d.department}">
+						            선택</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.select').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const diseases_code = this.dataset.diseasesCode; //js는 kebab-case를 자동으로 camelCase로 인식하기 때문에
+            const name_kor = this.dataset.nameKor;
+            const name_eng = this.dataset.nameEng;
+            const department = this.dataset.department;
+
+            // 부모창 함수 호출
+            window.opener.setDisease(diseases_code, name_kor, name_eng, department);
+
+            // 팝업 닫기
+            window.close();
+        });
+    });
+});
+</script>
+</body>
+</html>
