@@ -3,3 +3,7 @@
 (진료 시작 버튼 클릭 시) 차트 작성 및 수정 http://localhost:8080/doctor/chartWrite?visit_id=방문id&patient_id=환자id
 (차트 저장 및 전체 진료 리스트에서 클릭 시) 차트 조회 http://localhost:8080/doctor/chartView?visit_id=방문id&patient_id==환자id
 전체 진료 리스트 http://localhost:8080/doctor/allVisits
+
+## 25.12.08 김은서 : [인사] 휴가 리스트 
+휴가 리스트 http://localhost:8080/hr/vacationList
+(선택) 팝업창 뜸
