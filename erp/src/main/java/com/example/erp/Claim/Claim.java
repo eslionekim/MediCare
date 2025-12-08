@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.example.erp.Chart_diseases.Chart_diseases;
 import com.example.erp.Claim_item.Claim_item;
+import com.example.erp.User_account.User_account;
 import com.example.erp.Visit.Visit;
 
 import jakarta.persistence.Entity;
@@ -16,8 +17,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Table(name = "claim")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Claim { //청구
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //자동 생성

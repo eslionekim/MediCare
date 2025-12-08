@@ -58,8 +58,8 @@ public class Visit { //??
     private Department department; //????? ??
 
     @Column(name = "visit_datetime")
-    private LocalDateTime visit_datetime; //???? ??
-
+    private LocalDateTime visit_datetime; //접수시간 필드
+    
     @Column(name = "visit_route")
     private String visit_route; //???? ??
 

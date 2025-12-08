@@ -171,8 +171,9 @@
 		 background-color: #00FF08;
 		 color: black;
 		 cursor: pointer;
-		 font-size: 15px;
-		 font-weight: 300 /* 글씨 굵기 보통으로 */
+		 font-size: 14px;
+		 font-weight: 300; /* 글씨 굵기 보통으로 */
+		 text-decoration: none;
 	  }
 
 	
@@ -201,10 +202,10 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-                <li class="tab-item active"><a href="#">기능1</a></li>
-                <li class="tab-item"><a href="#">기능1</a></li>
-                <li class="tab-item"><a href="#">기능1</a></li>
-                <li class="tab-item"><a href="#">기능1</a></li>
+                <li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+                <li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
+                <li class="tab-item"><a href="#">휴가 신청</a></li>
+                <li class="tab-item"><a href="#">스케줄 조회</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
@@ -248,7 +249,7 @@
 
 			<tbody>
 				<tr th:if="${todayList.size() == 0}">
-				        <td colspan="9" class="no-data">금일 진료가 없습니다.</td>
+				        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
 				    </tr>
 
 				    <tr th:each="v : ${todayList}">
@@ -262,14 +263,16 @@
 				        <td th:text="${v.last_visit != null ? v.last_visit : '초진'}"></td>
 				        <td>없음</td>
 						<td th:text="${v.note}"></td>
-						<td>
-					        <button th:if="${v.first}" class="first">접수시작</button>
+						<td>  
+							<a th:if="${v.first}" class="first" 
+							       th:href="@{/doctor/chartWrite(visit_id=${v.visit_id},patient_id=${v.patient_id})}">
+							       진료 시작</a>  <!--차트 작성 페이지 연결 ->visitId,patientId -->
 						    <span th:if="${!v.first}" th:text="${v.status_name}"></span>
 						</td>
 				    </tr>
 					
 					<!-- 빈 행을 채워 최소 10행으로 유지 -->
-					    <tr th:if="${todayList.size() < 20}" 
+					    <tr th:if="${todayList.size() >0 }" 
 					        th:each="i : ${#numbers.sequence(todayList.size() + 1, 20)}">
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>

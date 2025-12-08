@@ -22,7 +22,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Chart_diseases { //차트진단
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY) //자동 생성

@@ -8,6 +8,7 @@ import com.example.erp.Chart_diseases.Chart_diseases;
 import com.example.erp.User_account.User_account;
 import com.example.erp.Visit.Visit;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -43,11 +44,12 @@ public class Chart { //차트
     private String plan; //계획및치료법 필드
     private String note; //진료메모 필드
 
-    private boolean is_locked = false; //잠금여부 필드
+    @Column(name="is_locked")
+    private boolean locked = false; //잠금여부 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_account") //user_id : 외래키로 받아올 자바 필드값
-    private User_account user_id; //사용자번호 필드
+    @JoinColumn(name = "user_id") //user_id : 외래키로 받아올 자바 필드값
+    private User_account user_account; //사용자번호 필드
 
     private LocalDateTime updated_at; // MySQL 테이블과 매핑
     
