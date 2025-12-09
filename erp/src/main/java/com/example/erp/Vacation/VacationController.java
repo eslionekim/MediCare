@@ -21,7 +21,7 @@ public class VacationController {
 	private final VacationRepository vacationRepository;
 	private final Status_codeRepository status_codeRepository;
 	
-	@GetMapping("/hr/vacationList")
+	@GetMapping("/hr/vacationList") //인사 -> 휴가 리스트
     public String vacationList(Model model) {
         List<Vacation> vacation = vacationRepository.vacationList(); // 필요하면 status_code, user_account, staff_profile join fetch
         model.addAttribute("vacation", vacation);

@@ -25,7 +25,7 @@ public class User_role { //사용자역할
     @GeneratedValue(strategy = GenerationType.IDENTITY)//자동생성
     private Long user_role_id; // 사용자역할번호
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id") //user_id: 외래키로 받아올 자바 필드명
     private User_account user_account; //사용자번호
 
