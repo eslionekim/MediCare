@@ -34,6 +34,7 @@ import com.example.erp.Patient.PatientService;
 import com.example.erp.Patient.VisitHistoryDto;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.User_account.User_account;
+import com.example.erp.Visit.OutHistoryDTO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -175,6 +176,7 @@ public class VisitController {
                 // 3) 환자 화면에서 넘어온 patientId 로 선택 환자 + 히스토리 조회
                 Patient selectedPatient = null;
                 List<Visit> visitHistories = Collections.emptyList();
+                List<OutHistoryDTO> outHistories = Collections.emptyList();
 
                 if (patientId != null) {
                         selectedPatient = patientService.findById(patientId); // 이미 있는 서비스 활용
@@ -182,11 +184,25 @@ public class VisitController {
                         if (selectedPatient != null) {
                                 // 히스토리는 visitService 써도 되고, repository 써도 됨
                                 visitHistories = visitRepository.findByPatientOrderByVisitDatetimeDesc(selectedPatient);
+
+                                List<Visit> visits = visitRepository.findRecentByPatient(patientId);
+                                outHistories = visits.stream()
+                                                .map(v -> new OutHistoryDTO(
+                                                                v.getVisit_datetime() != null
+                                                                                ? v.getVisit_datetime().toLocalDate()
+                                                                                : null,
+                                                                v.getUser_account() != null
+                                                                                ? v.getUser_account().getName()
+                                                                                : "",
+                                                                v.getVisit_type(),
+                                                                v.getNote()))
+                                                .collect(Collectors.toList());
                         }
                 }
 
                 model.addAttribute("selectedPatient", selectedPatient);
                 model.addAttribute("visitHistories", visitHistories);
+                model.addAttribute("outHistories", outHistories);
 
                 // 4) 드롭다운 데이터 (임시 하드코딩, 나중에 코드/마스터 테이블 연동 가능)
                 model.addAttribute("departments",
@@ -203,7 +219,7 @@ public class VisitController {
         @PostMapping("/receptions/save")
         public String saveReception(
                         @RequestParam Long patientId, // 환자 번호
-                        @RequestParam Long doctorUserId, // 담당 의사 user_id
+                        @RequestParam String doctorUserId, // 담당 의사 user_id (문자 PK)
                         @RequestParam String departmentCode, // 진료과 코드 (예: ORTHO)
                         @RequestParam String visitType, // first / follow-up
                         @RequestParam String visitRoute, // walk-in / reservation
@@ -226,9 +242,7 @@ public class VisitController {
                                         .orElse(null); // 없으면 null (선택값이면 이렇게 처리)
                 }
 
-                // 🔥 상태코드 WAIT 기본값 로딩 (여기는 네 DB 코드에 맞춰 수정)
-                // 예: status_code 테이블의 PK가 "VISIT_WAIT" 이라면 그 값 넣어줘야 함.
-                Status_code waitStatus = statusCodeRepository.findById("VISIT_WAIT")
+                Status_code waitStatus = statusCodeRepository.findById("VIS_REGISTERED")
                                 .orElseThrow(() -> new IllegalArgumentException("기본 대기 상태코드가 없습니다."));
 
                 // 2) Visit 엔티티 생성 및 값 셋팅

@@ -1,4 +1,4 @@
-﻿package com.example.erp.Visit;
+package com.example.erp.Visit;
 
 import com.example.erp.Patient.Patient;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,30 +13,40 @@ import java.util.List;
 @Repository
 public interface VisitRepository extends JpaRepository<Visit, Long> {
 
-    // 금일 진료 리스트 -> 최종 내원일(오늘 방문 제외)
-    @Query("select max(v.visit_datetime) from Visit v where v.patient.patient_id = :patient_id and date(v.visit_datetime) < :today")
-    LocalDateTime findLastVisitBeforeToday(@Param("patient_id") Long patient_id, @Param("today") LocalDateTime today);
-    // 진료 시간으로 datetime컬럼 만든거라 LocalDateTime일수밖에 없음
-    // 진료 시작 -> patient_id로 visit 리스트 조회 (최근 방문 순)
+    // 최종 내원일(오늘 제외)
+    @Query("select max(v.visit_datetime) from Visit v where v.patient.patient_id = :patientId and date(v.visit_datetime) < :today")
+    LocalDateTime findLastVisitBeforeToday(@Param("patientId") Long patientId, @Param("today") LocalDate today);
 
-    // 의사->금일 진료 리스트 -> 최종내원일 (오늘 방문은 제외)
+    // 환자 상세용 최근 방문 내역 (의사 포함)
     @Query("select v from Visit v left join fetch v.user_account ua where v.patient.patient_id = :patientId order by v.visit_datetime desc")
     List<Visit> findRecentByPatient(@Param("patientId") Long patientId);
 
-    // 의사->금일 진료 리스트
+    // 특정 기간 방문 (시간순)
+    @Query("select v from Visit v where v.visit_datetime between :start and :end order by v.visit_datetime asc")
+    List<Visit> findByVisitDatetimeBetweenOrderByVisitDatetimeAsc(@Param("start") LocalDateTime start,
+                                                                  @Param("end") LocalDateTime end);
+
+    // 환자별 방문 이력 (최근순, 파라미터: Patient)
+    @Query("select v from Visit v where v.patient = :patient order by v.visit_datetime desc")
+    List<Visit> findByPatientOrderByVisitDatetimeDesc(@Param("patient") Patient patient);
+
+    // 환자별 방문 이력 (최근순, 파라미터: patientId)
+    @Query("select v from Visit v where v.patient.patient_id = :patientId order by v.visit_datetime desc")
+    List<Visit> findByPatientIdOrderByVisitDatetimeDesc(@Param("patientId") Long patientId);
+
+    // 환자별 방문 이력 (정렬 없음)
+    @Query("select v from Visit v where v.patient.patient_id = :patientId")
+    List<Visit> findByPatientId(@Param("patientId") Long patientId);
+
+    // 오늘 진료 리스트 (환자 fetch)
     @Query("SELECT v FROM Visit v JOIN FETCH v.patient WHERE v.visit_datetime BETWEEN :start AND :end")
-    // JOIN FETCH : visit과 관련된 parient 정보 가져오기,
-    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end); // 의사-> 금일 진료리스트
+    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    // 의사 -> 차트 작성 -> 환자 번호로 내원 기록 조회
-    @Query("SELECT v FROM Visit v WHERE v.patient.patient_id = :patient_id")
-    List<Visit> findByPatientId(@Param("patient_id") Long patient_id);
-
-    // 의사 -> 차트 작성 -> visit 한건 찾고 연관된 department,insurance_code 찾아서 진료과,보험 추출
+    // 차트 작성 시 department, insurance 함께 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.department JOIN FETCH v.insurance_code WHERE v.visit_id = :visit_id")
-    Visit findWithDepartmentAndInsurance(@Param("visit_id") Long visit_id);
+    Visit findWithDepartmentAndInsurance(@Param("visit_id") Long visitId);
 
+    // 청구 완료/종료 방문 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.patient LEFT JOIN FETCH v.user_account LEFT JOIN FETCH v.insurance_code JOIN v.status_code s WHERE s.status_code IN ('VIS_CLAIMED', 'VIS_COMPLETED') ORDER BY v.created_at DESC")
     List<Visit> findAllVisits();
-
 }
