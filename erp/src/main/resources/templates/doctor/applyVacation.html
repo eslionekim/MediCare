@@ -202,17 +202,17 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-                <li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
-                <li class="tab-item"><a href="#">스케줄 조회</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
+				<li class="tab-item active"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
+				<li class="tab-item"><a href="#">스케줄 조회</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
 		
 		<!-- 하단 헤더-->
         <div class="sub-menu">
-            <span>금일 진료 리스트</span>
+            <span>휴가 신청</span>
         </div>
 		<!-- 하단 헤더 끝-->
     </header>
@@ -234,51 +234,30 @@
 		<table id="table" border="1">
 			<thead>
 			    <tr>
-			        <th>접수시간</th>
-			        <th>환자ID</th>
-			        <th>환자명</th>
-			        <th>성별</th>
-			        <th>생년월일</th>
-			        <th>진료구분</th>
-					<th>최종내원일</th>
-					<th>선행 검사 상태</th>
-					<th>내원사유</th>
-			        <th>상태</th>
+			        <th>휴가코드</th>
+			        <th>분류</th>
+			        <th>사용 기간</th>
+			        <th>승인 여부</th>
+			        <th>사유</th>
 			    </tr>
 			</thead>
 
 			<tbody>
-				<tr th:if="${todayList.size() == 0}">
-				        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
+				<tr th:if="${vacation.size() == 0}">
+				        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
 				    </tr>
 
-				    <tr th:each="v : ${todayList}">
-						<td th:text="${v.visit_time}"></td>
-				        <td th:text="${v.patient_id}"></td>
-				        <td th:text="${v.name}"></td>
-				        <td th:text="${v.gender}"></td>
-				        <td th:text="${v.birth_date}"></td>
-						<td th:text="${v.visit_type}"></td>
-				        <!-- 최종내원일 없으면 ‘초진’ -->
-				        <td th:text="${v.last_visit != null ? v.last_visit : '초진'}"></td>
-				        <td>없음</td>
-						<td th:text="${v.note}"></td>
-						<td>  
-							<a th:if="${v.first}" class="first" 
-							       th:href="@{/doctor/chartWrite(visit_id=${v.visit_id},patient_id=${v.patient_id})}">
-							       진료 시작</a>  <!--차트 작성 페이지 연결 ->visitId,patientId -->
-						    <span th:if="${!v.first}" th:text="${v.status_name}"></span>
-						</td>
+				    <tr th:each="v : ${vacation}">
+						<td th:text="${v.vacation_id}"></td>
+						<td th:text="${v.vacation_type.type_name}"></td>
+						<td th:text="${#temporals.format(v.start_date, 'yyyy-MM-dd')} + ' ~ ' + ${#temporals.format(v.end_date, 'yyyy-MM-dd')}"></td>
+						<td th:text="${v.status_code.name}"></td>
+						<td th:text="${v.reason}"></td>
 				    </tr>
 					
-					<!-- 빈 행을 채워 최소 10행으로 유지 -->
-					    <tr th:if="${todayList.size() >0 }" 
-					        th:each="i : ${#numbers.sequence(todayList.size() + 1, 20)}">
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
+					<!-- 빈 행을 채워 최소 15행으로 유지 -->
+					    <tr th:if="${vacation.size() >0 }" 
+					        th:each="i : ${#numbers.sequence(vacation.size() + 1, 15)}">
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
@@ -287,8 +266,73 @@
 					</tr>
 			</tbody>
 		</table>
-
+		<button id="openPopupBtn">휴가 신청</button>
+		
+		<!-- 팝업 -->
+		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
+		    <h2>신규 신청</h2>
+		    
+		    <label>기간:</label>
+		    <input type="date" id="start_date" required>~<input type="date" id="end_date" required>
+		    
+		    <label>분류:</label>
+		    <select id="vacation_type" required>
+		        <option th:each="t : ${vacationTypes}" th:value="${t.type_name}" th:text="${t.type_name}"></option>
+		    </select>
+		    <br><br>
+		    
+		    <label>사유:</label>
+		    <input type="text" id="reason">
+		    <br><br>
+		    
+		    <button id="submitVacation">신청</button>
+		    <button id="closePopup">이전</button>
+		</div>
+		
+		
     </div>
 	<!-- 콘텐츠 영역 끝-->
+	
+	<script>
+		// 팝업 열기
+		    document.getElementById("openPopupBtn").onclick = function() {
+		        document.getElementById("vacationPopup").style.display = "block";
+		    };
+
+		    // 팝업 닫기
+		    document.getElementById("closePopup").onclick = function() {
+		        document.getElementById("vacationPopup").style.display = "none";
+		    };
+
+		    // 휴가 신청 제출
+		    document.getElementById("submitVacation").onclick = function() {
+		        const start_date = document.getElementById("start_date").value;
+		        const end_date = document.getElementById("end_date").value;
+		        const type_name = document.getElementById("vacation_type").value;
+		        const reason = document.getElementById("reason").value;
+
+				if (!start_date || !end_date || !type_name) {
+				    alert("기간과 분류는 반드시 입력해야 합니다.");
+				    return;
+				}
+				
+		        fetch('/doctor/applyVacation', {
+		            method: 'POST',
+		            headers: {
+		                'Content-Type': 'application/json',
+		                
+		            },
+		            body: JSON.stringify({ start_date, end_date, type_name, reason })
+		        }).then(res => res.json())
+		          .then(data => {
+		              if(data.success){
+		                  alert("휴가 신청 완료");
+		                  location.reload(); // 새로고침해서 테이블에 추가
+		              } else {
+		                  alert("실패: " + data.message);
+		              }
+		          });
+		    };
+	</script>
 </body>
 </html>

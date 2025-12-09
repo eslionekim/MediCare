@@ -9,8 +9,9 @@
 휴가 리스트 http://localhost:8080/hr/vacationList
 (선택) 팝업창 뜸
 
-## 25.12.09 김은서 : 로그인 구현
+## 25.12.09 김은서 : 로그인 구현 / [의사] 휴가 신청
 로그인 페이지 http://localhost:8080/login
+휴가 신청 http://localhost:8080/doctor/applyVacation
 
 ### role_code별 로그인 후 접속 페이지
 com.example.erp.security 폴더 CustomLoginSuccessHandler.java
@@ -28,3 +29,4 @@ else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_HR")))
 else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"))) {
      redirectURL += "/patients";
 }
+
