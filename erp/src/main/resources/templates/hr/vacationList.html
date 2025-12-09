@@ -242,7 +242,6 @@
 			        <th>진료과</th>
 					<th>사용 기간</th>
 					<th>선행 검사 상태</th>
-					<th>내원사유</th>
 			        <th>선택</th>
 			    </tr>
 			</thead>
@@ -260,7 +259,7 @@
 						<td th:text="${v.user_account.name}"></td>
 						<td th:text="${#lists.isEmpty(v.user_account.staff_profile) ? '-' : v.user_account.staff_profile.get(0).department.name}"></td>
 						<td th:text="${#temporals.format(v.start_date, 'yyyy-MM-dd')} + ' ~ ' + ${#temporals.format(v.end_date, 'yyyy-MM-dd')}"></td>
-						<td></td>
+				
 						<td th:text="${v.reason}"></td>
 						<td>
 						        <button type="button" th:data-id="${v.vacation_id}" 
@@ -272,7 +271,6 @@
 					<!-- 빈 행을 채워 최소 10행으로 유지 -->
 					    <tr th:if="${vacation.size() >0 }" 
 					        th:each="i : ${#numbers.sequence(vacation.size() + 1, 20)}">
-					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
