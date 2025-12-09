@@ -50,7 +50,7 @@ public class Visit { // 방문
     private Reservation reservation; // 예약번호 필드
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "doctor_id", nullable = false) // visit 테이블의 담당 의사 FK 컬럼명
+    @JoinColumn(name = "user_id", nullable = false) // visit 테이블의 담당 의사 FK 컬럼명
     private User_account user_account; // 담당 의사/사용자 FK
 
     @ManyToOne(fetch = FetchType.LAZY)
