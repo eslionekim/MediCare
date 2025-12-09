@@ -189,7 +189,11 @@
 
                 <div class="quick-buttons">
                     <button class="btn-small" type="button">예약 바로가기</button>
-                    <button class="btn-small" type="button">접수 바로가기</button>
+                    <button class="btn-small"
+                        th:if="${selected != null}"
+                        th:onclick="|location.href='@{/receptions(patientId=${selected.patient_id})}'|">
+                    접수 바로가기
+                </button>
                 </div>
 
                 <section class="card">
