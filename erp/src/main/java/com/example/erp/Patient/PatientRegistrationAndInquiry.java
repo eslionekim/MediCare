@@ -77,15 +77,15 @@ public class PatientRegistrationAndInquiry {
     @PostMapping("/save")
     public String savePatient(
             @RequestParam(value = "patientId", required = false) Long patientId,
-            @RequestParam String name,
-            @RequestParam(required = false) String rrn,
-            @RequestParam(required = false) String gender,
+            @RequestParam("name") String name,
+            @RequestParam(value = "rrn", required = false) String rrn,
+            @RequestParam(value = "gender", required = false) String gender,
             @RequestParam(value = "birth_date", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
-            @RequestParam(required = false) String phone,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String address1,
-            @RequestParam(required = false) String address2,
-            @RequestParam(required = false) String note,
+            @RequestParam(value = "phone", required = false) String phone,
+            @RequestParam(value = "email", required = false) String email,
+            @RequestParam(value = "address1", required = false) String address1,
+            @RequestParam(value = "address2", required = false) String address2,
+            @RequestParam(value = "note", required = false) String note,
             RedirectAttributes redirectAttributes) {
 
         Patient patient;

@@ -219,7 +219,7 @@ public class VisitController {
         @PostMapping("/receptions/save")
         public String saveReception(
                         @RequestParam Long patientId, // 환자 번호
-                        @RequestParam String doctorUserId, // 담당 의사 user_id (문자 PK)
+                        @RequestParam(name = "user_id") String user_id, // 담당 의사 user_id (문자 PK)
                         @RequestParam String departmentCode, // 진료과 코드 (예: ORTHO)
                         @RequestParam String visitType, // first / follow-up
                         @RequestParam String visitRoute, // walk-in / reservation
@@ -230,7 +230,7 @@ public class VisitController {
                 // 1) 연관 엔티티 조회
                 Patient patient = patientService.findById(patientId);
 
-                User_account doctor = userAccountRepository.findById(doctorUserId)
+                User_account doctor = userAccountRepository.findById(user_id)
                                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 의사 ID입니다."));
 
                 Department department = departmentRepository.findById(departmentCode)
