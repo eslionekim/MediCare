@@ -55,7 +55,7 @@ public class VisitController {
         private final com.example.erp.Insurance_code.Insurance_codeRepository insuranceCodeRepository;
         private final com.example.erp.Status_code.Status_codeRepository statusCodeRepository;
 
-        // ====================== 의사용 기능 ======================
+        // ====================== 의사용 기능 ====================== by 은서
 
         @GetMapping("/doctor/todayVisits") // 의사 -> 금일 진료 리스트
         public String getTodayVisitList(Model model) {

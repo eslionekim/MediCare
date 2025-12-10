@@ -31,7 +31,7 @@ public class VacationController {
 	private final Vacation_typeRepository vacation_typeRepository;
 	private final Status_codeRepository status_codeRepository;
 	
-	@GetMapping("/hr/vacationList") //인사 -> 휴가 리스트
+	@GetMapping("/hr/vacationList") //인사 -> 휴가 리스트 by 은서
     public String vacationList(Model model) {
         List<Vacation> vacation = vacationRepository.vacationList(); // 필요하면 status_code, user_account, staff_profile join fetch
         model.addAttribute("vacation", vacation);
@@ -39,7 +39,7 @@ public class VacationController {
     }
 	
 	// 상태 변경 AJAX
-    @PostMapping("/hr/vacation/updateStatus") //인사 -> 휴가 승인/취소/반려
+    @PostMapping("/hr/vacation/updateStatus") //인사 -> 휴가 승인/취소/반려 by 은서
     @ResponseBody
     public Map<String, Object> updateStatus(@RequestBody Map<String, String> params) {
         try {
@@ -60,7 +60,7 @@ public class VacationController {
         return Map.of("success", false);
     }
     
-    // 의사 -> 휴가 신청
+    // 의사 -> 휴가 신청 by 은서
     @GetMapping("/doctor/applyVacation")
     public String applyVacation(Model model) {
         String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
@@ -72,7 +72,7 @@ public class VacationController {
         return "doctor/applyVacation";
     }
     
-    // 의사 -> 휴가 신청 -> 폼 제출
+    // 의사 -> 휴가 신청 -> 폼 제출 by 은서
     @PostMapping("/doctor/applyVacation")
     @ResponseBody // 반환값을 JSON형태(키-값)로 전달
     public Map<String,Object> applyVacation(@RequestBody Map<String,String> body) {

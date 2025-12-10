@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 public class PatientService {
 	private final PatientRepository patientRepository;
 
-    public Patient findById(Long patientId) {  // patient_id로 환자 조회
+    public Patient findById(Long patientId) {  // patient_id로 환자 조회 by 은서
         return patientRepository.findById(patientId)
                 .orElseThrow(() -> new RuntimeException("환자를 찾을 수 없습니다. id=" + patientId));
     }

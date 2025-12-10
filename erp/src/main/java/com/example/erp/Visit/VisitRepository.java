@@ -49,4 +49,6 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     // 청구 완료/종료 방문 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.patient LEFT JOIN FETCH v.user_account LEFT JOIN FETCH v.insurance_code JOIN v.status_code s WHERE s.status_code IN ('VIS_CLAIMED', 'VIS_COMPLETED') ORDER BY v.created_at DESC")
     List<Visit> findAllVisits();
+    
+    
 }

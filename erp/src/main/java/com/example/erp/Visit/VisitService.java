@@ -18,7 +18,7 @@ public class VisitService {
     private final VisitRepository visitRepository;
 
     @Transactional(readOnly = true) // 트랜젝션(조회용)
-    public List<TodayVisitDTO> getTodayVisitList() { // 의사->금일 진료 리스트
+    public List<TodayVisitDTO> getTodayVisitList() { // 의사->금일 진료 리스트 by 은서
         LocalDate today = LocalDate.now(); // 오늘 날짜 -> 최종내원일에 쓰임
         LocalDateTime todayStart = today.atStartOfDay(); // 오늘 날짜를 LocalDateTime으로 바꿈, 진료시간으로 설정된거랑 비교하려면 쩔수없음
 
@@ -85,20 +85,20 @@ public class VisitService {
         return result; // 최종 DTO 리스트 반환
     }
 
-    public List<Visit> findByPatientId(Long patient_id) { // 의사->금일 진료 리스트->진료 시작 -> 환자 과거 방문 기록 조회
+    public List<Visit> findByPatientId(Long patient_id) { // 의사->금일 진료 리스트->진료 시작 -> 환자 과거 방문 기록 조회 by 은서
         return visitRepository.findByPatientId(patient_id);
     }
 
-    public Visit findById(Long visit_id) { // 의사 -> 차트 작성 -> 방문 정보 (진료 유형, 내원 경로) 불러오기
+    public Visit findById(Long visit_id) { // 의사 -> 차트 작성 -> 방문 정보 (진료 유형, 내원 경로) 불러오기 by 은서
         return visitRepository.findById(visit_id)
                 .orElseThrow(() -> new RuntimeException("Visit not found: " + visit_id)); // 없으면
     }
 
-    public Visit findWithDepartmentAndInsurance(Long visit_id) { // 의사 -> 차트 작성 -> 진료과,보험명 불러오기
+    public Visit findWithDepartmentAndInsurance(Long visit_id) { // 의사 -> 차트 작성 -> 진료과,보험명 불러오기 by 은서
         return visitRepository.findWithDepartmentAndInsurance(visit_id);
     }
 
-    @Transactional(readOnly = true) // 의사 -> 전체 진료 리스트
+    @Transactional(readOnly = true) // 의사 -> 전체 진료 리스트 by 은서
     public List<AllVisitDTO> getAllVisitList() {
         List<Visit> visits = visitRepository.findAllVisits(); // 레포지토리에서 연관관계 한번에 조회
         List<AllVisitDTO> result = new ArrayList<>();

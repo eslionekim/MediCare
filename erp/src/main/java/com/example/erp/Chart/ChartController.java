@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 public class ChartController {
 	private final ChartService chartService;
 	
-	@PostMapping("/doctor/chartSave")
+	@PostMapping("/doctor/chartSave") // 의사-> 차트 저장 버튼 by 은서
 	public String saveChart(			
 	        @RequestParam("visit_id") Long visit_id,
 	        @RequestParam("chart_id") Long chart_id,

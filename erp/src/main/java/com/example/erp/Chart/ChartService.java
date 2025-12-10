@@ -38,8 +38,8 @@ public class ChartService {
     private final Fee_itemRepository fee_itemRepository;
     private final Status_codeRepository status_codeRepository;
     
-	// 진료 시작 시 기본 차트 생성
-    public Chart createBasicChart(Long visitId) {
+	// 진료 시작 시 기본 차트 생성 by 은서
+    public Chart createBasicChart(Long visitId) { 
     	Optional<Chart> existingChart = chartRepository.findByVisitId(visitId);
         if (existingChart.isPresent()) {
             return existingChart.get(); // 이미 있으면 반환
@@ -55,8 +55,7 @@ public class ChartService {
         return chartRepository.save(chart);
     }
 
-    // 차트 저장
-      
+    // 의사 -> 차트 저장 by 은서  
     @Transactional
     public void saveAll(Long visit_id,Long chart_id,String subjective,String objective,String assessment,String plan,String note,List<String> diseases_code,List<String> fee_item_code,List<Integer> base_price,List<Integer> quantity) {
     	//soap 저장
