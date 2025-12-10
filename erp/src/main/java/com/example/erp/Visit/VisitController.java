@@ -35,6 +35,8 @@ import com.example.erp.Patient.VisitHistoryDto;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.User_account.User_account;
 import com.example.erp.Visit.OutHistoryDTO;
+import com.example.erp.Staff_profile.Staff_profileRepository;
+import com.example.erp.Staff_profile.Staff_profile;
 
 import lombok.RequiredArgsConstructor;
 
@@ -49,11 +51,11 @@ public class VisitController {
         private final ClaimRepository claimRepository;
         private final Claim_itemRepository claim_itemRepository;
         private final VisitRepository visitRepository; //
-        // 추가
         private final com.example.erp.User_account.User_accountRepository userAccountRepository;
         private final com.example.erp.Department.DepartmentRepository departmentRepository;
         private final com.example.erp.Insurance_code.Insurance_codeRepository insuranceCodeRepository;
         private final com.example.erp.Status_code.Status_codeRepository statusCodeRepository;
+        private final Staff_profileRepository staffProfileRepository;
 
         // ====================== 의사용 기능 ====================== by 은서
 
@@ -204,9 +206,12 @@ public class VisitController {
                 model.addAttribute("visitHistories", visitHistories);
                 model.addAttribute("outHistories", outHistories);
 
-                // 4) 드롭다운 데이터 (임시 하드코딩, 나중에 코드/마스터 테이블 연동 가능)
-                model.addAttribute("departments",
-                                List.of("ORTHO", "GS", "ENDO", "PULMO")); // 진료과 코드 예시
+                // 4) 드롭다운 데이터 (DB 연동)
+                List<Department> departments = departmentRepository.findAll();
+                List<Staff_profile> doctorProfiles = staffProfileRepository.findAllWithUserAndDepartment();
+
+                model.addAttribute("departments", departments);
+                model.addAttribute("doctorProfiles", doctorProfiles);
                 model.addAttribute("visitTypes",
                                 List.of("first", "follow-up"));
                 model.addAttribute("visitRoutes",
@@ -242,7 +247,7 @@ public class VisitController {
                                         .orElse(null); // 없으면 null (선택값이면 이렇게 처리)
                 }
 
-                Status_code waitStatus = statusCodeRepository.findById("VIS_REGISTERED")
+                Status_code waitStatus = statusCodeRepository.findById("VIS_WAITING")
                                 .orElseThrow(() -> new IllegalArgumentException("기본 대기 상태코드가 없습니다."));
 
                 // 2) Visit 엔티티 생성 및 값 셋팅
