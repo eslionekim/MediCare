@@ -178,6 +178,11 @@
 
 	
 	</style>
+	
+	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+	
+
 </head>
 <body>
     <header class="main-header">
@@ -186,7 +191,10 @@
             <div class="user-info">
                 <span>(아이콘)</span>
                 <span>MediCare |</span>
-                <span>사용자ID: </span>
+				<span>사용자ID:
+				    <span id="user_id" th:text="${username}"></span>
+				</span>
+				
             </div>
             <div class="user-info">
                 <span>진료과 ㅇㅇㅇ</span>
@@ -334,5 +342,6 @@
 		          });
 		    };
 	</script>
+	<script src="/js/notify.js"></script>
 </body>
 </html>

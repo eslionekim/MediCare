@@ -20,6 +20,7 @@ import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.User_account.User_account;
 import com.example.erp.Vacation_type.Vacation_type;
 import com.example.erp.Vacation_type.Vacation_typeRepository;
+import com.example.erp.notification.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,11 +31,14 @@ public class VacationController {
 	private final VacationRepository vacationRepository;
 	private final Vacation_typeRepository vacation_typeRepository;
 	private final Status_codeRepository status_codeRepository;
+	private final NotificationService notificationService;
 	
 	@GetMapping("/hr/vacationList") //인사 -> 휴가 리스트 by 은서
     public String vacationList(Model model) {
         List<Vacation> vacation = vacationRepository.vacationList(); // 필요하면 status_code, user_account, staff_profile join fetch
+        String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
         model.addAttribute("vacation", vacation);
+        model.addAttribute("username", user_id);
         return "hr/vacationList";
     }
 	
@@ -52,6 +56,13 @@ public class VacationController {
             	        .orElseThrow(() -> new RuntimeException("상태코드 없음"));
             	vacation.setStatus_code(statusCode);
                 vacationRepository.save(vacation); //설정한대로 저장
+                
+                // 직원 user_id 가져오기
+                String user_id = vacation.getUser_account().getUser_id();
+
+                // 상태코드 name으로 메시지 만들기      보낼 사람  alert 제목     내용
+                notificationService.notifyUser(user_id, "휴가 현황", statusCode.getName() + "되었습니다.");
+
                 return Map.of("success", true); //성공 여부를 JSON으로 반환
             }
         } catch (Exception e) { 
@@ -69,6 +80,8 @@ public class VacationController {
         
         model.addAttribute("vacation", vacation);
         model.addAttribute("vacationTypes", vacationTypes);
+        model.addAttribute("username", user_id); // ✅ username 추가
+        
         return "doctor/applyVacation";
     }
     
@@ -99,8 +112,10 @@ public class VacationController {
             v.setReason(body.get("reason"));
 
             vacationRepository.save(v);
-
-            result.put("success", true); // 저장 성공 시 
+            
+            result.put("success", true); // 저장 성공 시
+            // 직원이 휴가 신청했을 때 HR에게 알림
+            notificationService.notifyHR("휴가 신청", "직원 " + user_id + "님이 휴가를 신청했습니다.");
         } catch(Exception e){
             result.put("success", false);
             result.put("message", e.getMessage());

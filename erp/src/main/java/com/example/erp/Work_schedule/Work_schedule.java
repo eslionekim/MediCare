@@ -42,10 +42,10 @@ public class Work_schedule { //근무스케줄
     @Column(nullable = false)
     private LocalDate work_date; //근무일자 필드
 
-    @Column(nullable = false)
+    @Column
     private LocalTime start_time; //출근버튼 필드
 
-    @Column(nullable = false)
+    @Column
     private LocalTime end_time; //퇴근버튼 필드
 
     @ManyToOne

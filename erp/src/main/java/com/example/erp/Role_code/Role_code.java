@@ -36,7 +36,4 @@ public class Role_code { //역할코드
 
     @OneToMany(mappedBy = "role_code")
     private List<User_role> user_role = new ArrayList<>(); // 사용자역할 리스트
-    
-    @OneToMany(mappedBy = "role_code")
-    private List<Work_type> work_type = new ArrayList<>(); // 근무종류 리스트
-}
+    }

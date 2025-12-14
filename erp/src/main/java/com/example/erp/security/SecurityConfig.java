@@ -15,13 +15,10 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration // 스프링 설정 클래스로 인식하게 함
 @EnableWebSecurity // 웹 보안 활성화, 스프링 시큐리티 기능 사용 , 필터 체인과 로그인/권한 기능을 사용 가능
+@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
-
-    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
 
     @Bean //보안 정책
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomLoginSuccessHandler successHandler) throws Exception {
