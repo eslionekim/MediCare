@@ -31,4 +31,7 @@ else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"
 }
 
 ## 25.12.14 김은서 : [인사] 스케줄 부여
-http://localhost:8080/hr/schedule
+스케줄 부여 http://localhost:8080/hr/schedule
+
+## 25.12.14 김은서 : [의사] 스케줄 조회
+http://localhost:8080/doctor/mySchedule
