@@ -207,15 +207,15 @@ public class VisitController {
                 model.addAttribute("outHistories", outHistories);
 
                 // 4) 드롭다운 데이터 (DB 연동)
-                List<Department> departments = departmentRepository.findAll();
+                List<Department> departments = departmentRepository.findActive();
                 List<Staff_profile> doctorProfiles = staffProfileRepository.findAllWithUserAndDepartment();
+                List<Insurance_code> insuranceCodes = insuranceCodeRepository.findAll();
 
                 model.addAttribute("departments", departments);
                 model.addAttribute("doctorProfiles", doctorProfiles);
-                model.addAttribute("visitTypes",
-                                List.of("first", "follow-up"));
-                model.addAttribute("visitRoutes",
-                                List.of("walk-in", "reservation"));
+                model.addAttribute("insuranceCodes", insuranceCodes);
+                model.addAttribute("visit_types", List.of("초진", "재진"));
+                model.addAttribute("visitRoutes", List.of("당일방문", "예약"));
 
                 return "staff/reception";
         }
@@ -226,9 +226,9 @@ public class VisitController {
                         @RequestParam Long patientId, // 환자 번호
                         @RequestParam(name = "user_id") String user_id, // 담당 의사 user_id (문자 PK)
                         @RequestParam String departmentCode, // 진료과 코드 (예: ORTHO)
-                        @RequestParam String visitType, // first / follow-up
+                        @RequestParam(name = "visit_type") String visit_type, // first / follow-up
                         @RequestParam String visitRoute, // walk-in / reservation
-                        @RequestParam(required = false) String insuranceCode, // 보험 코드
+                        @RequestParam(name = "insurance_code") String insuranceCode, // 보험 코드
                         @RequestParam(required = false) String note,
                         RedirectAttributes redirectAttributes) {
 
@@ -260,7 +260,7 @@ public class VisitController {
                 visit.setDepartment(department);
                 visit.setVisit_datetime(now);
                 visit.setVisit_route(visitRoute);
-                visit.setVisit_type(visitType);
+                visit.setVisit_type(visit_type);
                 visit.setInsurance_code(insurance);
                 visit.setStatus_code(waitStatus);
                 visit.setNote(note);

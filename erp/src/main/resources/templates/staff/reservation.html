@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>예약</title>
+    <style>
+        body { margin:0; padding:0; font-family:'Inter','맑은 고딕',sans-serif; background:#D5DDED; }
+        .erp-page { width:1280px; margin:24px auto; background:#fff; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 15px; font-size:14px; }
+        .user-info { color:#555; }
+        .action-buttons { display:flex; gap:5px; }
+        .action-buttons button, .btn-logout { padding:4px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:500; border:1px solid #7B7B7B; }
+        .btn-logout { background:#FF4B4B; color:#fff; }
+        .time-in { background:#879BD5; color:#fff; }
+        .time-out { background:#D5DDED; }
+        .nav-tabs { background:#D5DDED; padding:0 10px; }
+        .tab-list { list-style:none; display:flex; margin:0; padding:0; }
+        .tab-item a { display:block; padding:8px 15px; text-decoration:none; color:#333; font-size:14px; }
+        .tab-item.active a { font-weight:600; }
+        .sub-menu { background:#BACCFF; padding:6px 15px; font-size:14px; color:#555; font-weight:530; }
+        .content-area { padding:10px; }
+        .layout-main { display:grid; grid-template-columns:280px 1fr 320px; gap:12px; padding:10px; box-sizing:border-box; }
+        .card { border:1px solid #b0b7c7; border-radius:4px; background:#f7f9ff; overflow:hidden; }
+        .card-header { padding:6px 10px; font-size:13px; font-weight:600; background:#879BD5; color:#fff; }
+        .card-body { padding:10px; background:#fff; }
+        .calendar-inner { padding:10px; }
+        .calendar-month-nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:16px; font-weight:600; }
+        .calendar-arrow { cursor:pointer; padding:0 6px; user-select:none; }
+        .calendar-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; font-size:12px; text-align:center; }
+        .calendar-day-header { padding:4px 0; font-weight:600; background:#E3E9FF; border-radius:3px; }
+        .calendar-date { padding:4px 0; cursor:pointer; border-radius:3px; background:#fff; }
+        .calendar-date:hover { background:#E7EEFF; }
+        .calendar-date.selected { background:#4D6CDB; color:#fff; font-weight:600; }
+        .calendar-date.other-month { color:#aaa; }
+        .search-panel { margin-top:6px; padding:8px 10px; background:#EFF3FF; border-top:1px solid #cbd2e1; }
+        .search-row { margin-bottom:6px; font-size:13px; }
+        .search-row label { display:block; margin-bottom:2px; }
+        .search-row input, .search-row select { width:100%; padding:4px 6px; font-size:13px; border-radius:4px; border:1px solid #cbd2e1; box-sizing:border-box; }
+        .btn-search { width:100%; margin-top:4px; padding:5px 0; background:#879BD5; color:#fff; border-radius:4px; border:1px solid #7B7B7B; cursor:pointer; font-size:13px; }
+        .schedule-card { height:520px; }
+        .schedule-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .schedule-table th, .schedule-table td { border:1px solid #ccc; padding:6px 4px; text-align:center; }
+        .schedule-table th { background:#F3F6FF; font-weight:600; }
+        .schedule-table tbody tr:nth-child(even) { background:#FAFBFF; }
+        .btn-xs { padding:3px 8px; font-size:12px; border-radius:10px; border:1px solid #7B7B7B; background:#D5DDED; cursor:pointer; }
+        .btn-xs-primary { background:#879BD5; color:#fff; }
+        .right-panel { display:flex; flex-direction:column; gap:8px; }
+        .info-row, .reserve-row { display:flex; align-items:center; margin-bottom:6px; font-size:13px; }
+        .info-row label { width:60px; font-weight:500; }
+        .info-row input { flex:1; padding:4px 6px; border-radius:4px; border:1px solid #cbd2e1; font-size:13px; background:#f7f9ff; }
+        .reserve-row label { width:70px; font-weight:500; }
+        .reserve-row input, .reserve-row select { flex:1; padding:4px 6px; border-radius:4px; border:1px solid #cbd2e1; font-size:13px; }
+        .btn-reserve { width:100%; padding:6px 0; margin-top:6px; background:#879BD5; color:#fff; border-radius:4px; border:1px solid #7B7B7B; cursor:pointer; font-size:13px; }
+    </style>
+</head>
+<body>
+<div class="erp-page">
+    <!-- 상단 바 -->
+    <div class="top-bar">
+        <div class="user-info">
+            <span>(이름)</span>
+            <span>MediCare |</span>
+            <span>사용자ID:</span>
+        </div>
+        <div class="user-info">
+            <span>업무상태</span>
+            <button class="btn-logout">로그아웃</button>
+        </div>
+        <div class="action-buttons">
+            <button class="time-in">출근</button>
+            <button class="time-out">퇴근</button>
+        </div>
+    </div>
+
+    <!-- 네비게이션 -->
+    <nav class="nav-tabs">
+        <ul class="tab-list">
+            <li class="tab-item"><a th:href="@{/patients}">환자 등록/수정</a></li>
+            <li class="tab-item"><a th:href="@{/receptions}">접수</a></li>
+            <li class="tab-item active"><a th:href="@{/reservations}">예약 받기</a></li>
+            <li class="tab-item"><a href="#">수납</a></li>
+            <li class="tab-item"><a href="#">검사/처치 신청</a></li>
+            <li class="tab-item"><a href="#">상담내역 조회</a></li>
+        </ul>
+    </nav>
+
+    <div class="sub-menu">예약</div>
+
+    <div class="content-area">
+        <div class="layout-main">
+            <!-- 왼쪽: 달력 + 검색 -->
+            <section class="card">
+                <div class="card-header">달력</div>
+                <div class="calendar-inner">
+                    <div class="calendar-month-nav">
+                        <span class="calendar-arrow"
+                              th:onclick="|location.href='@{/reservations(date=${prevMonth}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0})}'|">&lt;</span>
+                        <span th:text="${calendarTitle != null ? calendarTitle : 'YYYY-MM'}">2025-12</span>
+                        <span class="calendar-arrow"
+                              th:onclick="|location.href='@{/reservations(date=${nextMonth}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0})}'|">&gt;</span>
+                    </div>
+
+                    <div class="calendar-grid">
+                        <div class="calendar-day-header">Sun</div>
+                        <div class="calendar-day-header">Mon</div>
+                        <div class="calendar-day-header">Tue</div>
+                        <div class="calendar-day-header">Wed</div>
+                        <div class="calendar-day-header">Thu</div>
+                        <div class="calendar-day-header">Fri</div>
+                        <div class="calendar-day-header">Sat</div>
+
+                        <div th:each="d : ${dates}"
+                             th:text="${#temporals.format(d, 'd')}"
+                             th:class="${#temporals.format(d, 'yyyy-MM-dd') == selectedDate ? 'calendar-date selected' : 'calendar-date'}"
+                             th:onclick="|location.href='@{/reservations(date=${#temporals.format(d, 'yyyy-MM-dd')}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0})}'|">1</div>
+                    </div>
+                </div>
+
+                <div class="search-panel">
+                    <form th:action="@{/reservations}" method="get">
+                        <input type="hidden" name="patientId" th:value="${selectedPatient != null ? selectedPatient.patient_id : ''}">
+                        <input type="hidden" name="date" th:value="${selectedDate != null ? selectedDate : ''}">
+                        <div class="search-row">
+                            <label>진료과</label>
+                            <select name="departmentCode">
+                                <option value="">전체</option>
+                                <option th:each="d : ${departments}"
+                                        th:value="${d.department_code}"
+                                        th:text="${d.name}">정형외과</option>
+                            </select>
+                        </div>
+                        <div class="search-row">
+                            <label>진료의사</label>
+                            <select name="userId">
+                                <option value="">전체</option>
+                                <option th:each="doc : ${doctors}"
+                                        th:value="${doc.user_id}"
+                                        th:text="${doc.name}">의사</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-search">검색</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 가운데: 시간대별 예약표 -->
+            <section class="card schedule-card">
+                <div class="card-header">
+                    <span th:text="${selectedDate != null ? selectedDate : '예약 현황'}">2025-12-10</span>
+                </div>
+                <div class="card-body">
+                    <table class="schedule-table">
+                        <thead>
+                        <tr>
+                            <th>시간</th>
+                            <th>환자명</th>
+                            <th>진료과</th>
+                            <th>의사</th>
+                            <th>상태</th>
+                            <th>작업</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="slot : ${dailySlots}">
+                            <td th:text="${slot.time}">09:00</td>
+                            <td th:text="${slot.patientName}">-</td>
+                            <td th:text="${slot.departmentName}">정형외과</td>
+                            <td th:text="${slot.doctorName}">의사</td>
+                            <td th:text="${slot.statusName}">예약가능</td>
+                            <td>
+                                <button class="btn-xs btn-xs-primary"
+                                        th:if="${slot.reservable}"
+                                        th:onclick="|location.href='@{/reservations(new=true, date=${selectedDate}, time=${slot.time}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0})}'|">
+                                    예약하기
+                                </button>
+                                <button class="btn-xs"
+                                        th:if="${!slot.reservable}"
+                                        th:onclick="|location.href='@{/reservations(edit=${slot.reservationId}, date=${selectedDate}, time=${slot.time}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0})}'|">
+                                    변경하기
+                                </button>
+                            </td>
+                        </tr>
+                        <tr th:if="${dailySlots == null or #lists.isEmpty(dailySlots)}">
+                            <td colspan="6">해당 일자의 예약 정보가 없습니다.</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- 오른쪽: 환자 정보 + 예약 입력 -->
+            <section class="right-panel">
+                <section class="card">
+                    <div class="card-header">환자 정보</div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <label>환자ID</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.patient_id : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>환자명</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.name : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>생년월일</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.birth_date : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>연락처</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.phone : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>주소1</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.address1 : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>주소2</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.address2 : ''}">
+                        </div>
+                        <div class="info-row">
+                            <label>이메일</label>
+                            <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.email : ''}">
+                        </div>
+                    </div>
+                </section>
+
+                <section class="card">
+                    <div class="card-header">진료 예약 정보</div>
+                    <div class="card-body">
+                        <form th:action="@{/reservations/save}" method="post">
+                            <input type="hidden" name="reservationId"
+                                   th:value="${selectedReservation != null ? selectedReservation.reservation_id : ''}"/>
+                            <input type="hidden" name="patientId"
+                                   th:value="${selectedPatient != null ? selectedPatient.patient_id : ''}"/>
+
+                            <div class="reserve-row">
+                                <label>진료일자</label>
+                                <input type="text" name="date" placeholder="YYYY-MM-DD"
+                                       th:value="${selectedDate != null ? selectedDate :
+                                                 (selectedReservation != null ? #temporals.format(selectedReservation.start_time, 'yyyy-MM-dd') : '')}"/>
+                            </div>
+
+                            <div class="reserve-row">
+                                <label>진료과</label>
+                                <select name="departmentCode" required>
+                                    <option value="">선택</option>
+                                    <option th:each="d : ${departments}"
+                                            th:value="${d.department_code}"
+                                            th:text="${d.name}"
+                                            th:selected="${selectedReservation != null and selectedReservation.department != null and selectedReservation.department.department_code == d.department_code}">
+                                        정형외과
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="reserve-row">
+                                <label>진료의사</label>
+                                <select name="userId" required>
+                                    <option value="">선택</option>
+                                    <option th:each="doc : ${doctors}"
+                                            th:value="${doc.user_id}"
+                                            th:text="${doc.name}"
+                                            th:selected="${selectedReservation != null and selectedReservation.user != null and selectedReservation.user.user_id == doc.user_id}">
+                                        의사
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="reserve-row">
+                                <label>시작시간</label>
+                                <input type="text" name="startTime" placeholder="HH:mm (예: 09:00)"
+                                       th:value="${selectedTime != null ? selectedTime :
+                                                 (selectedReservation != null ? #temporals.format(selectedReservation.start_time, 'HH:mm') : '')}"/>
+                            </div>
+
+                            <div class="reserve-row">
+                                <label>종료시간</label>
+                                <input type="text" name="endTime" placeholder="HH:mm (선택)"
+                                       th:value="${selectedReservation != null && selectedReservation.end_time != null ?
+                                                 #temporals.format(selectedReservation.end_time, 'HH:mm') : ''}"/>
+                            </div>
+
+                            <input type="hidden" name="statusCode"
+                                   th:value="${selectedReservation != null ?
+                                             selectedReservation.status_code.status_code : 'RESERVED'}"/>
+
+                            <div class="reserve-row">
+                                <label>메모</label>
+                                <input type="text" name="note"
+                                       th:value="${selectedReservation != null ? selectedReservation.note : ''}"
+                                       placeholder="기타 메모"/>
+                            </div>
+
+                            <button type="submit" class="btn-reserve"
+                                    th:text="${selectedReservation != null ? '예약 수정' : '예약'}">예약</button>
+                        </form>
+                    </div>
+                </section>
+            </section>
+        </div>
+    </div>
+</div>
+</body>
+</html>

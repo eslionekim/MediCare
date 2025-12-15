@@ -198,8 +198,8 @@
 
                             <div class="form-row">
                                 <label>진료구분</label>
-                                <select name="visitType">
-                                    <option th:each="t : ${visitTypes}" th:value="${t}" th:text="${t}"></option>
+                                <select name="visit_type">
+                                    <option th:each="t : ${visit_types}" th:value="${t}" th:text="${t}"></option>
                                 </select>
                             </div>
 
@@ -212,7 +212,12 @@
 
                             <div class="form-row">
                                 <label>보험코드</label>
-                                <input type="text" name="insuranceCode" placeholder="보험/보훈/산재/자보 코드" />
+                                <select name="insurance_code">
+                                    <option value="">선택</option>
+                                    <option th:each="ic : ${insuranceCodes}"
+                                            th:value="${ic.insurance_code}"
+                                            th:text="${ic.name}"></option>
+                                </select>
                             </div>
 
                             <div class="form-row">
