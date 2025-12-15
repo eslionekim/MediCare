@@ -6,6 +6,11 @@
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>/* 전체 리셋 및 기본 배경 */
+		
+	html, body {
+		height: 100%;
+		overflow: hidden;        /* 화면 전체 스크롤 막기 */
+	}
 	body {
 	    margin: 0;
 	    padding: 0;
@@ -123,7 +128,8 @@
 	
 	/* 컨텐츠 영역 (전체 배경색 확인용) */
 	.content-area {
-	    min-height: 500px; /* 임시 높이 */
+		height: calc(100vh - 130px);  /* 화면 높이에서 헤더 뺀 값 */
+		overflow: hidden;              /* 밖으로 넘치는 건 숨김 */
 	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
 	}
 	
@@ -135,11 +141,11 @@
 	}
 	
 	table { 
-	    width: 90%; /* 너비 */
+	    width: 100%; /* 너비 */
 	    border-collapse: collapse; /* 표 한줄로 합치기 */
-	    font-size: 14px;
+	    font-size: 13px;
 	    background-color: white;
-		
+		margin:5px 0px;
 	 }
 
 	 th, td {
@@ -155,29 +161,30 @@
 		 color: rgb(31, 31, 31);
 	 }
 
-	 tr:nth-child(even) {
-	     background-color: #ffffffff;
-	 }
 
-	 /* 접수 시작 */
-	 .first {
-		 display: flex;             /* flex로 변환 */
-		 justify-content: center;   /* 가로 중앙 */
-		 align-items: center;       /* 세로 중앙 */
-		 width: 100%;               /* 가로 꽉 */
-		 height: 100%;              /* 세로 꽉 */
-		 box-sizing: border-box;    /* 패딩 포함 계산 */
-		 border: none;
-		 background-color: #00FF08;
-		 color: black;
-		 cursor: pointer;
-		 font-size: 14px;
-		 font-weight: 300; /* 글씨 굵기 보통으로 */
-		 text-decoration: none;
+	  .container {
+	      display: grid;
+	      grid-template-columns: 1fr 1fr; /* 왼쪽, 오른쪽 */
+	      gap: 5px;
+	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
+	      padding: 5px;
+	      box-sizing: border-box;
 	  }
-
+	
+	  .schedule{
+	  	  grid-column:1/2 ;
+	  }
+	  .vacation{
+	  	  grid-column:2/3 ;
+	  }
 	
 	</style>
+	<!-- FullCalendar CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+
+	<!-- FullCalendar JS -->
+	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+
 </head>
 <body>
     <header class="main-header">
@@ -202,93 +209,131 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-                <li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
+				<li class="tab-item"><a href="#">휴가 신청</a></li>
+				<li class="tab-item active"><a href="#">스케줄 조회</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
 		
 		<!-- 하단 헤더-->
         <div class="sub-menu">
-            <span>금일 진료 리스트</span>
+            <span>스케줄 조회</span>
         </div>
 		<!-- 하단 헤더 끝-->
     </header>
 
 	<!-- 콘텐츠 영역 시작-->
-    <div class="content-area">
-		<!-- 상태 필터링 -->
-		<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
-		    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
-		        <option value="">전체 보기</option>
-		        <option value="대기 중">대기 중</option>
-		        <option value="진료중">진료중</option>
-		        <option value="진료종료">진료종료</option>
-		        <option value="수납/청구완료">수납/청구완료</option>
-		    </select>
+	<div class="content-area container">
+		<!-- 1. 스케줄 -->
+		<div class="schedule">
+			<div id="calendar"></div>
 		</div>
-
-		<!-- 금일 진료 리스트 -->
-		<table id="table" border="1">
-			<thead>
-			    <tr>
-			        <th>접수시간</th>
-			        <th>환자ID</th>
-			        <th>환자명</th>
-			        <th>성별</th>
-			        <th>생년월일</th>
-			        <th>진료구분</th>
-					<th>최종내원일</th>
-					<th>선행 검사 상태</th>
-					<th>내원사유</th>
-			        <th>상태</th>
-			    </tr>
-			</thead>
-
-			<tbody>
-				<tr th:if="${todayList.size() == 0}">
-				        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
-				    </tr>
-
-				    <tr th:each="v : ${todayList}">
-						<td th:text="${v.visit_time}"></td>
-				        <td th:text="${v.patient_id}"></td>
-				        <td th:text="${v.name}"></td>
-				        <td th:text="${v.gender}"></td>
-				        <td th:text="${v.birth_date}"></td>
-						<td th:text="${v.visit_type}"></td>
-				        <!-- 최종내원일 없으면 ‘초진’ -->
-				        <td th:text="${v.last_visit != null ? v.last_visit : '초진'}"></td>
-				        <td>없음</td>
-						<td th:text="${v.note}"></td>
-						<td>  
-							<a th:if="${v.first}" class="first" 
-							       th:href="@{/doctor/chartWrite(visit_id=${v.visit_id},patient_id=${v.patient_id})}">
-							       진료 시작</a>  <!--차트 작성 페이지 연결 ->visitId,patientId -->
-						    <span th:if="${!v.first}" th:text="${v.status_name}"></span>
-						</td>
-				    </tr>
-					
-					<!-- 빈 행을 채워 최소 10행으로 유지 -->
-					    <tr th:if="${todayList.size() >0 }" 
-					        th:each="i : ${#numbers.sequence(todayList.size() + 1, 20)}">
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					</tr>
-			</tbody>
-		</table>
-
-    </div>
+		
+		<!-- 2. 휴가 -->
+		<div class="vacation" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; border: none;">
+			    <table border="1" width="100%">
+			        <thead>
+			            <tr>
+			                <th>분류</th>
+			                <th>일시</th>
+			                <th>승인여부</th>
+			                <th>취소</th>
+			            </tr>
+			        </thead>
+			        <tbody id="vacationBody"></tbody>
+			    </table>
+		</div>
+	</div>
 	<!-- 콘텐츠 영역 끝-->
+	
+	<script>
+	document.addEventListener('DOMContentLoaded', function () {
+	
+	    // -------------------
+	    // 1. FullCalendar
+	    // -------------------
+	    const calendarEl = document.getElementById('calendar');
+	
+	    const calendar = new FullCalendar.Calendar(calendarEl, {
+	        initialView: 'dayGridMonth',
+	        locale: 'ko',
+	        height: 'auto',
+	
+	        headerToolbar: {
+	            left: 'prev,next today',
+	            center: 'title',
+	            right: ''
+	        },
+	
+	        datesSet: function (info) {
+	            const currentDate = info.view.currentStart;
+	            const year = currentDate.getFullYear();
+	            const month = currentDate.getMonth() + 1;
+	
+	            console.log('조회 기준:', year, month);
+	
+	            // 서버에서 근무 스케줄 불러오기
+	            fetch(`/doctor/mySchedule/events?year=${year}&month=${month}`)
+	                .then(res => res.json())
+	                .then(data => {
+	                    calendar.removeAllEvents();
+	                    calendar.addEventSource(data);
+	                });
+	        }
+	    });
+	
+	    calendar.render();
+	
+	
+	    // -------------------
+	    // 2. 휴가 리스트
+	    // -------------------
+	    function loadVacations() {
+	
+	        fetch('/doctor/mySchedule/vacations')
+	            .then(res => res.json())
+	            .then(data => {
+	                const tbody = document.getElementById('vacationBody');
+	                tbody.innerHTML = '';
+	
+					data.forEach(v => {
+					    const tr = document.createElement('tr');
+					    tr.innerHTML = `
+					        <td>${v.typeName}</td>
+					        <td>${v.startDate} ~ ${v.endDate}</td>
+					        <td>${v.statusName}</td>
+					        <td>
+					            ${v.statusCode === 'VAC_APPROVED'
+					                ? `<button onclick="cancelVacation(${v.vacationId})">취소</button>`
+					                : '-'}
+					        </td>
+					    `;
+					    tbody.appendChild(tr);
+					});
+
+	            });
+	    }
+	
+	    loadVacations();
+	
+	    window.cancelVacation = function(id) {
+	        if (!confirm('휴가 취소 요청하시겠습니까?')) return;
+	
+	        fetch(`/doctor/mySchedule/vacation/cancel/${id}`, {
+	            method: 'POST'
+	        }).then(() => {
+	            alert('취소 요청되었습니다.');
+	            loadVacations(); // 리스트 다시 갱신
+	        });
+	    };
+	
+	});
+</script>
+
+
+
 </body>
 </html>
+

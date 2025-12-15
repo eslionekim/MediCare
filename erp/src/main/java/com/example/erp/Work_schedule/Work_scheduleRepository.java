@@ -11,7 +11,29 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Long> {
 
+	// 인사 -> 스케줄 부여 by 은서
     @Query("SELECT w FROM Work_schedule w WHERE w.user_account.user_id = :user_id AND w.work_date BETWEEN :start AND :end")
     List<Work_schedule> findByUserAndMonth(@Param("user_id") String user_id,@Param("start") LocalDate start,@Param("end") LocalDate end);
+
+    // 의사 -> 스케줄 조회 by 은서
+    @Query("""
+    	    SELECT new com.example.erp.Work_schedule.Work_scheduleDTO$WorkTypeItem(
+    	        ws.work_date,
+    	        wt.work_type_code,
+    	        wt.work_name
+    	    )
+    	    FROM Work_schedule ws
+    	    JOIN ws.work_type wt
+    	    WHERE ws.user_account.user_id = :userId
+    	      AND YEAR(ws.work_date) = :year
+    	      AND MONTH(ws.work_date) = :month
+    	""")
+    	List<Work_scheduleDTO.WorkTypeItem> findDoctorMonthlySchedule(
+    	        @Param("userId") String userId,
+    	        @Param("year") int year,
+    	        @Param("month") int month
+    	);
+
+
 }
 

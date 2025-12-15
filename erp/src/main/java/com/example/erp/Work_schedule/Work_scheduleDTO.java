@@ -3,8 +3,14 @@ package com.example.erp.Work_schedule;
 import java.time.LocalDate;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Getter
+@Setter
 public class Work_scheduleDTO {
 
 	@Data
@@ -22,10 +28,14 @@ public class Work_scheduleDTO {
 
 	 // 여기서 WorkType용 DTO 추가
     @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class WorkTypeItem {
+    	private LocalDate workDate;
         private String workTypeCode;
         private String workName;
 
+        
         public WorkTypeItem(String workTypeCode, String workName) {
             this.workTypeCode = workTypeCode;
             this.workName = workName;
