@@ -178,6 +178,10 @@
 
 	
 	</style>
+	
+	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+	
 </head>
 <body>
     <header class="main-header">
@@ -186,7 +190,9 @@
             <div class="user-info">
                 <span>(아이콘)</span>
                 <span>MediCare |</span>
-                <span>사용자ID: </span>
+				<span>사용자ID:<span>
+					<span id="user_id" th:text="${username}"></span>
+	
             </div>
             <div class="user-info">
                 <span>진료과 ㅇㅇㅇ</span>
@@ -204,7 +210,7 @@
             <ul class="tab-list">
                 <li class="tab-item"><a href="">직원 스케줄 조회</a></li>
                 <li class="tab-item active"><a href="">휴가 신청 리스트</a></li>
-                <li class="tab-item"><a href="#">스케줄 부여</a></li>
+                <li class="tab-item"><a th:href="@{/hr/schedule}">스케줄 부여</a></li>
                 <li class="tab-item"><a href="#">근태 현황</a></li>
             </ul>
         </nav>
@@ -241,7 +247,7 @@
 			        <th>직원명</th>
 			        <th>진료과</th>
 					<th>사용 기간</th>
-					<th>선행 검사 상태</th>
+					<th>사유</th>
 			        <th>선택</th>
 			    </tr>
 			</thead>
@@ -396,6 +402,66 @@
 	        }
 	    });
 	}
+	</script>
+	<script src="/js/notify.js"></script>
+	<script>
+		// 1. Notification 권한 요청
+		function requestNotificationPermission() {
+		    return new Promise((resolve, reject) => {
+		        if (Notification.permission === "granted") resolve();
+		        else if (Notification.permission !== "denied") {
+		            Notification.requestPermission().then(permission => {
+		                if (permission === "granted") resolve();
+		                else reject("알림 권한 거부됨");
+		            });
+		        } else {
+		            reject("알림 권한 거부됨");
+		        }
+		    });
+		}
+
+		// 2. 웹소켓 연결 및 구독
+		function connectWebSocket(user_id) {
+		    const socket = new SockJS('/ws');
+		    const stompClient = Stomp.over(socket);
+		    stompClient.debug = null;
+
+		    stompClient.connect({}, function() {
+		        console.log("STOMP 연결 성공");
+
+		        // HR 전체 알림 (권한 필요 없음, alert로 표시)
+		        stompClient.subscribe('/topic/hr', function(msg) {
+					const data = JSON.parse(msg.body);  // JSON 파싱
+
+					alert("📢 " + data.title + "\n" + data.content);
+					location.reload();
+		        });
+
+		        // 1:1 직원 알림 (Notification 사용)
+		        stompClient.subscribe('/user/queue/notify/' + user_id, function(msg) {
+		            console.log('1:1 메시지 수신:', msg.body);
+		            const data = JSON.parse(msg.body);
+		            if (Notification.permission === "granted") {
+		                new Notification(data.title, { body: data.content });
+		            } else {
+		                console.warn("알림 권한 없음");
+		            }
+		        });
+		    });
+		}
+
+		// 3. DOMContentLoaded에서 실행
+		document.addEventListener("DOMContentLoaded", function() {
+		    const user_id = document.getElementById("user_id").innerText.trim();
+
+		    // HR 알림은 권한과 상관없이 연결
+		    connectWebSocket(user_id);
+
+		    // 1:1 알림을 위해 Notification 권한 요청
+		    requestNotificationPermission().catch(err => console.warn(err));
+		});
+
+
 	</script>
 </body>
 </html>

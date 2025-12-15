@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>/* 전체 리셋 및 기본 배경 */
+	body {
+	    margin: 0;
+	    padding: 0;
+	    font-family: 'Inter', '맑은 고딕', sans-serif;
+	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	
+	}
+	
+	
+	/* 상단 헤더 배경 및 레이아웃 */
+	.top-bar {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    padding: 5px 15px;
+	    background-color: #ffffff; /* 흰색 배경 */
+	    font-size: 14px;
+	}
+	
+	/* 상단 헤더 텍스트 스타일 */
+	.user-info {
+	    color: #555;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 배열 */
+	.action-buttons {
+	    display: flex;
+	    gap: 5px;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 공통스타일 */
+	.action-buttons button {
+	    padding: 4px 12px;
+	    border: none;
+	    border-radius: 4px;
+	    cursor: pointer;
+	    font-weight: 500;
+	    font-size: 13px;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 버튼 스타일 */
+	.btn-logout {
+		padding: 4px 12px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		font-size: 13px;
+		color: white;
+	    background-color: #FF4B4B;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 출근 버튼 스타일 */
+	.time-in {
+	    background-color: #879BD5;
+		color:#ffffff;
+	}
+	
+	/* 상단 헤더 -> 퇴근 버튼 스타일 */
+	.time-out {
+	    background-color: #D5DDED;
+	    color: #000;
+	}
+
+	/* 중앙 헤더 -> 카테고리 배치 */
+	.tab-list {
+	    list-style: none; /* 앞에 점 제거*/
+	    margin: 0;
+	    padding: 0;
+	    display: flex; /* 가로 나열*/
+	}
+	
+	/* 중앙 헤더 -> 카테고리 요소 스타일 */
+	.tab-item a {
+	    display: block;
+	    padding: 8px 15px;
+	    text-decoration: none; /* 카테고리 밑줄 제거*/
+	    color: #333; /* 글자 색*/
+	    background-color: transparent; /* 배경색 투명 (nav-tabs의 배경색 사용) */
+	    border: none; /* 경계선 제거 */
+	    font-size: 14px;
+	    font-weight: normal;
+	}
+	
+	/* 2. 중앙 헤더 공통 ⭐ */
+	.nav-tabs {
+		background-color: #D5DDED; /* 이미지의 균일한 하늘색 배경 */
+		padding: 0 10px;
+	}
+	
+	/* 중앙 헤더 -> 카테고리 호버 */
+	.tab-item:hover {
+	    background-color: rgba(255, 255, 255, 0.3); /* 마지막 숫자가 컬러 세기 정도*/
+	}
+	
+	/* 중앙 헤더 -> 선택된 카테고리 스타일 */
+	.tab-item.active a {
+	    color: #333; /* 텍스트 색상은 검은색 유지 (사진처럼) */
+	    font-weight: 550;
+	    /* 하단에 진한 파란색 선으로 강조 */
+	}
+	
+	
+	/* 3. 하단 헤더  */
+	.sub-menu {
+	    background-color: #BACCFF; /* 흰색 배경 */
+	    padding: 5px 15px; /* 패딩을 줄여서 메뉴와 붙은 느낌 */
+	    font-size: 14px;
+	    color: #555;
+		font-weight: 530;
+	    /* 이미지처럼 '금일 진료 리스트' 텍스트를 진하게 표현 */
+	}
+	
+	/* 컨텐츠 영역 (전체 배경색 확인용) */
+	.content-area {
+	    min-height: 500px; /* 임시 높이 */
+	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	}
+	
+	/* 금일 진료 리스트 */
+	#table{ /* div 영역 및 레이아웃 */
+		margin:5px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	table { 
+	    width: 90%; /* 너비 */
+	    border-collapse: collapse; /* 표 한줄로 합치기 */
+	    font-size: 14px;
+	    background-color: white;
+		
+	 }
+
+	 th, td {
+	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+	     padding: 0;
+		 height: 25px; /* 원하는 셀 높이 */
+	     text-align: center; /* 텍스트 중앙 */
+	 }
+
+	 th {
+	     background-color: #879BD5; 
+		 font-weight: normal; /* 글씨 굵기 보통으로 */
+		 color: rgb(31, 31, 31);
+	 }
+
+	 tr:nth-child(even) {
+	     background-color: #ffffffff;
+	 }
+
+	 /* 접수 시작 */
+	 .first {
+		 display: flex;             /* flex로 변환 */
+		 justify-content: center;   /* 가로 중앙 */
+		 align-items: center;       /* 세로 중앙 */
+		 width: 100%;               /* 가로 꽉 */
+		 height: 100%;              /* 세로 꽉 */
+		 box-sizing: border-box;    /* 패딩 포함 계산 */
+		 border: none;
+		 background-color: #00FF08;
+		 color: black;
+		 cursor: pointer;
+		 font-size: 14px;
+		 font-weight: 300; /* 글씨 굵기 보통으로 */
+		 text-decoration: none;
+	  }
+
+	  .container {
+	  	      display: grid;
+	  	      grid-template-columns: 1fr 1fr; /* 왼쪽, 오른쪽 */
+	  	      gap: 5px;
+	  	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
+	  	      padding: 5px;
+	  	      box-sizing: border-box;
+	  }
+	  
+	  .user_list{
+	  		grid-column:1/2 ;
+	  }
+		
+	  .schedule{
+			grid-column:2/3 ;
+	  }
+	  
+	  /* 날짜 숫자 스타일 
+	  .fc-daygrid-day-number {
+	      font-size: 12px;
+	      color: #5E77B4;
+	      font-weight: 500;
+	  }
+
+	  // 날짜 뒤에 붙는 '일' 제거 
+	  .fc-daygrid-day-number::after {
+	      content: '';
+	  }
+	  
+	  .work-select {
+		pointer-events: auto;
+	    position: relative;
+	    z-index: 9999;       
+	    margin-top: 18px;     
+	    font-size: 11px;
+	    width: 90%;
+	  }
+
+	  .fc-daygrid-day-events {
+	    z-index: 1;
+		pointer-events: none;
+	  }
+
+	  .fc-daygrid-day-frame {
+	    overflow: visible !important; // 드롭다운 잘림 방지 
+	  }*/
+	  
+	  #calendarTable td {
+	      width: 80px;
+	      height: 60px;
+	      vertical-align: top;
+	      text-align: left;
+	      padding: 2px;
+	  }
+	  .work-select {
+	      width: 100%;
+	      font-size: 11px;
+	      margin-top: 2px;
+	  }
+	</style>
+	<!-- FullCalendar -->
+	
+</head>
+<body>
+    <header class="main-header">
+		<!-- 상단 헤더 -->
+        <div class="top-bar">
+            <div class="user-info">
+                <span>(아이콘)</span>
+                <span>MediCare |</span>
+				<span>사용자ID:<span>
+					<span id="user_id" th:text="${username}"></span>
+	
+            </div>
+            <div class="user-info">
+                <span>진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout">로그아웃</button>
+			</div>
+            <div class="action-buttons">
+                <button class="time-in">출근</button>
+                <button class="time-out">퇴근</button>
+            </div>
+        </div>
+		<!-- 상단 헤더 끝-->
+		
+		<!-- 중앙 헤더-->
+        <nav class="nav-tabs">
+            <ul class="tab-list">
+                <li class="tab-item"><a href="">직원 스케줄 조회</a></li>
+                <li class="tab-item"><a href="">휴가 신청 리스트</a></li>
+                <li class="tab-item active"><a href="#">스케줄 부여</a></li>
+                <li class="tab-item"><a href="#">근태 현황</a></li>
+            </ul>
+        </nav>
+		<!-- 중앙 헤더 끝-->
+		
+		<!-- 하단 헤더-->
+        <div class="sub-menu">
+            <span>휴가 신청 리스트</span>
+        </div>
+		<!-- 하단 헤더 끝-->
+    </header>
+
+	<!-- 콘텐츠 영역 시작-->
+    <div class="content-area">
+		<div class="container">
+		<!-- 상태 필터링 -->
+			<div class="user_list">
+				<div> <!-- 검색창 -->
+					<form method="get" action="/hr/schedule">
+					  <label>
+					    년도<input type="number" name="year" th:value="${year}" min="2000" max="2099">
+					  </label>
+
+					  <label>
+					    월<input type="number" name="month" th:value="${month}" min="1" max="12">
+					  </label>
+
+					  <button type="submit">조회</button>
+					</form>
+				</div>
+				
+				<div> <!-- 리스트 -->
+				<table id="table" border="1">
+					<thead>
+					    <tr>
+					        <th>진료과</th>
+					        <th>직원ID</th>
+					        <th>직원명</th>
+					        <th>상태</th>
+					        <th>선택</th>
+					    </tr>
+					</thead>
+		
+					<tbody>
+						<tr th:if="${userWithFlag.size() == 0}">
+						        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
+						    </tr>
+		
+						    <tr th:each="u : ${userWithFlag}">
+								<td th:text="${u.user.staff_profile[0].department.name}"></td>
+								<td th:text="${u.user.user_id}"></td>
+								<td th:text="${u.user.name}"></td>
+								<!-- 상태: 1일 스케줄 있으면 '부여' -->
+								<td th:text="${u.hasScheduleOnFirst ? '부여' : '미부여'}"></td>
+								<td><button class="selectUserBtn"
+								    th:attr="data-user-id=${u.user.user_id}, data-department-code=${u.user.staff_profile[0].department.department_code}">
+								    선택
+								</button>
+								</td>
+						    </tr>
+							
+							<!-- 빈 행을 채워 최소 10행으로 유지 -->
+							    <tr th:if="${userWithFlag.size() >0 }" 
+							        th:each="i : ${#numbers.sequence(userWithFlag.size() + 1, 20)}">
+							        <td>&nbsp;</td>
+							        <td>&nbsp;</td>
+							        <td>&nbsp;</td>
+							        <td>&nbsp;</td>
+							        <td>&nbsp;</td>
+							</tr>
+					</tbody>
+				</table>
+				</div> 
+			</div>
+		
+		<!-- 달력 -->
+		<div class="schedule">
+		    <div id="empty">선택한 직원이 없습니다</div>
+		    <table id="calendarTable" border="1" style="display:none; border-collapse: collapse;">
+		        <thead>
+		            <tr>
+		                <th>일</th><th>월</th><th>화</th><th>수</th><th>목</th><th>금</th><th>토</th>
+		            </tr>
+		        </thead>
+		        <tbody></tbody>
+		    </table>
+		    <button id="saveBtn" style="display:none;" disabled>저장</button>
+		</div>
+	<!-- 콘텐츠 영역 끝-->
+	<script th:inline="javascript">
+    const year = [[${year}]];   // 예: 2025
+    const month = [[${month}]]; // 예: 12
+
+    let selectedUserId = null;
+    let selectedDepartmentCode = null;
+    let workTypes = [];
+    let existingSchedules = []; // ✅ 기존 스케줄 저장용
+
+    /* 직원 선택 버튼 클릭 */
+    document.querySelectorAll('.selectUserBtn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            selectedUserId = btn.dataset.userId;
+            selectedDepartmentCode = btn.dataset.departmentCode;
+
+            console.log("선택한 직원 userId =", selectedUserId);
+            console.log("선택한 부서 departmentCode =", selectedDepartmentCode);
+
+            // 테이블 먼저 표시
+            document.getElementById('calendarTable').style.display = 'table';
+            document.getElementById('empty').style.display = 'none';
+
+			// 저장 버튼 표시
+			document.getElementById('saveBtn').style.display = 'inline-block';
+			
+            // 근무 유형 로딩
+            await loadWorkTypes();
+            // 기존 스케줄 로딩
+            await loadExistingSchedules();
+            // 달력 렌더
+            renderCalendar(year, month);
+        });
+    });
+
+    /* 근무 유형 조회 */
+    async function loadWorkTypes() {
+        try {
+            const res = await fetch(`/work-types?user_id=${selectedUserId}`);
+            workTypes = await res.json();
+            console.log("받은 workTypes:", workTypes);
+        } catch (err) {
+            console.error("근무 유형 조회 실패", err);
+            workTypes = [];
+        }
+    }
+
+    /* 기존 스케줄 조회 */
+    async function loadExistingSchedules() {
+        try {
+            const res = await fetch(`/work-schedule/${selectedUserId}/${year}/${month}`);
+            existingSchedules = await res.json();
+            console.log("받은 기존 스케줄:", existingSchedules);
+        } catch (err) {
+            console.error("기존 스케줄 조회 실패", err);
+            existingSchedules = [];
+        }
+    }
+
+    /* 달력 생성 */
+    function renderCalendar(year, month) {
+        const tbody = document.querySelector('#calendarTable tbody');
+        tbody.innerHTML = '';
+
+        const firstDay = new Date(year, month-1, 1);
+        const lastDay = new Date(year, month, 0);
+        const startDay = firstDay.getDay();
+        const totalDays = lastDay.getDate();
+
+        let row = document.createElement('tr');
+        for (let i=0;i<startDay;i++){
+            const td = document.createElement('td');
+            row.appendChild(td);
+        }
+
+        for (let day=1; day<=totalDays; day++) {
+            const td = document.createElement('td');
+            td.innerHTML = `<div>${day}</div>`;
+            const select = document.createElement('select');
+            select.className = 'work-select';
+            const dateStr = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            select.dataset.date = dateStr;
+            select.innerHTML = `<option value="">근무 선택</option>`;
+
+            workTypes.forEach(wt => {
+                const opt = document.createElement('option');
+                opt.value = wt.workTypeCode;
+                opt.textContent = wt.workName;
+
+                // ✅ 기존 스케줄이면 selected
+                const existing = existingSchedules.find(s => s.workDate === dateStr);
+                if (existing && existing.workTypeCode === wt.workTypeCode) {
+                    opt.selected = true;
+                }
+
+                select.appendChild(opt);
+            });
+			
+			checkAllSelected();
+
+            select.addEventListener('change', checkAllSelected);
+            td.appendChild(select);
+            row.appendChild(td);
+
+            if ((day + startDay) % 7 === 0 || day === totalDays) {
+                if(day === totalDays){
+                    const remaining = 7 - ((day + startDay) % 7);
+                    for(let i=0;i<remaining;i++){
+                        const emptyTd = document.createElement('td');
+                        row.appendChild(emptyTd);
+                    }
+                }
+                tbody.appendChild(row);
+                row = document.createElement('tr');
+            }
+        }
+    }
+
+    /* 모든 날짜 선택 여부 체크 */
+	function checkAllSelected() {
+	    const selects = document.querySelectorAll('.work-select');
+	    const saveBtn = document.getElementById('saveBtn');
+
+	    // 기존 스케줄 존재 여부 (한 달이라도 있으면 수정)
+	    const isEditMode = existingSchedules.length > 0;
+
+	    if (isEditMode) {
+	        // ✅ 수정 모드
+	        saveBtn.textContent = '수정';
+	        saveBtn.disabled = false;
+	        return;
+	    }
+
+	    // ✅ 저장 모드
+	    const allSelected = Array.from(selects).every(s => s.value !== '');
+	    saveBtn.textContent = '저장';
+	    saveBtn.disabled = !allSelected;
+	}
+
+
+    /* 저장 버튼 클릭 */
+    document.getElementById('saveBtn').addEventListener('click', () => {
+        const data = [];
+        document.querySelectorAll('.work-select').forEach(select => {
+            data.push({
+                workDate: select.dataset.date,
+                workTypeCode: select.value
+            });
+        });
+
+        fetch('/work-schedule/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: selectedUserId,
+                department_code: selectedDepartmentCode,
+                schedules: data
+            })
+        })			
+		.then(async () => {
+			alert('스케줄이 저장되었습니다.');
+
+			    // 🔥 서버에서 다시 상태 불러오기
+			    await loadExistingSchedules();
+
+			    // 🔥 캘린더 다시 그림 (부여 상태 반영)
+			    renderCalendar(year, month);
+
+			    // 🔥 버튼 상태 갱신
+			    checkAllSelected();
+		});
+});
+</script>
+
+
+
+</body>
+</html>

@@ -30,3 +30,5 @@ else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"
      redirectURL += "/patients";
 }
 
+## 25.12.14 김은서 : [인사] 스케줄 부여
+http://localhost:8080/hr/schedule

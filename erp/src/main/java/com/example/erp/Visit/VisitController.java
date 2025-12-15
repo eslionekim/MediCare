@@ -223,13 +223,13 @@ public class VisitController {
         // 접수 등록
         @PostMapping("/receptions/save")
         public String saveReception(
-                        @RequestParam Long patientId, // 환자 번호
+                        @RequestParam(name = "patientId") Long patientId, // 환자 번호
                         @RequestParam(name = "user_id") String user_id, // 담당 의사 user_id (문자 PK)
-                        @RequestParam String departmentCode, // 진료과 코드 (예: ORTHO)
-                        @RequestParam(name = "visit_type") String visit_type, // first / follow-up
-                        @RequestParam String visitRoute, // walk-in / reservation
-                        @RequestParam(name = "insurance_code") String insuranceCode, // 보험 코드
-                        @RequestParam(required = false) String note,
+                        @RequestParam(name = "departmentCode") String departmentCode, // 진료과 코드 (예: ORTHO)
+                        @RequestParam(name = "visitType") String visitType, // first / follow-up
+                        @RequestParam(name = "visitRoute") String visitRoute, // walk-in / reservation
+                        @RequestParam(name = "insuranceCode", required = false) String insuranceCode, // 보험 코드
+                        @RequestParam(name = "note", required = false) String note,
                         RedirectAttributes redirectAttributes) {
 
                 // 1) 연관 엔티티 조회
