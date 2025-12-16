@@ -136,9 +136,9 @@ public class Work_scheduleController {
     }
 
     // 구현 안됨
-    @PostMapping("/doctor/mySchedule/vacations/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
+    @PostMapping("/doctor/mySchedule/vacation/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
     @ResponseBody
-    public void cancelVacation(@PathVariable Long vacationId) {
+    public void cancelVacation(@PathVariable("vacationId") Long vacationId) {
     	Vacation vacation = vacationRepository.findById(vacationId)
                 .orElseThrow(() -> new RuntimeException("휴가 없음"));
 
@@ -146,6 +146,7 @@ public class Work_scheduleController {
                 .orElseThrow(() -> new RuntimeException("상태코드 없음"));
 
         vacation.setStatus_code(cancelStatus);
+        vacationRepository.save(vacation);
     }
 
 

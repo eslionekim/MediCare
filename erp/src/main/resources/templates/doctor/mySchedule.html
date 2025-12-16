@@ -350,15 +350,16 @@
 	
 	    loadVacations();
 	
-	    window.cancelVacation = function(id) {
+	    window.cancelVacation = function(vacationId) {
 	        if (!confirm('휴가 취소 요청하시겠습니까?')) return;
 	
-	        fetch(`/doctor/mySchedule/vacation/cancel/${id}`, {
-	            method: 'POST'
-	        }).then(() => {
-	            alert('취소 요청되었습니다.');
-	            loadVacations(); // 리스트 다시 갱신
-	        });
+	        fetch(`/doctor/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
+				.then(res => {
+					if (!res.ok) throw new Error();
+					alert('취소 요청되었습니다.');
+					loadVacations();
+	        	})
+				.catch(() => alert('취소 요청 실패'));
 	    };
 	
 	});
