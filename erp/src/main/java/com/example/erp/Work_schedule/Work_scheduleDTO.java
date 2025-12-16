@@ -15,14 +15,14 @@ import lombok.Setter;
 public class Work_scheduleDTO {
 
 	@Data
-	public static class WorkScheduleSaveRequest {
+	public static class WorkScheduleSaveRequest { 
 	    private String user_id;
 	    private String department_code;
 	    private List<ScheduleItem> schedules;
 	}
 
 	@Data
-	public static class ScheduleItem {
+	public static class ScheduleItem { // 인사 -> 스케줄 부여 -> 저장하고 나서 새로고침 by 은서
 	    private LocalDate workDate;
 	    private String workTypeCode;
 	}

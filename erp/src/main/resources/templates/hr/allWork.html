@@ -192,6 +192,10 @@
 	  .calendar{
 		 grid-column: 2/3;
 	  }
+	  
+	  .fc-event-title {  /*캘린더 줄띄어쓰기*/
+  	        white-space: pre-line;
+  	   }
 	</style>
 	
 	<!-- FullCalendar CSS/JS -->
@@ -224,10 +228,10 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-                <li class="tab-item"><a href="">직원 스케줄 조회</a></li>
-                <li class="tab-item"><a href="">휴가 신청 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/hr/schedule}">스케줄 부여</a></li>
-                <li class="tab-item active"><a href="#">근태 현황</a></li>
+				<li class="tab-item"><a th:href="@{/hr/allSchedule}">직원 스케줄 조회</a></li>
+                <li class="tab-item"><a th:href="@{/hr/vacationList}">휴가 신청 리스트</a></li>
+                <li class="tab-item"><a th:href="@{/hr/scheduleAssignment}">스케줄 부여</a></li>
+                <li class="tab-item active"><a th:href="@{/hr/allWork}">근태 현황</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
@@ -243,16 +247,113 @@
     <div class="content-area">
 		<div class="container">
 			<div class="user"> <!-- 직원 영역-->
-				
+				<table class="user-table">
+			        <thead>
+			            <tr>
+			                <th>진료과</th>
+			                <th>직원 ID</th>
+			                <th>직원명</th>
+			                <th>직함</th>
+			                <th>선택</th>
+			            </tr>
+			        </thead>
+
+			        <tbody>
+			            <tr th:each="u : ${user}">
+			                <!-- 진료과명 -->
+			                <td th:text="${u.staff_profile[0].department.name}">
+			                </td>
+
+			                <!-- 직원 ID -->
+			                <td th:text="${u.user_id}"></td>
+
+			                <!-- 직원명 -->
+			                <td th:text="${u.name}"></td>
+
+			                <!-- 직함 (null이면 빈칸) -->
+			                <td th:text="${u.staff_profile[0].position}">
+			                </td>
+
+			                <!-- 선택 버튼 -->
+			                <td>
+			                    <button type="button"
+			                            class="select-user-btn"
+			                            th:data-user-id="${u.user_id}">
+			                        선택
+			                    </button>
+			                </td>
+			            </tr>
+			        </tbody>
+				</table>		
 			</div>
 			
 			<div class="calendar"> <!-- 캘린더 영역-->
-				
+				<div id="calendar-placeholder">직원을 선택해주세요</div>
+				<div id="calendar" style="display:none;"></div>
 			</div>
 		</div>
 	</div>
 	<!-- 콘텐츠 영역 끝-->
-	
+	<script>
+	let calendar;
+	let selectedUserId = null;
+
+	document.addEventListener('DOMContentLoaded', function () {
+
+	    const calendarEl = document.getElementById('calendar');
+
+	    calendar = new FullCalendar.Calendar(calendarEl, {
+	        initialView: 'dayGridMonth',
+	        locale: 'ko',
+	        height: 'auto',
+
+	        headerToolbar: {
+	            left: 'prev,next today',
+	            center: 'title',
+	            right: ''
+	        },
+
+	        // 달 변경될 때마다 호출
+	        datesSet: function (info) {
+
+	            // 직원 선택 안 했으면 조회 안 함
+	            if (!selectedUserId) return;
+
+	            const currentDate = info.view.currentStart;
+	            const year = currentDate.getFullYear();
+	            const month = currentDate.getMonth() + 1;
+
+				fetch(`/hr/allWork/schedule?userId=${selectedUserId}&year=${year}&month=${month}`)
+	                .then(res => res.json())
+	                .then(data => {
+	                    calendar.removeAllEvents();
+	                    calendar.addEventSource(data);
+	                });
+	        }
+	    });
+
+	    calendar.render();
+
+	    // 직원 선택 버튼
+	    document.querySelectorAll('.select-user-btn').forEach(btn => {
+	        btn.addEventListener('click', () => {
+
+	            selectedUserId = btn.dataset.userId;
+
+	            // 안내 문구 제거
+	            document.getElementById('calendar-placeholder')?.remove();
+				
+				// 캘린더 보이기
+				document.getElementById('calendar').style.display = 'block';
+
+	            // 현재 달 기준으로 강제 조회
+	            calendar.gotoDate(calendar.getDate());
+	        });
+	    });
+	});
+	</script>
+
+
 	
 
 

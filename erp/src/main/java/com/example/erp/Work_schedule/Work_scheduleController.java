@@ -55,7 +55,7 @@ public class Work_scheduleController {
     private final Status_codeRepository status_codeRepository;
     private final Work_scheduleService work_scheduleService;
     
-    @GetMapping("/hr/schedule") // 인사 -> 스케줄 부여-> 날짜 by 은서
+    @GetMapping("/hr/scheduleAssignment") // 인사 -> 스케줄 부여-> 날짜 by 은서
     public String getSchedulePage(@RequestParam(value="year",required = false) Integer year,
                                   @RequestParam(value="month",required = false) Integer month,
                                   Model model) {
@@ -322,9 +322,54 @@ public class Work_scheduleController {
 
     // 인사 -> 근태 조회 by 은서
     @GetMapping("/hr/allWork") 
-    public String allWork() {
-		return "hr/allWork";
+    public String allWork(Model model) {
+    	List<User_account> user = user_accountRepository.findAll();
+    	model.addAttribute("user", user);
+    	return "hr/allWork";
     }
+    
+    // 인사 -> 근태 조회 by 은서
+    @GetMapping("/hr/allWork/schedule")
+    @ResponseBody
+    public List<Map<String, Object>> getDoctorScheduleEvents(
+            @RequestParam(value="userId", required=false) String userId,
+            @RequestParam(value="year", required=false) int year,
+            @RequestParam(value="month", required=false) int month
+    ) {
+        List<ScheduleCalendarDTO> list =
+                work_scheduleService.getDoctorMonthlySchedule(userId, year, month);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (ScheduleCalendarDTO item : list) {
+            Map<String, Object> event = new HashMap<>();
+
+            StringBuilder title = new StringBuilder();
+            title.append(item.getWorkName());
+
+            if (item.getStartTime() != null) {
+                title.append("\n출근 ")
+                     .append(item.getStartTime().format(timeFormatter));
+            }
+
+            if (item.getEndTime() != null) {
+                title.append("\n퇴근 ")
+                     .append(item.getEndTime().format(timeFormatter));
+            }
+
+            event.put("title", title.toString());
+            event.put("start", item.getWorkDate().toString());
+            event.put("allDay", true);
+
+            events.add(event);
+        }
+
+        return events;
+    }
+
+
     
     
 }

@@ -14,7 +14,7 @@ import lombok.Setter;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ScheduleCalendarDTO {
+public class ScheduleCalendarDTO { //의사 -> 스케줄 조회 by 은서
 	private LocalDate workDate;
     private String workTypeCode;
     private String workName;
