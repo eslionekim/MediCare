@@ -1,6 +1,7 @@
 package com.example.erp.Work_schedule;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -26,20 +27,6 @@ public class Work_scheduleDTO {
 	    private String workTypeCode;
 	}
 	
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class WorkTypeItem {
-    	private LocalDate workDate;
-        private String workTypeCode;
-        private String workName;
-
-        
-        public WorkTypeItem(String workTypeCode, String workName) {
-            this.workTypeCode = workTypeCode;
-            this.workName = workName;
-        }
-    }
     
     @Data
     @AllArgsConstructor

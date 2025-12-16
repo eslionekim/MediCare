@@ -18,18 +18,21 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
 
     // 의사 -> 스케줄 조회 by 은서
     @Query("""
-    	    SELECT new com.example.erp.Work_schedule.Work_scheduleDTO$WorkTypeItem(
-    	        ws.work_date,
-    	        wt.work_type_code,
-    	        wt.work_name
-    	    )
-    	    FROM Work_schedule ws
-    	    JOIN ws.work_type wt
-    	    WHERE ws.user_account.user_id = :userId
-    	      AND YEAR(ws.work_date) = :year
-    	      AND MONTH(ws.work_date) = :month
+	 SELECT new com.example.erp.Work_schedule.ScheduleCalendarDTO(
+	        ws.work_date,
+	        wt.work_type_code,
+	        wt.work_name,
+	        ws.start_time,
+	        ws.end_time
+	    )
+	    FROM Work_schedule ws
+	    JOIN ws.work_type wt
+	    JOIN ws.user_account u
+	    WHERE u.user_id = :userId
+	      AND YEAR(ws.work_date) = :year
+	      AND MONTH(ws.work_date) = :month
     	""")
-    List<Work_scheduleDTO.WorkTypeItem> findDoctorMonthlySchedule(
+    List<ScheduleCalendarDTO> findDoctorMonthlySchedule(
     	        @Param("userId") String userId,
     	        @Param("year") int year,
     	        @Param("month") int month
