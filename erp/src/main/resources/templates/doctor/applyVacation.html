@@ -182,7 +182,39 @@
 	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 	
+	<script>
+				document.addEventListener('DOMContentLoaded', () => {
 
+				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+				        fetch('/work/time-in', { method: 'POST' })
+				            .then(res =>
+				                res.text().then(msg => {
+				                    if (!res.ok) throw msg;
+				                    alert(msg);
+				                })
+				            )
+				            .catch(msg => alert(msg));
+				    });
+
+					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+
+						fetch('/work/time-out/check')
+						        .then(res =>
+						            res.text().then(msg => {
+						                if (!res.ok) throw msg; // 퇴근 불가능
+
+						                if (!confirm('퇴근하시겠습니까?')) return;
+
+						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+						                    .then(res => res.text())
+						                    .then(msg => alert(msg))
+						                    .catch(() => alert('퇴근 처리 실패'));
+						            })
+						        )
+						        .catch(msg => alert(msg));
+					});
+				});
+	</script>
 </head>
 <body>
     <header class="main-header">
@@ -213,7 +245,7 @@
 				<li class="tab-item"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
 				<li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
 				<li class="tab-item active"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
-				<li class="tab-item"><a href="#">스케줄 조회</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->

@@ -1,6 +1,7 @@
 package com.example.erp.Work_schedule;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -133,7 +135,8 @@ public class Work_scheduleController {
             .collect(Collectors.toList());
     }
 
-    @PostMapping("/doctor/mySchedule/vacations/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 
+    // 구현 안됨
+    @PostMapping("/doctor/mySchedule/vacations/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
     @ResponseBody
     public void cancelVacation(@PathVariable Long vacationId) {
     	Vacation vacation = vacationRepository.findById(vacationId)
@@ -216,12 +219,12 @@ public class Work_scheduleController {
                 .collect(Collectors.toList());
     }
 
-    @GetMapping("/hr/allSchedule") // 인사 -> 전체 스케줄 조회
+    @GetMapping("/hr/allSchedule") // 인사 -> 전체 스케줄 조회 by 은서
     public String allSchedule() {
 		return "hr/allSchedule";
     }
     
-    @GetMapping("/hr/allSchedule/byDate") // 인사 -> 전체 스케줄 조회 -> 날짜 선택시 리스트 
+    @GetMapping("/hr/allSchedule/byDate") // 인사 -> 전체 스케줄 조회 -> 날짜 선택시 리스트 by 은서
     @ResponseBody
     public List<Work_scheduleDTO.HrDailyScheduleItem> getScheduleByDate(
             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -229,4 +232,79 @@ public class Work_scheduleController {
     ) {
         return work_scheduleRepository.findDailySchedule(date);
     }
+    
+    // 출근 by 은서
+    @PostMapping("/work/time-in")
+    public ResponseEntity<?> timeIn() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        LocalDate today = LocalDate.now();
+
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        if (ws.getStart_time() != null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("이미 출근 처리되었습니다.");
+        }
+        
+        ws.setStart_time(LocalTime.now());
+        work_scheduleRepository.save(ws); //insert아니고 update
+
+        return ResponseEntity.ok("출근 처리 완료"); //alert 띄우기
+    }
+
+    // 퇴근 가능 여부 체크 by 은서
+    @GetMapping("/work/time-out/check")
+    public ResponseEntity<?> checkTimeOut() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        LocalDate today = LocalDate.now();
+
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        if (ws.getEnd_time() != null) {
+            return ResponseEntity.badRequest().body("이미 퇴근 처리되었습니다.");
+        }
+
+        if (ws.getStart_time() == null) {
+            return ResponseEntity.badRequest().body("출근 기록이 없어 퇴근할 수 없습니다.");
+        }
+
+        return ResponseEntity.ok("퇴근 가능");
+    }
+
+    
+    // 퇴근 by 은서
+    @PostMapping("/work/time-out")
+    public ResponseEntity<?> timeOut() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        LocalDate today = LocalDate.now();
+
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        ws.setEnd_time(LocalTime.now());
+        work_scheduleRepository.save(ws);
+
+        return ResponseEntity.ok("퇴근 처리 완료");
+    }
+
+
+    // 인사 -> 근태 조회 by 은서
+    @GetMapping("/hr/allWork") 
+    public String allWork() {
+		return "hr/allWork";
+    }
+    
+    
 }

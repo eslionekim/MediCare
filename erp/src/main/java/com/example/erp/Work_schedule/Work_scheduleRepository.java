@@ -2,6 +2,7 @@ package com.example.erp.Work_schedule;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -52,5 +53,14 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	""")
     List<Work_scheduleDTO.HrDailyScheduleItem> findDailySchedule(@Param("date") LocalDate date);
 
+    //의사 -> 출근,퇴근 버튼 by 은서
+    @Query("""
+    	    SELECT ws
+    	    FROM Work_schedule ws
+    	    JOIN ws.user_account u
+    	    WHERE u.user_id = :userId
+    	      AND ws.work_date = :workDate
+    	""")
+    Optional<Work_schedule> findByUser_account_UserIdAndWork_date(@Param("userId") String userId, @Param("workDate") LocalDate workDate);
 }
 

@@ -178,18 +178,18 @@
 
 	  .container {
 	  	      display: grid;
-	  	      grid-template-columns: 1fr 2fr; /* 왼쪽, 오른쪽 */
+	  	      grid-template-columns: 1fr 1fr; /* 왼쪽, 오른쪽 */
 	  	      gap: 5px;
 	  	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
 	  	      padding: 5px;
 	  	      box-sizing: border-box;
 	  }
 	  
-	  .calendar{
+	  .user{
 		 grid-column: 1/2;
 	  }
 	  
-	  .user{
+	  .calendar{
 		 grid-column: 2/3;
 	  }
 	</style>
@@ -224,17 +224,17 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-                <li class="tab-item active"><a href="">직원 스케줄 조회</a></li>
+                <li class="tab-item"><a href="">직원 스케줄 조회</a></li>
                 <li class="tab-item"><a href="">휴가 신청 리스트</a></li>
                 <li class="tab-item"><a th:href="@{/hr/schedule}">스케줄 부여</a></li>
-                <li class="tab-item"><a th:href="@{/hr/allWork}">근태 현황</a></li>
+                <li class="tab-item active"><a href="#">근태 현황</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
 		
 		<!-- 하단 헤더-->
         <div class="sub-menu">
-            <span>휴가 신청 리스트</span>
+            <span>근태 현황</span>
         </div>
 		<!-- 하단 헤더 끝-->
     </header>
@@ -242,108 +242,18 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<div class="container">
-			<div class="calendar"> <!-- 캘린더 영역-->
-				<div id="calendar"></div>
+			<div class="user"> <!-- 직원 영역-->
+				
 			</div>
 			
-			<div class="user">
-				<table border="1" width="100%">
-				    <thead id="userScheduleHead" style="display:none;">
-				        <tr>
-				            <th>진료과</th>
-				            <th>직원ID</th>
-				            <th>직원명</th>
-				            <th>스케줄</th>
-				            <th>휴가</th>
-				        </tr>
-				    </thead>
-				    <tbody id="userScheduleBody">
-				        <tr>
-				            <td colspan="5">날짜를 선택하세요</td>
-				        </tr>
-				    </tbody>
-				</table>
+			<div class="calendar"> <!-- 캘린더 영역-->
+				
 			</div>
 		</div>
 	</div>
 	<!-- 콘텐츠 영역 끝-->
 	
-	<script>
-	document.addEventListener('DOMContentLoaded', function() {
-	    const calendarEl = document.getElementById('calendar');
-	    const userEl = document.getElementById('userSchedule');
-
-	    const calendar = new FullCalendar.Calendar(calendarEl, {
-	        initialView: 'dayGridMonth',
-	        locale: 'ko',
-	        height: 'auto',
-	        headerToolbar: {
-	            left: 'prev,next today',
-	            center: 'title',
-	            right: ''
-	        },
-			dateClick: function(info) {
-			    const selectedDate = info.dateStr; // 선택한 날짜
-			    console.log("선택한 날짜:", selectedDate);
-
-				// 날짜 선택 표시 (이미 잘됨)
-				calendar.getEvents().forEach(event => {
-				     if (event.id === 'selected-date') event.remove();
-				});
-
-				calendar.addEvent({ // 날짜 선택시 css
-				     id: 'selected-date',
-				     start: selectedDate,
-				     allDay: true,
-				     display: 'background',
-				     backgroundColor: '#D5DDED'
-				});
-
-				// 직원 스케줄 조회
-				fetch(`/hr/allSchedule/byDate?date=${selectedDate}`)
-				     .then(res => res.json())
-				     .then(data => {
-				     renderUserSchedule(data);
-				});
-			}
-
-	    });
-
-	    calendar.render();
-	});
 	
-	function renderUserSchedule(data) {
-	    const tbody = document.getElementById('userScheduleBody');
-	    const thead = document.getElementById('userScheduleHead');
-
-	    // thead 보이게
-	    thead.style.display = '';
-
-	    tbody.innerHTML = '';
-
-	    // 데이터 없을 때
-	    if (data.length === 0) {
-	        tbody.innerHTML = `
-	            <tr>
-	                <td colspan="5">해당 날짜에 스케줄이 부여되지 않았습니다.</td>
-	            </tr>
-	        `;
-	        return;
-	    }
-
-	    data.forEach(item => {
-	        const tr = document.createElement('tr');
-	        tr.innerHTML = `
-	            <td>${item.departmentName}</td>
-	            <td>${item.userId}</td>
-	            <td>${item.userName}</td>
-	            <td>${item.workName ?? '-'}</td>
-	            <td>${item.statusName ?? '없음'}</td>
-	        `;
-	        tbody.appendChild(tr);
-	    });
-	}
-	</script>
 
 
 </body>
