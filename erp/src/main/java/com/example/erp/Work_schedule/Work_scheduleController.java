@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -81,6 +82,7 @@ public class Work_scheduleController {
         model.addAttribute("userWithFlag", userWithFlag);
         return "hr/scheduleAssignment";
     }
+    
     
     @GetMapping("/doctor/mySchedule") // 의사 -> 스케줄 조회 by 은서
     public String getMySchedulePage() {
@@ -214,4 +216,17 @@ public class Work_scheduleController {
                 .collect(Collectors.toList());
     }
 
+    @GetMapping("/hr/allSchedule") // 인사 -> 전체 스케줄 조회
+    public String allSchedule() {
+		return "hr/allSchedule";
+    }
+    
+    @GetMapping("/hr/allSchedule/byDate") // 인사 -> 전체 스케줄 조회 -> 날짜 선택시 리스트 
+    @ResponseBody
+    public List<Work_scheduleDTO.HrDailyScheduleItem> getScheduleByDate(
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
+    ) {
+        return work_scheduleRepository.findDailySchedule(date);
+    }
 }

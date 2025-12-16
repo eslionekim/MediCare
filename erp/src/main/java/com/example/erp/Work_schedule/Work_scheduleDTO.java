@@ -25,8 +25,7 @@ public class Work_scheduleDTO {
 	    private LocalDate workDate;
 	    private String workTypeCode;
 	}
-
-	 // 여기서 WorkType용 DTO 추가
+	
     @Data
     @AllArgsConstructor
     @NoArgsConstructor
@@ -41,4 +40,16 @@ public class Work_scheduleDTO {
             this.workName = workName;
         }
     }
+    
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class HrDailyScheduleItem { // 인사-> 전체 스케줄 조회 by 은서
+        private String departmentName;
+        private String userId;
+        private String userName;
+        private String workName;
+        private String statusName;
+    }
+
 }

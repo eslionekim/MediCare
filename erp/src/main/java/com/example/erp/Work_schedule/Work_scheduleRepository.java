@@ -28,12 +28,29 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	      AND YEAR(ws.work_date) = :year
     	      AND MONTH(ws.work_date) = :month
     	""")
-    	List<Work_scheduleDTO.WorkTypeItem> findDoctorMonthlySchedule(
+    List<Work_scheduleDTO.WorkTypeItem> findDoctorMonthlySchedule(
     	        @Param("userId") String userId,
     	        @Param("year") int year,
     	        @Param("month") int month
-    	);
+    );
 
+    // 인사 -> 전체 스케줄 조회 by 은서
+    @Query(""" 
+    	    SELECT new com.example.erp.Work_schedule.Work_scheduleDTO$HrDailyScheduleItem(
+    	        d.name,
+    	        u.user_id,
+    	        u.name,
+    	        wt.work_name,
+    	        sc.name
+    	    )
+    	    FROM Work_schedule ws
+    	    JOIN ws.department d
+    	    JOIN ws.user_account u
+    	    JOIN ws.work_type wt
+    	    LEFT JOIN ws.status_code sc
+    	    WHERE ws.work_date = :date
+    	""")
+    List<Work_scheduleDTO.HrDailyScheduleItem> findDailySchedule(@Param("date") LocalDate date);
 
 }
 
