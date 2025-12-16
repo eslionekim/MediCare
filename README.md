@@ -35,3 +35,6 @@ else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"
 
 ## 25.12.14 김은서 : [의사] 스케줄 조회
 http://localhost:8080/doctor/mySchedule
+
+## 25.12.15 김은서 : [인사] 전체 스케줄 조회
+전체 스케줄 조회 http://localhost:8080/hr/allSchedule
