@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Controller
@@ -121,7 +125,18 @@ public class PatientRegistrationAndInquiry {
         } else {
             patients = patientRepository.findAll();
         }
+        Map<Long, LocalDate> lastVisitMap = new HashMap<>();
+        for (Patient p : patients) {
+            LocalDate lastDate = visitRepository.findByPatientIdOrderByVisitDatetimeDesc(p.getPatient_id()).stream()
+                    .map(Visit::getVisit_datetime)
+                    .filter(Objects::nonNull)
+                    .map(LocalDateTime::toLocalDate)
+                    .findFirst()
+                    .orElse(null);
+            lastVisitMap.put(p.getPatient_id(), lastDate);
+        }
         model.addAttribute("patients", patients);
         model.addAttribute("keyword", keyword);
+        model.addAttribute("lastVisitMap", lastVisitMap);
     }
 }

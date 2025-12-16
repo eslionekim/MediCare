@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -48,11 +49,39 @@ public class ReservationService {
         return baseDate.plusMonths(1).toString();
     }
 
-    public List<LocalDate> buildCalendar(LocalDate baseDate) {
+    public List<CalendarDateDto> buildCalendar(LocalDate baseDate) {
+        LocalDate first = baseDate.withDayOfMonth(1);
         int length = baseDate.lengthOfMonth();
-        return IntStream.rangeClosed(1, length)
-                .mapToObj(baseDate::withDayOfMonth)
-                .collect(Collectors.toList());
+        int startDow = first.getDayOfWeek().getValue(); // 1=Mon ... 7=Sun
+        int offset = startDow % 7; // Sunday=0, Monday=1 ...
+
+        List<CalendarDateDto> dates = new ArrayList<>();
+
+        // 이전 달 채우기
+        LocalDate prevMonth = first.minusMonths(1);
+        int prevLength = prevMonth.lengthOfMonth();
+        for (int i = offset - 1; i >= 0; i--) {
+            LocalDate d = prevMonth.withDayOfMonth(prevLength - i);
+            dates.add(new CalendarDateDto(d.getDayOfMonth(), d.toString(), false, true));
+        }
+
+        // 이번 달
+        for (int day = 1; day <= length; day++) {
+            LocalDate d = first.withDayOfMonth(day);
+            boolean selected = d.equals(baseDate);
+            dates.add(new CalendarDateDto(day, d.toString(), selected, false));
+        }
+
+        // 다음 달로 채워서 주 단위 맞추기 (최대 6주, 42칸)
+        LocalDate nextMonth = first.plusMonths(1);
+        int nextDay = 1;
+        while (dates.size() % 7 != 0 || dates.size() < 42) {
+            LocalDate d = nextMonth.withDayOfMonth(nextDay++);
+            dates.add(new CalendarDateDto(d.getDayOfMonth(), d.toString(), false, true));
+            if (dates.size() >= 42 && dates.size() % 7 == 0) break;
+        }
+
+        return dates;
     }
 
     @Transactional(readOnly = true)
@@ -71,11 +100,26 @@ public class ReservationService {
     }
 
     @Transactional(readOnly = true)
-    public List<DailySlotDto> getDailySlots(LocalDate date) {
+    public List<DailySlotDto> getDailySlots(LocalDate date, String departmentCode, String userId) {
         if (date == null) return Collections.emptyList();
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
         List<Reservation> reservations = reservationRepository.findByStartTimeBetween(start, end);
+
+        // 필터: 진료과, 의사
+        if (departmentCode != null && !departmentCode.isBlank()) {
+            reservations = reservations.stream()
+                    .filter(r -> r.getDepartment() != null
+                            && departmentCode.equalsIgnoreCase(r.getDepartment().getDepartment_code()))
+                    .collect(Collectors.toList());
+        }
+        if (userId != null && !userId.isBlank()) {
+            reservations = reservations.stream()
+                    .filter(r -> r.getUser() != null
+                            && userId.equalsIgnoreCase(r.getUser().getUser_id()))
+                    .collect(Collectors.toList());
+        }
+
         return reservations.stream().map(r -> {
             DailySlotDto dto = new DailySlotDto();
             dto.setTime(r.getStart_time() != null ? r.getStart_time().toLocalTime().toString() : null);
@@ -103,9 +147,11 @@ public class ReservationService {
         User_account doctor = userAccountRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("의사를 찾을 수 없습니다: " + dto.getUserId()));
         // 예약 기본 상태코드: 전달값이 없거나 미등록이면 RES_PENDING 사용
-        String statusCodeValue = (dto.getStatusCode() == null || dto.getStatusCode().isBlank())
+        String statusCodeValueTemp = (dto.getStatusCode() == null || dto.getStatusCode().isBlank())
                 ? "RES_PENDING"
                 : dto.getStatusCode();
+        // 과거 값 'RESERVED'로 들어오면 신규 코드로 매핑
+        final String statusCodeValue = "RESERVED".equalsIgnoreCase(statusCodeValueTemp) ? "RES_PENDING" : statusCodeValueTemp;
 
         Status_code status = statusCodeRepository.findById(statusCodeValue)
                 .orElseThrow(() -> new IllegalArgumentException("상태코드를 찾을 수 없습니다: " + statusCodeValue));

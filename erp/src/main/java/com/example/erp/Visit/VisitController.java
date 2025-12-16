@@ -228,7 +228,7 @@ public class VisitController {
                         @RequestParam(name = "departmentCode") String departmentCode, // 진료과 코드 (예: ORTHO)
                         @RequestParam(name = "visit_type") String visit_type, // first / follow-up
                         @RequestParam(name = "visitRoute") String visitRoute, // walk-in / reservation
-                        @RequestParam(name = "insuranceCode", required = false) String insuranceCode, // 보험 코드
+                        @RequestParam(name = "insurance_code", required = false) String insuranceCode, // 보험 코드
                         @RequestParam(name = "note", required = false) String note,
                         RedirectAttributes redirectAttributes) {
 

@@ -316,13 +316,13 @@
 						    </tr>
 		
 						    <tr th:each="u : ${userWithFlag}">
-								<td th:text="${u.user.staff_profile[0].department.name}"></td>
+								<td th:text="${!#lists.isEmpty(u.user.staff_profile) ? u.user.staff_profile[0].department.name : ''}"></td>
 								<td th:text="${u.user.user_id}"></td>
 								<td th:text="${u.user.name}"></td>
 								<!-- 상태: 1일 스케줄 있으면 '부여' -->
 								<td th:text="${u.hasScheduleOnFirst ? '부여' : '미부여'}"></td>
 								<td><button class="selectUserBtn"
-								    th:attr="data-user-id=${u.user.user_id}, data-department-code=${u.user.staff_profile[0].department.department_code}">
+								    th:attr="data-user-id=${u.user.user_id}, data-department-code=${!#lists.isEmpty(u.user.staff_profile) ? u.user.staff_profile[0].department.department_code : ''}">
 								    선택
 								</button>
 								</td>

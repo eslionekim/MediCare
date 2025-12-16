@@ -107,7 +107,7 @@
                             <td th:text="${p.name}"></td>
                             <td th:text="${p.gender}"></td>
                             <td th:text="${p.birth_date}"></td>
-                            <td>최근</td>
+                            <td th:text="${lastVisitMap[p.patient_id] != null ? lastVisitMap[p.patient_id] : '없음'}"></td>
                             <td th:text="${p.note}"></td>
                             <td th:text="${p.phone}"></td>
                             <td>
