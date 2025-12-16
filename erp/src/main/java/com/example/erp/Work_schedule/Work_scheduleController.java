@@ -1,28 +1,37 @@
 package com.example.erp.Work_schedule;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Department.Department;
 import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Staff_profile.Staff_profileRepository;
+import com.example.erp.Status_code.Status_code;
+import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.User_account.User_account;
 import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.User_role.User_roleRepository;
+import com.example.erp.Vacation.Vacation;
+import com.example.erp.Vacation.VacationDTO;
+import com.example.erp.Vacation.VacationRepository;
 import com.example.erp.Work_schedule.Work_scheduleDTO.ScheduleItem;
 import com.example.erp.Work_schedule.Work_scheduleDTO.WorkScheduleSaveRequest;
 import com.example.erp.Work_type.Work_type;
@@ -33,12 +42,16 @@ import lombok.RequiredArgsConstructor;
 @Controller
 @RequiredArgsConstructor
 public class Work_scheduleController {
+
+    private final VacationRepository vacationRepository;
 	private final User_accountRepository user_accountRepository;
     private final Staff_profileRepository staff_profileRepository;
     private final DepartmentRepository departmentRepository;
     private final Work_scheduleRepository work_scheduleRepository;
     private final Work_typeRepository work_typeRepository;
     private final User_roleRepository user_roleRepository;
+    private final Status_codeRepository status_codeRepository;
+    private final Work_scheduleService work_scheduleService;
     
     @GetMapping("/hr/schedule") // 인사 -> 스케줄 부여-> 날짜 by 은서
     public String getSchedulePage(@RequestParam(value="year",required = false) Integer year,
@@ -72,7 +85,73 @@ public class Work_scheduleController {
         return "hr/scheduleAssignment";
     }
     
-    @GetMapping("/work-types")
+    
+    @GetMapping("/doctor/mySchedule") // 의사 -> 스케줄 조회 by 은서
+    public String getMySchedulePage() {
+        return "doctor/mySchedule";
+    }
+    
+    @GetMapping("/doctor/mySchedule/events") //의사 -> 스케줄 조회 -> 근무 스케줄 달력 by 은서
+    @ResponseBody
+    public List<Map<String, Object>> getMyScheduleEvents(
+            @RequestParam(value="year",required = false) int year,
+            @RequestParam(value="month",required = false) int month
+    ) {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        List<Work_scheduleDTO.WorkTypeItem> list =
+                work_scheduleService.getDoctorMonthlySchedule(userId, year, month);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        for (Work_scheduleDTO.WorkTypeItem item : list) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("title", item.getWorkName());                 // ⭐ work_name
+            event.put("start", item.getWorkDate().toString());     // ⭐ yyyy-MM-dd
+            event.put("allDay", true);
+
+            events.add(event);
+        }
+
+        return events;
+    }
+    
+    @GetMapping("/doctor/mySchedule/vacations") //의사 -> 스케줄 조회 -> 휴가 리스트 by 은서
+    @ResponseBody
+    public List<VacationDTO> getMyVacations() {
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return vacationRepository.findVacationByUserId(userId)
+            .stream()
+            .map(v -> new VacationDTO(
+                v.getVacation_id(),
+                v.getVacation_type().getType_name(),
+                v.getStart_date().toString(),
+                v.getEnd_date().toString(),
+                v.getStatus_code().getName(),
+                v.getStatus_code().getStatus_code()
+            ))
+            .collect(Collectors.toList());
+    }
+
+    // 구현 안됨
+    @PostMapping("/doctor/mySchedule/vacation/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
+    @ResponseBody
+    public void cancelVacation(@PathVariable("vacationId") Long vacationId) {
+    	Vacation vacation = vacationRepository.findById(vacationId)
+                .orElseThrow(() -> new RuntimeException("휴가 없음"));
+
+        Status_code cancelStatus = status_codeRepository.findByCode("VAC_CANCEL_REQUESTED")
+                .orElseThrow(() -> new RuntimeException("상태코드 없음"));
+
+        vacation.setStatus_code(cancelStatus);
+        vacationRepository.save(vacation);
+    }
+
+
+    
+    @GetMapping("/work-types") // 인사 -> 스케줄 부여 -> 근무종류 조회 by 은서
     @ResponseBody
     public List<Work_scheduleDTO.WorkTypeItem> getWorkTypesByUser(@RequestParam("user_id") String user_id) {
         List<Work_type> types = work_typeRepository.findByUserRole(user_id);
@@ -83,7 +162,7 @@ public class Work_scheduleController {
 
 
 
-    @PostMapping("/work-schedule/save")
+    @PostMapping("/work-schedule/save") //인사 -> 스케줄 부여 -> 저장 by 은서
     public ResponseEntity<?> saveSchedule(@RequestBody WorkScheduleSaveRequest req) {
 
         User_account user_account = user_accountRepository.findById(req.getUser_id()).orElseThrow();
@@ -119,7 +198,7 @@ public class Work_scheduleController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/work-schedule/{user_id}/{year}/{month}")
+    @GetMapping("/work-schedule/{user_id}/{year}/{month}") // 인사 -> 스케줄 부여 -> 저장하고 나서 새로고침 by 은서
     @ResponseBody
     public List<Work_scheduleDTO.ScheduleItem> getMonthlySchedule(
             @PathVariable("user_id") String user_id,
@@ -141,121 +220,92 @@ public class Work_scheduleController {
                 .collect(Collectors.toList());
     }
 
-    /*
-    // 달력 이벤트 API (FullCalendar)
-    @GetMapping("/hr/schedule/calender")
-    @ResponseBody
-    public List<Map<String, Object>> getScheduleEvents(@RequestParam String userId,
-                                                       @RequestParam Integer year,
-                                                       @RequestParam Integer month) {
-
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-
-        List<Work_schedule> schedule = work_scheduleRepository.findByUserAndMonth(userId, start, end);
-
-        List<Map<String, Object>> events = new ArrayList<>();
-
-        for (Work_schedule ws : schedule) {
-            Map<String, Object> map = new HashMap<>();
-            map.put("work_name", ws.getWork_type().getWork_name()); // 근무 이름
-            map.put("start", ws.getWork_date().toString());    // 날짜
-            map.put("work_type_code", ws.getWork_type().getWork_type_code());
-            map.put("user_id", ws.getUser_account().getUser_id());
-
-            events.add(map);
-        }
-
-        return events;
-    }
-
-
-    // 드롭다운 저장 API
-    @PostMapping("/hr/schedule/save")
-    @ResponseBody
-    public ResponseEntity<?> saveSchedule(@RequestBody List<Map<String, Object>> scheduleList) {
-    	for (Map<String, Object> m : scheduleList) {
-
-            String userId = (String) m.get("userId");
-            String deptCode = (String) m.get("deptCode");
-            String dateStr = (String) m.get("date");
-            String workTypeCode = (String) m.get("workTypeCode");
-
-            Work_schedule ws = new Work_schedule();
-            ws.setUser_account(user_accountRepository.findById(userId).orElseThrow());
-            ws.setDepartment(departmentRepository.findById(deptCode).orElseThrow());
-            ws.setWork_date(LocalDate.parse(dateStr));
-            ws.setWork_type(work_typeRepository.findById(workTypeCode).orElseThrow());
-
-            work_scheduleRepository.save(ws);
-        }
-
-        return ResponseEntity.ok("저장 완료");
+    @GetMapping("/hr/allSchedule") // 인사 -> 전체 스케줄 조회 by 은서
+    public String allSchedule() {
+		return "hr/allSchedule";
     }
     
-    //달력 생성 API
-    @GetMapping("/hr/schedule/calenderAPI")
-    public Map<String, Object> getCalendar(@RequestParam(value="year",required = false) Integer year,@RequestParam(value="month",required = false) Integer month) {
+    @GetMapping("/hr/allSchedule/byDate") // 인사 -> 전체 스케줄 조회 -> 날짜 선택시 리스트 by 은서
+    @ResponseBody
+    public List<Work_scheduleDTO.HrDailyScheduleItem> getScheduleByDate(
+            @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date
+    ) {
+        return work_scheduleRepository.findDailySchedule(date);
+    }
+    
+    // 출근 by 은서
+    @PostMapping("/work/time-in")
+    public ResponseEntity<?> timeIn() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
 
         LocalDate today = LocalDate.now();
 
-        // year or month가 null이면 현재 날짜로 설정
-        if (year == null || month == null) {
-            year = today.getYear();
-            month = today.getMonthValue();
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        if (ws.getStart_time() != null) {
+            return ResponseEntity
+                    .badRequest()
+                    .body("이미 출근 처리되었습니다.");
+        }
+        
+        ws.setStart_time(LocalTime.now());
+        work_scheduleRepository.save(ws); //insert아니고 update
+
+        return ResponseEntity.ok("출근 처리 완료"); //alert 띄우기
+    }
+
+    // 퇴근 가능 여부 체크 by 은서
+    @GetMapping("/work/time-out/check")
+    public ResponseEntity<?> checkTimeOut() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        LocalDate today = LocalDate.now();
+
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        if (ws.getEnd_time() != null) {
+            return ResponseEntity.badRequest().body("이미 퇴근 처리되었습니다.");
         }
 
-        LocalDate firstDay = LocalDate.of(year, month, 1);
-        int lengthOfMonth = firstDay.lengthOfMonth(); // 그 달이 며칠까지 있는지
-
-        int startDayOfWeek = firstDay.getDayOfWeek().getValue(); // 1=월 ~ 7=일 요일별 숫자
-
-        List<Map<String, Object>> days = new ArrayList<>();
-
-        for (int day = 1; day <= lengthOfMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
-
-            Map<String, Object> info = new HashMap<>();
-            info.put("date", date.toString());
-            info.put("dayOfMonth", day);
-            info.put("dayOfWeek", date.getDayOfWeek().getValue());
-            days.add(info);
+        if (ws.getStart_time() == null) {
+            return ResponseEntity.badRequest().body("출근 기록이 없어 퇴근할 수 없습니다.");
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("year", year);
-        result.put("month", month);
-        result.put("startDayOfWeek", startDayOfWeek);
-        result.put("days", days);
+        return ResponseEntity.ok("퇴근 가능");
+    }
 
-        return result;
+    
+    // 퇴근 by 은서
+    @PostMapping("/work/time-out")
+    public ResponseEntity<?> timeOut() {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        LocalDate today = LocalDate.now();
+
+        Work_schedule ws = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today)
+                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+
+        ws.setEnd_time(LocalTime.now());
+        work_scheduleRepository.save(ws);
+
+        return ResponseEntity.ok("퇴근 처리 완료");
+    }
+
+
+    // 인사 -> 근태 조회 by 은서
+    @GetMapping("/hr/allWork") 
+    public String allWork() {
+		return "hr/allWork";
     }
     
- // 직원 선택 시 가능한 근무 + 이미 배정된 스케줄 반환
-    @GetMapping("/hr/schedule/userSchedule")
-    @ResponseBody
-    public Map<String, Object> getUserSchedule(@RequestParam String userId,
-                                               @RequestParam Integer year,
-                                               @RequestParam Integer month) {
-        Map<String, Object> result = new HashMap<>();
-
-        User_account user = user_accountRepository.findById(userId).orElseThrow();
-
-        // 직원이 가진 role 기준으로 가능한 근무 타입 가져오기
-        List<Work_type> possibleWorks = user.getUser_role().stream()
-                .flatMap(ur -> ur.getRole_code().getWork_type().stream())
-                .distinct()
-                .collect(Collectors.toList());
-
-        result.put("possibleWorks", possibleWorks);
-
-        // 이미 배정된 스케줄
-        LocalDate start = LocalDate.of(year, month, 1);
-        LocalDate end = start.withDayOfMonth(start.lengthOfMonth());
-        List<Work_schedule> assignedSchedules = work_scheduleRepository.findByUserAndMonth(userId, start, end);
-
-        result.put("assignedSchedules", assignedSchedules);
-
-        return result;
-    }*/
+    
 }
