@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -61,7 +62,8 @@ public class VisitController {
 
         @GetMapping("/doctor/todayVisits") // 의사 -> 금일 진료 리스트
         public String getTodayVisitList(Model model) {
-                List<TodayVisitDTO> todayList = visitService.getTodayVisitList();
+        		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+                List<TodayVisitDTO> todayList = visitService.getTodayVisitListByUser(userId);
                 model.addAttribute("todayList", todayList);
                 return "doctor/todayVisits"; // 타임리프 HTML 파일 경로
         }
