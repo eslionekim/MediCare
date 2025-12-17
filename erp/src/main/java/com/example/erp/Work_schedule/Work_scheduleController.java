@@ -125,6 +125,10 @@ public class Work_scheduleController {
                      .append(item.getEndTime().format(timeFormatter));
             }
 
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
             
             event.put("title", title.toString());                 // ⭐ work_name
             event.put("start", item.getWorkDate().toString());     // ⭐ yyyy-MM-dd
@@ -358,6 +362,11 @@ public class Work_scheduleController {
                 title.append("\n퇴근 ")
                      .append(item.getEndTime().format(timeFormatter));
             }
+            
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
 
             event.put("title", title.toString());
             event.put("start", item.getWorkDate().toString());

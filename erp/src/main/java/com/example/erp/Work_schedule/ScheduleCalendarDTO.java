@@ -20,6 +20,7 @@ public class ScheduleCalendarDTO { //의사 -> 스케줄 조회 by 은서
     private String workName;
     private LocalTime startTime;
     private LocalTime endTime;
+    private String statusName;
     
     public ScheduleCalendarDTO(String workTypeCode, String workName) { // 인사 -> 스케줄 부여 -> 근무종류 조회 by 은서
         this.workTypeCode = workTypeCode;
