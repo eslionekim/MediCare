@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>수납 결제</title>
+  <style>
+    body { margin:0; padding:0; font-family:'Inter','맑은 고딕',sans-serif; background:#D5DDED; }
+    .erp-page { width:1280px; margin:24px auto; background:#fff; box-shadow:0 4px 8px rgba(0,0,0,0.15); }
+    /* 상단 바/탭 스타일 */
+    .top-bar { display:flex; justify-content:space-between; align-items:center; padding:5px 15px; background:#fff; font-size:14px; }
+    .user-info { color:#555; }
+    .action-buttons { display:flex; gap:5px; }
+    .action-buttons button, .btn-logout { padding:4px 12px; border-radius:4px; cursor:pointer; font-size:13px; font-weight:500; border:1px solid #7B7B7B; }
+    .btn-logout { background:#FF4B4B; color:#fff; }
+    .time-in { background:#879BD5; color:#fff; }
+    .time-out { background:#D5DDED; }
+    .nav-tabs { background:#D5DDED; padding:0 10px; }
+    .tab-list { list-style:none; display:flex; padding:0; margin:0; }
+    .tab-item a { display:block; padding:8px 15px; text-decoration:none; color:#333; font-size:14px; }
+    .tab-item.active a { font-weight:600; }
+    .sub-menu { background:#BACCFF; padding:5px 15px; font-size:14px; color:#555; font-weight:530; }
+
+    .content-area { padding:10px; }
+    .layout { display:grid; grid-template-columns:420px 1fr 340px; gap:12px; padding:10px; box-sizing:border-box; align-items:start; }
+    .left-panel { display:flex; flex-direction:column; gap:10px; }
+    .center-panel { display:flex; flex-direction:column; gap:10px; }
+    .right-panel { display:flex; flex-direction:column; gap:10px; }
+    .box { background:#fff; border:1px solid #b0b7c7; border-radius:4px; }
+    .box-header { padding:6px 10px; background:#879BD5; color:#fff; font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+    .box-body { padding:10px; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:center; }
+    th { background:#f3f6ff; }
+    .waiting-table th, .waiting-table td { font-size:12px; padding:4px; }
+    .scroll { max-height:520px; overflow:auto; }
+    .btn-xs { padding:4px 10px; font-size:12px; border-radius:4px; border:1px solid #7B7B7B; background:#D5DDED; cursor:pointer; }
+    .form-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; font-size:13px; }
+    .form-row label { width:90px; font-weight:600; color:#444; }
+    .form-row input, .form-row select { flex:1; padding:6px; border-radius:4px; border:1px solid #cbd2e1; font-size:13px; }
+    .summary-grid { display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+    .summary-grid .form-row { margin-bottom:0; }
+    .pay-btn { padding:8px 16px; border:1px solid #7B7B7B; border-radius:6px; background:#879BD5; color:#fff; cursor:pointer; font-weight:600; }
+    .pay-btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .hint { font-size:12px; color:#666; margin-top:6px; }
+  </style>
+</head>
+<body>
+<div class="erp-page">
+  <div th:replace="~{fragments/staff-header :: header(title='수납 결제', activeTab='payments')}"></div>
+
+  <div class="content-area">
+    <div class="layout">
+
+      <!-- 왼쪽: 금일 수납 대기 리스트 -->
+      <section class="left-panel">
+        <div class="box">
+          <div class="box-header">
+            <span>금일 수납 대기</span>
+            <span style="font-weight:500; font-size:12px;">(클릭 시 해당 방문 정보 표시)</span>
+          </div>
+          <div class="box-body scroll">
+            <table class="waiting-table">
+              <thead>
+              <tr>
+                <th>시간</th>
+                <th>방문ID</th>
+                <th>환자ID</th>
+                <th>환자명</th>
+                <th>진료과</th>
+                <th>의사</th>
+                <th>상태</th>
+                <th>선택</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="v : ${todayVisits}">
+                <td th:text="${#temporals.format(v.visit_datetime,'HH:mm')}">09:00</td>
+                <td th:text="${v.visit_id}">1</td>
+                <td th:text="${v.patient != null ? v.patient.patient_id : ''}">1</td>
+                <td th:text="${v.patient != null ? v.patient.name : ''}">환자명</td>
+                <td th:text="${v.department != null ? v.department.name : v.department_code}">진료과</td>
+                <td th:text="${v.user_account != null ? v.user_account.name : v.user_id}">의사</td>
+                <td th:text="${v.status_code != null ? v.status_code.name : ''}">상태</td>
+                <td>
+                  <button class="btn-xs"
+                          th:onclick="|location.href='@{/payments(visitId=${v.visit_id})}'|">선택</button>
+                </td>
+              </tr>
+              <tr th:if="${todayVisits == null or #lists.isEmpty(todayVisits)}">
+                <td colspan="8">&nbsp;</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 가운데: 청구항목 + 금액요약 -->
+      <section class="center-panel">
+        <div class="box" th:if="${claimItems != null}">
+          <div class="box-header"><span>청구항목</span></div>
+          <div class="box-body scroll" style="max-height:260px;">
+            <table>
+              <thead>
+              <tr>
+                <th>수가코드</th>
+                <th>항목명</th>
+                <th>구분</th>
+                <th>단가</th>
+                <th>수량</th>
+                <th>할인</th>
+                <th>합계</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr th:each="ci : ${claimItems}">
+                <td th:text="${ci.fee_item != null ? ci.fee_item.fee_item_code : ''}">F001</td>
+                <td th:text="${ci.fee_item != null ? ci.fee_item.name : ''}">항목명</td>
+                <td th:text="${ci.fee_item != null && ci.fee_item.is_active() ? '급여' : '비급여'}">구분</td>
+                <td th:text="${ci.unit_price}">0</td>
+                <td th:text="${ci.quantity}">1</td>
+                <td th:text="${ci.discount}">0</td>
+                <td th:text="${ci.total}">0</td>
+              </tr>
+              <tr th:if="${claimItems == null or #lists.isEmpty(claimItems)}">
+                <td colspan="6">&nbsp;</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-header"><span>금액 요약 (보험 할인 포함)</span></div>
+          <div class="box-body">
+            <div class="summary-grid">
+              <div class="form-row">
+                <label>진료비 총계</label>
+                <input readonly th:value="${totalAmount}">
+              </div>
+              <div class="form-row">
+                <label>항목 할인</label>
+                <input readonly th:value="${baseDiscount}">
+              </div>
+              <div class="form-row">
+                <label>보험 할인</label>
+                <input readonly th:value="${insuranceDiscount}">
+              </div>
+              <div class="form-row">
+                <label>총 할인</label>
+                <input readonly th:value="${discountAmount}">
+              </div>
+              <div class="form-row" style="grid-column:1 / span 2;">
+                <label>최종 결제</label>
+                <input readonly th:value="${finalAmount}">
+              </div>
+            </div>
+            <div class="hint">보험 할인은 보험코드(discount_rate)를 기준으로 서버에서 강제 적용됩니다.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 오른쪽: 방문 정보 + 결제 -->
+      <section class="right-panel">
+
+        <!-- 방문 정보 -->
+        <div class="box">
+          <div class="box-header"><span>방문 정보</span></div>
+          <div class="box-body">
+
+            <div class="form-row">
+              <label>방문ID</label>
+              <input readonly th:value="${visit != null ? visit.visit_id : ''}">
+            </div>
+
+            <div class="form-row">
+              <label>환자</label>
+              <input readonly th:value="${visit != null && visit.patient != null ? visit.patient.name + ' (ID:' + visit.patient.patient_id + ')' : ''}">
+            </div>
+
+            <div class="form-row">
+              <label>진료과</label>
+              <input readonly th:value="${visit != null && visit.department != null ? visit.department.name : ''}">
+            </div>
+
+            <div class="form-row">
+              <label>의사</label>
+              <input readonly th:value="${visit != null && visit.user_account != null ? visit.user_account.name + ' (' + visit.user_account.user_id + ')' : ''}">
+            </div>
+
+            <div class="form-row">
+              <label>방문시각</label>
+              <input readonly th:value="${visit != null ? #temporals.format(visit.visit_datetime,'yyyy-MM-dd HH:mm') : ''}">
+            </div>
+
+            <div class="form-row">
+              <label>보험</label>
+              <input readonly th:value="${visit != null && visit.insurance_code != null ? visit.insurance_code.name + ' (' + visit.insurance_code.insurance_code + ')' : '없음'}">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 결제 -->
+        <div class="box">
+          <div class="box-header"><span>결제</span></div>
+          <div class="box-body">
+            <form th:action="@{/payments/pay}" method="post">
+              <input type="hidden" name="visitId" th:value="${visit != null ? visit.visit_id : ''}">
+
+              <div class="form-row">
+                <label>결제수단</label>
+                <select name="paymentMethodCode" required>
+                  <option value="">선택</option>
+                  <option th:each="pm : ${paymentMethods}"
+                          th:value="${pm.payment_method_code}"
+                          th:text="${pm.name}">
+                  </option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label>결제금액</label>
+                <input name="amountView" readonly th:value="${finalAmount}">
+              </div>
+
+              <div style="text-align:right;">
+                <button class="pay-btn" type="submit" th:disabled="${visit == null or !claimReady}">결제</button>
+              </div>
+              <div class="hint" th:if="${!claimReady}">청구/청구항목이 없습니다. 차트에서 청구를 생성한 뒤 결제해 주세요.</div>
+            </form>
+          </div>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</div>
+</body>
+</html>

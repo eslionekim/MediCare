@@ -45,34 +45,7 @@
 </head>
 <body>
 <div class="erp-page">
-    <div class="top-bar">
-        <div class="user-info">
-            <span>(이름)</span>
-            <span>MediCare |</span>
-            <span>사용자ID:</span>
-        </div>
-        <div class="user-info">
-            <span>업무상태</span>
-            <button class="btn-logout">로그아웃</button>
-        </div>
-        <div class="action-buttons">
-            <button class="time-in">출근</button>
-            <button class="time-out">퇴근</button>
-        </div>
-    </div>
-
-    <nav class="nav-tabs">
-        <ul class="tab-list">
-            <li class="tab-item"><a th:href="@{/patients}">환자 등록/수정</a></li>
-            <li class="tab-item active"><a th:href="@{/receptions}">접수</a></li>
-            <li class="tab-item"><a href="#">예약 받기</a></li>
-            <li class="tab-item"><a href="#">수납</a></li>
-            <li class="tab-item"><a href="#">검사/처치 신청</a></li>
-            <li class="tab-item"><a href="#">상담내역 조회</a></li>
-        </ul>
-    </nav>
-
-    <div class="sub-menu">접수</div>
+    <div th:replace="~{fragments/staff-header :: header(title='접수', activeTab='receptions')}"></div>
 
     <div class="content-area">
         <div class="layout-two-column">

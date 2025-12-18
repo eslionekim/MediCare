@@ -164,11 +164,16 @@ public class ReservationService {
         LocalDate date = LocalDate.parse(dto.getDate());
         LocalTime start = LocalTime.parse(dto.getStartTime());
         reservation.setStart_time(LocalDateTime.of(date, start));
+
+        // 종료시간이 비었거나 시작보다 빠르면 시작시간 +1시간으로 보정
         if (dto.getEndTime() != null && !dto.getEndTime().isBlank()) {
             LocalTime end = LocalTime.parse(dto.getEndTime());
+            if (!end.isAfter(start)) {
+                end = start.plusHours(1);
+            }
             reservation.setEnd_time(LocalDateTime.of(date, end));
         } else {
-            reservation.setEnd_time(null);
+            reservation.setEnd_time(LocalDateTime.of(date, start.plusHours(1)));
         }
 
         reservation.setNote(dto.getNote());

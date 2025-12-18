@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="header(title, activeTab)">
+    <div class="top-bar">
+        <div class="user-info">
+            <span>(이름)</span>
+            <span>MediCare |</span>
+            <span>사용자ID:</span>
+        </div>
+        <div class="user-info">
+            <span>업무 상태</span>
+            <button class="btn-logout">로그아웃</button>
+        </div>
+        <div class="action-buttons">
+            <button class="time-in">출근</button>
+            <button class="time-out">퇴근</button>
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <ul class="tab-list">
+            <li class="tab-item" th:classappend="${activeTab}=='patients' ? ' active'">
+                <a th:href="@{/patients}">환자 등록/조회</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='receptions' ? ' active'">
+                <a th:href="@{/receptions}">접수</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='reservations' ? ' active'">
+                <a th:href="@{/reservations}">예약 받기</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='payments' ? ' active'">
+                <a th:href="@{/payments}">수납</a>
+            </li>
+            <li class="tab-item"><a href="#">검사/처치 신청</a></li>
+            <li class="tab-item"><a href="#">상담/기록 조회</a></li>
+        </ul>
+    </nav>
+
+    <div class="sub-menu" th:text="${title}">서브메뉴</div>
+</div>
+</body>
+</html>

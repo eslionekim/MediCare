@@ -24,7 +24,7 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     // 특정 기간 방문 (시간순)
     @Query("select v from Visit v where v.visit_datetime between :start and :end order by v.visit_datetime asc")
     List<Visit> findByVisitDatetimeBetweenOrderByVisitDatetimeAsc(@Param("start") LocalDateTime start,
-                                                                  @Param("end") LocalDateTime end);
+            @Param("end") LocalDateTime end);
 
     // 환자별 방문 이력 (최근순, 파라미터: Patient)
     @Query("select v from Visit v where v.patient = :patient order by v.visit_datetime desc")
@@ -49,6 +49,26 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     // 청구 완료/종료 방문 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.patient LEFT JOIN FETCH v.user_account LEFT JOIN FETCH v.insurance_code JOIN v.status_code s WHERE s.status_code IN ('VIS_CLAIMED', 'VIS_COMPLETED') ORDER BY v.created_at DESC")
     List<Visit> findAllVisits();
-    
-    
+
+    // 금일 방문(수납 대상) - status_code는 필요하면 조건 추가
+    @Query("""
+                select v
+                from Visit v
+                where v.visit_datetime between :start and :end
+                order by v.visit_datetime asc
+            """)
+    List<Visit> findTodaysVisits(@Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
+    @Query("""
+                select v
+                from Visit v
+                left join fetch v.patient
+                left join fetch v.department
+                left join fetch v.user_account
+                left join fetch v.insurance_code
+                left join fetch v.status_code
+                where v.visit_id = :visitId
+            """)
+    Visit findDetail(@Param("visitId") Long visitId);
 }
