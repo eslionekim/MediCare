@@ -158,7 +158,7 @@ public class Work_scheduleController {
             .collect(Collectors.toList());
     }
 
-    // 구현 안됨
+    
     @PostMapping("/doctor/mySchedule/vacation/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
     @ResponseBody
     public void cancelVacation(@PathVariable("vacationId") Long vacationId) {
