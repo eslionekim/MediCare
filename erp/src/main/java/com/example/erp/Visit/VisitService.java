@@ -18,14 +18,14 @@ public class VisitService {
     private final VisitRepository visitRepository;
 
     @Transactional(readOnly = true) // 트랜젝션(조회용)
-    public List<TodayVisitDTO> getTodayVisitList() { // 의사->금일 진료 리스트 by 은서
+    public List<TodayVisitDTO> getTodayVisitListByUser(String userId) { // 의사->금일 진료 리스트 by 은서
         LocalDate today = LocalDate.now(); // 오늘 날짜 -> 최종내원일에 쓰임
         LocalDateTime todayStart = today.atStartOfDay(); // 오늘 날짜를 LocalDateTime으로 바꿈, 진료시간으로 설정된거랑 비교하려면 쩔수없음
 
         LocalDateTime start = today.atStartOfDay();
         LocalDateTime end = today.plusDays(1).atStartOfDay().minusSeconds(1);
 
-        List<Visit> todayVisits = visitRepository.findByVisitDate(start, end); // 금일 진료 리스트 조회
+        List<Visit> todayVisits = visitRepository.findByVisitDate(start, end, userId); // 금일 진료 리스트 조회
         List<TodayVisitDTO> result = new ArrayList<>(); // 추출한거 담을 결과물
         LocalDateTime first = null; // 가장 빠른 시간
 

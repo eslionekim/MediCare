@@ -17,5 +17,5 @@ public interface Work_typeRepository extends JpaRepository<Work_type, String> {
 	        join ur.user_account ua
 	        where ua.user_id = :user_id
 	    """)
-	    List<Work_type> findByUserRole(@Param("user_id") String user_id);
+	List<Work_type> findByUserRole(@Param("user_id") String user_id);
 }

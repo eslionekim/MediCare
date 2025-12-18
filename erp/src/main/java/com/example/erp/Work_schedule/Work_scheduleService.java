@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 public class Work_scheduleService {
     private final Work_scheduleRepository work_scheduleRepository;
 
-	public List<Work_scheduleDTO.WorkTypeItem> getDoctorMonthlySchedule(String userId, int year, int month) {
+	public List<ScheduleCalendarDTO> getDoctorMonthlySchedule(String userId, int year, int month) {
 
 	    return work_scheduleRepository.findDoctorMonthlySchedule(userId, year, month);
 	}

@@ -2,6 +2,7 @@ package com.example.erp.Work_schedule;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +35,7 @@ import com.example.erp.Vacation.VacationDTO;
 import com.example.erp.Vacation.VacationRepository;
 import com.example.erp.Work_schedule.Work_scheduleDTO.ScheduleItem;
 import com.example.erp.Work_schedule.Work_scheduleDTO.WorkScheduleSaveRequest;
+import com.example.erp.Work_schedule.ScheduleCalendarDTO;
 import com.example.erp.Work_type.Work_type;
 import com.example.erp.Work_type.Work_typeRepository;
 
@@ -53,7 +55,7 @@ public class Work_scheduleController {
     private final Status_codeRepository status_codeRepository;
     private final Work_scheduleService work_scheduleService;
     
-    @GetMapping("/hr/schedule") // 인사 -> 스케줄 부여-> 날짜 by 은서
+    @GetMapping("/hr/scheduleAssignment") // 인사 -> 스케줄 부여-> 날짜 by 은서
     public String getSchedulePage(@RequestParam(value="year",required = false) Integer year,
                                   @RequestParam(value="month",required = false) Integer month,
                                   Model model) {
@@ -100,14 +102,35 @@ public class Work_scheduleController {
         String userId = SecurityContextHolder.getContext()
                 .getAuthentication().getName();
 
-        List<Work_scheduleDTO.WorkTypeItem> list =
+        List<ScheduleCalendarDTO> list =
                 work_scheduleService.getDoctorMonthlySchedule(userId, year, month);
 
         List<Map<String, Object>> events = new ArrayList<>();
 
-        for (Work_scheduleDTO.WorkTypeItem item : list) {
+        for (ScheduleCalendarDTO item : list) {
             Map<String, Object> event = new HashMap<>();
-            event.put("title", item.getWorkName());                 // ⭐ work_name
+            
+            StringBuilder title = new StringBuilder();
+            title.append(item.getWorkName());
+
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            if (item.getStartTime() != null) {
+                title.append("\n출근 ")
+                     .append(item.getStartTime().format(timeFormatter));
+            }
+
+            if (item.getEndTime() != null) {
+                title.append("\n퇴근 ")
+                     .append(item.getEndTime().format(timeFormatter));
+            }
+
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
+            
+            event.put("title", title.toString());                 // ⭐ work_name
             event.put("start", item.getWorkDate().toString());     // ⭐ yyyy-MM-dd
             event.put("allDay", true);
 
@@ -153,10 +176,10 @@ public class Work_scheduleController {
     
     @GetMapping("/work-types") // 인사 -> 스케줄 부여 -> 근무종류 조회 by 은서
     @ResponseBody
-    public List<Work_scheduleDTO.WorkTypeItem> getWorkTypesByUser(@RequestParam("user_id") String user_id) {
+    public List<ScheduleCalendarDTO> getWorkTypesByUser(@RequestParam("user_id") String user_id) {
         List<Work_type> types = work_typeRepository.findByUserRole(user_id);
         return types.stream()
-                    .map(wt -> new Work_scheduleDTO.WorkTypeItem(wt.getWork_type_code(), wt.getWork_name()))
+                    .map(wt -> new ScheduleCalendarDTO(wt.getWork_type_code(), wt.getWork_name()))
                     .collect(Collectors.toList());
     }
 
@@ -303,9 +326,59 @@ public class Work_scheduleController {
 
     // 인사 -> 근태 조회 by 은서
     @GetMapping("/hr/allWork") 
-    public String allWork() {
-		return "hr/allWork";
+    public String allWork(Model model) {
+    	List<User_account> user = user_accountRepository.findAll();
+    	model.addAttribute("user", user);
+    	return "hr/allWork";
     }
+    
+    // 인사 -> 근태 조회 by 은서
+    @GetMapping("/hr/allWork/schedule")
+    @ResponseBody
+    public List<Map<String, Object>> getDoctorScheduleEvents(
+            @RequestParam(value="userId", required=false) String userId,
+            @RequestParam(value="year", required=false) int year,
+            @RequestParam(value="month", required=false) int month
+    ) {
+        List<ScheduleCalendarDTO> list =
+                work_scheduleService.getDoctorMonthlySchedule(userId, year, month);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+        for (ScheduleCalendarDTO item : list) {
+            Map<String, Object> event = new HashMap<>();
+
+            StringBuilder title = new StringBuilder();
+            title.append(item.getWorkName());
+
+            if (item.getStartTime() != null) {
+                title.append("\n출근 ")
+                     .append(item.getStartTime().format(timeFormatter));
+            }
+
+            if (item.getEndTime() != null) {
+                title.append("\n퇴근 ")
+                     .append(item.getEndTime().format(timeFormatter));
+            }
+            
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
+
+            event.put("title", title.toString());
+            event.put("start", item.getWorkDate().toString());
+            event.put("allDay", true);
+
+            events.add(event);
+        }
+
+        return events;
+    }
+
+
     
     
 }

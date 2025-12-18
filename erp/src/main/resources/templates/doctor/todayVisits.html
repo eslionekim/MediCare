@@ -282,12 +282,12 @@
 			    </tr>
 			</thead>
 
-			<tbody>
+			<tbody id="visitTableBody">
 				<tr th:if="${todayList.size() == 0}">
 				        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
 				    </tr>
 
-				    <tr th:each="v : ${todayList}">
+				    <tr th:each="v : ${todayList}" class="visit-row">
 						<td th:text="${v.visit_time}"></td>
 				        <td th:text="${v.patient_id}"></td>
 				        <td th:text="${v.name}"></td>
@@ -325,5 +325,27 @@
 
     </div>
 	<!-- 콘텐츠 영역 끝-->
+	<script>
+	const statusFilter = document.getElementById('statusFilter'); //필터링 select
+	const tableBody = document.getElementById('visitTableBody'); //테이블
+
+	statusFilter.addEventListener('change', function() { //change : select 선택값 바꿨을 때
+	    const selectedStatus = this.value; // 선택된 값
+
+	    const rows = tableBody.querySelectorAll('.visit-row'); // 테이블에서 visit-row클래스 행 모두 가져오기
+
+	    rows.forEach(row => { // 행 순회
+	        const statusSpan = row.querySelector('td span'); // 행에서 td 내부 span요소 찾기
+	        const statusText = statusSpan ? statusSpan.textContent : ''; //존재하면 저장
+
+	        if (selectedStatus === '' || statusText === selectedStatus) { // 선택된 값과 순회하는 값이 같으면
+	            row.style.display = ''; // 보여주기
+	        } else {
+	            row.style.display = 'none'; // 숨기기
+	        }
+	    });
+	});
+	</script>
+
 </body>
 </html>

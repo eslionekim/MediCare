@@ -39,8 +39,8 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     List<Visit> findByPatientId(@Param("patientId") Long patientId);
 
     // 오늘 진료 리스트 (환자 fetch)
-    @Query("SELECT v FROM Visit v JOIN FETCH v.patient WHERE v.visit_datetime BETWEEN :start AND :end")
-    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+    @Query("SELECT v FROM Visit v JOIN FETCH v.patient WHERE v.visit_datetime BETWEEN :start AND :end AND v.user_account.user_id = :userId")
+    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,@Param("userId") String userId);
 
     // 차트 작성 시 department, insurance 함께 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.department JOIN FETCH v.insurance_code WHERE v.visit_id = :visit_id")

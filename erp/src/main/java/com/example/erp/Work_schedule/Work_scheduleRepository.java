@@ -18,18 +18,23 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
 
     // 의사 -> 스케줄 조회 by 은서
     @Query("""
-    	    SELECT new com.example.erp.Work_schedule.Work_scheduleDTO$WorkTypeItem(
-    	        ws.work_date,
-    	        wt.work_type_code,
-    	        wt.work_name
-    	    )
-    	    FROM Work_schedule ws
-    	    JOIN ws.work_type wt
-    	    WHERE ws.user_account.user_id = :userId
-    	      AND YEAR(ws.work_date) = :year
-    	      AND MONTH(ws.work_date) = :month
+	 SELECT new com.example.erp.Work_schedule.ScheduleCalendarDTO(
+	        ws.work_date,
+	        wt.work_type_code,
+	        wt.work_name,
+	        ws.start_time,
+	        ws.end_time,
+	        sc.name
+	    )
+	    FROM Work_schedule ws
+	    JOIN ws.work_type wt
+	    JOIN ws.user_account u
+	    JOIN ws.status_code sc
+	    WHERE u.user_id = :userId
+	      AND YEAR(ws.work_date) = :year
+	      AND MONTH(ws.work_date) = :month
     	""")
-    List<Work_scheduleDTO.WorkTypeItem> findDoctorMonthlySchedule(
+    List<ScheduleCalendarDTO> findDoctorMonthlySchedule(
     	        @Param("userId") String userId,
     	        @Param("year") int year,
     	        @Param("month") int month
@@ -62,5 +67,17 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	      AND ws.work_date = :workDate
     	""")
     Optional<Work_schedule> findByUser_account_UserIdAndWork_date(@Param("userId") String userId, @Param("workDate") LocalDate workDate);
+
+    // work_schedule -> 출퇴근시간 토대로 status_code 지정 -> 어제 날짜까지 by 은서
+    @Query("""
+    	    SELECT ws
+    	    FROM Work_schedule ws
+    	    JOIN FETCH ws.work_type wt
+    	    JOIN FETCH ws.user_account u
+    	    WHERE ws.work_date <= :targetDate
+    	      AND ws.status_code IS NULL
+    	    """)
+    	    List<Work_schedule> findTargetSchedules(@Param("targetDate") LocalDate targetDate);
+
 }
 
