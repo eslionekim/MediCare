@@ -71,4 +71,51 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
                 where v.visit_id = :visitId
             """)
     Visit findDetail(@Param("visitId") Long visitId);
+    
+    @Query("""
+            SELECT new com.example.erp.Visit.AllVisitDTO(
+                c.chart_id,
+                p.patient_id,
+                d.name,
+                p.name,
+                p.gender,
+                p.birth_date,
+                v.visit_type,
+                v.created_at,
+                v.note,
+                i.name,
+                u.name,
+                v.visit_id
+            )
+            FROM Visit v
+            JOIN v.chart c
+            JOIN v.patient p
+            JOIN v.department d
+            JOIN v.user_account u
+            JOIN v.status_code sc
+            LEFT JOIN v.insurance_code i
+            WHERE
+		           sc.status_code IN ('VIS_COMPLETED', 'VIS_CLAIMED')
+		    AND (:department IS NULL OR d.name = :department)
+            AND (:doctor IS NULL OR u.name = :doctor)
+            AND (
+                :keyword IS NULL
+                OR p.name LIKE CONCAT('%', :keyword, '%')
+                OR v.note LIKE CONCAT('%', :keyword, '%')
+                OR d.name LIKE CONCAT('%', :keyword, '%')
+                OR u.name LIKE CONCAT('%', :keyword, '%')
+            )
+            AND (
+                :date IS NULL
+                OR DATE(v.created_at) = :date
+            )
+            ORDER BY v.created_at DESC
+            """)
+        List<AllVisitDTO> searchVisits(
+            @Param("department") String department,
+            @Param("doctor") String doctor,
+            @Param("keyword") String keyword,
+            @Param("date") LocalDate date
+        );
+
 }

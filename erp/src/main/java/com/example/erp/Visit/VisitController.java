@@ -72,8 +72,24 @@ public class VisitController {
         public String getAllVisitList(Model model) {
                 List<AllVisitDTO> allVisits = visitService.getAllVisitList();
                 model.addAttribute("allVisits", allVisits);
+                model.addAttribute("departments", departmentRepository.findAll());
                 return "doctor/allVisits"; // 타임리프 HTML 파일
         }
+        
+        @GetMapping("/doctor/allVisits/search") // 의사-> 전체 진료 리스트 - 검색창
+        public String searchVisits(
+                @RequestParam(value = "department",required = false) String department,
+                @RequestParam(value = "doctor",required = false) String doctor,
+                @RequestParam(value = "keyword",required = false) String keyword,
+                @RequestParam(value = "date",required = false) String date,
+                Model model) {
+
+            model.addAttribute("allVisits",
+                visitService.searchVisits(department, doctor, keyword, date));
+
+            return "doctor/allVisits :: table"; // 타임리프 fragment
+        }
+
 
         @GetMapping("/doctor/chartWrite") // 금일 진료 리스트 -> 진료시작 -> 차트 생성-> 차트 작성 페이지 이동
         public String chartWrite(@RequestParam("visit_id") Long visit_id, @RequestParam("patient_id") Long patient_id,
