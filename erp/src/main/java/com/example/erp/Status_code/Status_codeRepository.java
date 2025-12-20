@@ -1,5 +1,6 @@
 package com.example.erp.Status_code;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,8 @@ public interface Status_codeRepository  extends JpaRepository<Status_code, Strin
 	// 인사 -> 휴가 리스트 -> 상태코드 수정, 의사 -> 휴가 신청 -> 승인 대기로 by 은서
 	@Query("SELECT s FROM Status_code s WHERE s.status_code = :code")
 	Optional<Status_code> findByCode(@Param("code") String code);
+	
+	//의사-> 스케줄 조회-> 휴가 리스트 -> 검색창 ->승인여부 by 은서
+	@Query("SELECT s FROM Status_code s WHERE s.category = :category AND s.is_active = true")
+	List<Status_code> findByCategoryAndIsActiveTrue(@Param("category") String category);
 }

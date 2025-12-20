@@ -28,4 +28,27 @@ public interface VacationRepository extends JpaRepository<Vacation, Long> {
     		    @Param("date") LocalDate date
     		);
 
+    // 의사-> 스케줄 조회-> 휴가리스트 -> 검색창
+    @Query("""
+    	    SELECT v
+    	    FROM Vacation v
+    	    JOIN v.vacation_type vt
+    	    JOIN v.status_code sc
+    	    WHERE v.user_account.user_id = :userId
+    	      AND (:typeCode IS NULL OR vt.vacation_type_code = :typeCode)
+    	      AND (:statusCode IS NULL OR sc.status_code = :statusCode)
+    	      AND (
+    	            :date IS NULL
+    	            OR (:date BETWEEN v.start_date AND v.end_date)
+    	      )
+    	    ORDER BY v.start_date DESC
+    	""")
+    	List<Vacation> searchVacations(
+    	    @Param("userId") String userId,
+    	    @Param("typeCode") String typeCode,
+    	    @Param("statusCode") String statusCode,
+    	    @Param("date") LocalDate date
+    	);
+
+    
 }

@@ -26,6 +26,7 @@ import com.example.erp.Department.Department;
 import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Status_code.Status_code;
+import com.example.erp.Status_code.Status_codeDTO;
 import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.User_account.User_account;
 import com.example.erp.User_account.User_accountRepository;
@@ -33,6 +34,8 @@ import com.example.erp.User_role.User_roleRepository;
 import com.example.erp.Vacation.Vacation;
 import com.example.erp.Vacation.VacationDTO;
 import com.example.erp.Vacation.VacationRepository;
+import com.example.erp.Vacation_type.Vacation_typeDTO;
+import com.example.erp.Vacation_type.Vacation_typeRepository;
 import com.example.erp.Work_schedule.Work_scheduleDTO.ScheduleItem;
 import com.example.erp.Work_schedule.Work_scheduleDTO.WorkScheduleSaveRequest;
 import com.example.erp.Work_schedule.ScheduleCalendarDTO;
@@ -46,6 +49,7 @@ import lombok.RequiredArgsConstructor;
 public class Work_scheduleController {
 
     private final VacationRepository vacationRepository;
+    private final Vacation_typeRepository vacation_typeRepository;
 	private final User_accountRepository user_accountRepository;
     private final Staff_profileRepository staff_profileRepository;
     private final DepartmentRepository departmentRepository;
@@ -157,8 +161,56 @@ public class Work_scheduleController {
             ))
             .collect(Collectors.toList());
     }
-
     
+    @GetMapping("/doctor/mySchedule/vacation-types") //의사-> 스케줄 조회->휴가리스트 -> 검색창-> 분류 by 은서
+    @ResponseBody
+    public List<Vacation_typeDTO> getVacationTypes() {
+        return vacation_typeRepository.findByIsActiveTrue()
+            .stream()
+            .map(v -> new Vacation_typeDTO(
+                v.getVacation_type_code(),
+                v.getType_name()
+            ))
+            .toList();
+    }
+    
+    @GetMapping("/doctor/mySchedule/vacation-status") //의사-> 스케줄 조회-> 휴가리스트-> 검색창-> 승인여부 by 은서
+    @ResponseBody
+    public List<Status_codeDTO> getVacationStatus() {
+        return status_codeRepository.findByCategoryAndIsActiveTrue("vacation")
+            .stream()
+            .map(s -> new Status_codeDTO(
+                s.getStatus_code(),
+                s.getName()
+            ))
+            .toList();
+    }
+
+    @GetMapping("/doctor/mySchedule/vacations/search") //의사-> 스케줄 조회-> 휴가리스트-> 검색창 by 은서
+    @ResponseBody
+    public List<VacationDTO> searchVacations(
+        @RequestParam(value="typeCode",required = false) String typeCode,
+        @RequestParam(value="statusCode",required = false) String statusCode,
+        @RequestParam(value="date",required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return vacationRepository.searchVacations(userId,
+                (typeCode == null || typeCode.isBlank()) ? null : typeCode,
+                (statusCode == null || statusCode.isBlank()) ? null : statusCode,
+                date)
+            .stream()
+            .map(v -> new VacationDTO(
+        		v.getVacation_id(),
+                v.getVacation_type().getType_name(),
+                v.getStart_date().toString(),
+                v.getEnd_date().toString(),
+                v.getStatus_code().getName(),
+                v.getStatus_code().getStatus_code()
+            ))
+            .collect(Collectors.toList());
+    }
+
     @PostMapping("/doctor/mySchedule/vacation/{vacationId}/cancel") //의사-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
     @ResponseBody
     public void cancelVacation(@PathVariable("vacationId") Long vacationId) {
@@ -182,9 +234,7 @@ public class Work_scheduleController {
                     .map(wt -> new ScheduleCalendarDTO(wt.getWork_type_code(), wt.getWork_name()))
                     .collect(Collectors.toList());
     }
-
-
-
+    
     @PostMapping("/work-schedule/save") //인사 -> 스케줄 부여 -> 저장 by 은서
     public ResponseEntity<?> saveSchedule(@RequestBody WorkScheduleSaveRequest req) {
 
