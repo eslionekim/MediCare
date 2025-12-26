@@ -107,10 +107,11 @@ public class VisitService {
             AllVisitDTO dto = new AllVisitDTO();
             dto.setChart_id(!v.getChart().isEmpty() ? v.getChart().get(0).getChart_id() : null);
             dto.setVisit_id(v.getVisit_id());
+            dto.setDepartment_name(v.getDepartment().getName());
             dto.setPatient_id(v.getPatient().getPatient_id());
             dto.setPatient_name(v.getPatient().getName());
             dto.setGender(v.getPatient().getGender());
-            dto.setBirth_date(v.getPatient().getBirth_date().toString()); // yyyy-MM-dd
+            dto.setBirth_date(v.getPatient().getBirth_date()); // yyyy-MM-dd
             dto.setVisit_type(v.getVisit_type());
             dto.setCreated_at(v.getCreated_at());
             dto.setNote(v.getNote());
@@ -122,5 +123,33 @@ public class VisitService {
 
         return result;
     }
+    
+    private String emptyToNull(String value) {
+        return (value == null || value.trim().isEmpty()) ? null : value;
+    }
+
+    public List<AllVisitDTO> searchVisits(
+            String department,
+            String doctor,
+            String keyword,
+            String date
+    ) {
+        department = emptyToNull(department);
+        doctor = emptyToNull(doctor);
+        keyword = emptyToNull(keyword);
+
+        LocalDate parsedDate = null;
+        if (date != null && !date.isBlank()) {
+            parsedDate = LocalDate.parse(date);
+        }
+
+        return visitRepository.searchVisits(
+            department,
+            doctor,
+            keyword,
+            parsedDate
+        );
+    }
+
 
 }

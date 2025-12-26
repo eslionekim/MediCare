@@ -40,7 +40,8 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     // 오늘 진료 리스트 (환자 fetch)
     @Query("SELECT v FROM Visit v JOIN FETCH v.patient WHERE v.visit_datetime BETWEEN :start AND :end AND v.user_account.user_id = :userId")
-    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,@Param("userId") String userId);
+    List<Visit> findByVisitDate(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end,
+            @Param("userId") String userId);
 
     // 차트 작성 시 department, insurance 함께 조회
     @Query("SELECT v FROM Visit v JOIN FETCH v.department JOIN FETCH v.insurance_code WHERE v.visit_id = :visit_id")
@@ -72,6 +73,49 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
             """)
     Visit findDetail(@Param("visitId") Long visitId);
 
-    @Query("select (count(v) > 0) from Visit v where v.reservation.reservation_id = :reservationId")
-    boolean existsByReservationId(@Param("reservationId") Long reservationId);
+    @Query("""
+                  SELECT new com.example.erp.Visit.AllVisitDTO(
+                      c.chart_id,
+                      p.patient_id,
+                      d.name,
+                      p.name,
+                      p.gender,
+                      p.birth_date,
+                      v.visit_type,
+                      v.created_at,
+                      v.note,
+                      i.name,
+                      u.name,
+                      v.visit_id
+                  )
+                  FROM Visit v
+                  JOIN v.chart c
+                  JOIN v.patient p
+                  JOIN v.department d
+                  JOIN v.user_account u
+                  JOIN v.status_code sc
+                  LEFT JOIN v.insurance_code i
+                  WHERE
+                   sc.status_code IN ('VIS_COMPLETED', 'VIS_CLAIMED')
+            AND (:department IS NULL OR d.name = :department)
+                  AND (:doctor IS NULL OR u.name = :doctor)
+                  AND (
+                      :keyword IS NULL
+                      OR p.name LIKE CONCAT('%', :keyword, '%')
+                      OR v.note LIKE CONCAT('%', :keyword, '%')
+                      OR d.name LIKE CONCAT('%', :keyword, '%')
+                      OR u.name LIKE CONCAT('%', :keyword, '%')
+                  )
+                  AND (
+                      :date IS NULL
+                      OR DATE(v.created_at) = :date
+                  )
+                  ORDER BY v.created_at DESC
+                  """)
+    List<AllVisitDTO> searchVisits(
+            @Param("department") String department,
+            @Param("doctor") String doctor,
+            @Param("keyword") String keyword,
+            @Param("date") LocalDate date);
+
 }

@@ -267,8 +267,26 @@
 		</div>
 		
 		<!-- 2. 휴가 -->
-		<div class="vacation" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; border: none;">
-			    <table border="1" width="100%">
+		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">
+			<!-- 상태 필터링 -->
+					<div class="search-area" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+						<!-- 진료과 -->
+					    <select id="departmentSelect">
+					        <option value="">분류</option>
+					    </select>
+
+					    <!-- 의사 -->
+					    <select id="doctorSelect">
+					        <option value="">승인여부</option>
+					    </select>
+
+					    <!-- 날짜 -->
+					    <input type="date" id="visitDate">
+
+					    <button onclick="searchVisits()">검색</button>
+					</div>    
+			
+			<table border="1" width="100%">
 			        <thead>
 			            <tr>
 			                <th>분류</th>
@@ -284,89 +302,153 @@
 	<!-- 콘텐츠 영역 끝-->
 	
 	<script>
-	document.addEventListener('DOMContentLoaded', function () {
-	
-	    // -------------------
-	    // 1. FullCalendar
-	    // -------------------
-	    const calendarEl = document.getElementById('calendar');
-	
-	    const calendar = new FullCalendar.Calendar(calendarEl, {
-	        initialView: 'dayGridMonth',
-	        locale: 'ko',
-	        height: 'auto',
-	
-	        headerToolbar: {
-	            left: 'prev,next today',
-	            center: 'title',
-	            right: ''
-	        },
-	
-	        datesSet: function (info) {
-	            const currentDate = info.view.currentStart;
-	            const year = currentDate.getFullYear();
-	            const month = currentDate.getMonth() + 1;
-	
-	            console.log('조회 기준:', year, month);
-	
-	            // 서버에서 근무 스케줄 불러오기
-	            fetch(`/doctor/mySchedule/events?year=${year}&month=${month}`)
-	                .then(res => res.json())
-	                .then(data => {
-	                    calendar.removeAllEvents();
-	                    calendar.addEventSource(data);
-	                });
-	        }
-	    });
-	
-	    calendar.render();
-	
-	
-	    // -------------------
-	    // 2. 휴가 리스트
-	    // -------------------
-	    function loadVacations() {
-	
-	        fetch('/doctor/mySchedule/vacations')
-	            .then(res => res.json())
-	            .then(data => {
-	                const tbody = document.getElementById('vacationBody');
-	                tbody.innerHTML = '';
-	
-					data.forEach(v => {
-					    const tr = document.createElement('tr');
-					    tr.innerHTML = `
-					        <td>${v.typeName}</td>
-					        <td>${v.startDate} ~ ${v.endDate}</td>
-					        <td>${v.statusName}</td>
-					        <td>
-					            ${v.statusCode === 'VAC_APPROVED'
-					                ? `<button onclick="cancelVacation(${v.vacationId})">취소</button>`
-					                : '-'}
-					        </td>
-					    `;
-					    tbody.appendChild(tr);
-					});
+document.addEventListener('DOMContentLoaded', function () {
 
-	            });
-	    }
-	
-	    loadVacations();
-	
-	    window.cancelVacation = function(vacationId) {
-	        if (!confirm('휴가 취소 요청하시겠습니까?')) return;
-	
-	        fetch(`/doctor/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
-				.then(res => {
-					if (!res.ok) throw new Error();
-					alert('취소 요청되었습니다.');
-					loadVacations();
-	        	})
-				.catch(() => alert('취소 요청 실패'));
-	    };
-	
-	});
+    /* =========================
+       1. FullCalendar
+    ========================= */
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'ko',
+        height: 'auto',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+        },
+        datesSet: function (info) {
+            const currentDate = info.view.currentStart;
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+
+            fetch(`/doctor/mySchedule/events?year=${year}&month=${month}`)
+                .then(res => res.json())
+                .then(data => {
+                    calendar.removeAllEvents();
+                    calendar.addEventSource(data);
+                });
+        }
+    });
+
+    calendar.render();
+
+    /* =========================
+       2. 초기 데이터 로딩
+    ========================= */
+    loadVacationTypes();
+    loadVacationStatus();
+    loadVacations();
+
+});
+
+/* =========================
+   분류 select
+========================= */
+function loadVacationTypes() {
+    fetch('/doctor/mySchedule/vacation-types')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('departmentSelect');
+            select.innerHTML = '<option value="">분류</option>';
+
+            data.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.typeCode;
+                opt.textContent = t.typeName;
+                select.appendChild(opt);
+            });
+        });
+}
+
+/* =========================
+   승인여부 select
+========================= */
+function loadVacationStatus() {
+    fetch('/doctor/mySchedule/vacation-status')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('doctorSelect');
+            select.innerHTML = '<option value="">승인여부</option>';
+
+            data.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.statusCode;
+                opt.textContent = s.name;
+                select.appendChild(opt);
+            });
+        });
+}
+
+/* =========================
+   전체 휴가 리스트
+========================= */
+function loadVacations() {
+    fetch('/doctor/mySchedule/vacations')
+        .then(res => res.json())
+        .then(renderVacationTable);
+}
+
+/* =========================
+   검색
+========================= */
+function searchVisits() {
+    const params = new URLSearchParams({
+        typeCode: document.getElementById('departmentSelect').value,
+        statusCode: document.getElementById('doctorSelect').value,
+        date: document.getElementById('visitDate').value
+    });
+
+    fetch(`/doctor/mySchedule/vacations/search?${params}`)
+        .then(res => res.json())
+        .then(renderVacationTable);
+}
+
+/* =========================
+   테이블 렌더링
+========================= */
+function renderVacationTable(data) {
+    const tbody = document.getElementById('vacationBody');
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">검색 결과 없음</td></tr>`;
+        return;
+    }
+
+    data.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${v.typeName}</td>
+            <td>${v.startDate} ~ ${v.endDate}</td>
+            <td>${v.statusName}</td>
+            <td>
+                ${v.statusCode === 'VAC_APPROVED'
+                    ? `<button onclick="cancelVacation(${v.vacationId})">취소</button>`
+                    : '-'}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   취소
+========================= */
+function cancelVacation(vacationId) {
+    if (!confirm('휴가 취소 요청하시겠습니까?')) return;
+
+    fetch(`/doctor/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            alert('취소 요청되었습니다.');
+            loadVacations();
+        })
+        .catch(() => alert('취소 요청 실패'));
+}
 </script>
+
 
 
 

@@ -29,7 +29,7 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
 	    FROM Work_schedule ws
 	    JOIN ws.work_type wt
 	    JOIN ws.user_account u
-	    JOIN ws.status_code sc
+	    LEFT JOIN ws.status_code sc
 	    WHERE u.user_id = :userId
 	      AND YEAR(ws.work_date) = :year
 	      AND MONTH(ws.work_date) = :month
