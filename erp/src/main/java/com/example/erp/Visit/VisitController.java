@@ -33,6 +33,8 @@ import com.example.erp.Insurance_code.Insurance_code;
 import com.example.erp.Patient.Patient;
 import com.example.erp.Patient.PatientService;
 import com.example.erp.Patient.VisitHistoryDto;
+import com.example.erp.Reservation.Reservation;
+import com.example.erp.Reservation.ReservationRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.User_account.User_account;
 import com.example.erp.Visit.OutHistoryDTO;
@@ -57,6 +59,7 @@ public class VisitController {
         private final com.example.erp.Insurance_code.Insurance_codeRepository insuranceCodeRepository;
         private final com.example.erp.Status_code.Status_codeRepository statusCodeRepository;
         private final Staff_profileRepository staffProfileRepository;
+        private final ReservationRepository reservationRepository;
 
         // ====================== 의사용 기능 ====================== by 은서
 
@@ -181,6 +184,7 @@ public class VisitController {
                 Patient selectedPatient = null;
                 List<Visit> visitHistories = Collections.emptyList();
                 List<OutHistoryDTO> outHistories = Collections.emptyList();
+                List<Reservation> confirmedReservations = Collections.emptyList();
 
                 if (patientId != null) {
                         selectedPatient = patientService.findById(patientId); // 이미 있는 서비스 활용
@@ -201,12 +205,22 @@ public class VisitController {
                                                                 v.getVisit_type(),
                                                                 v.getNote()))
                                                 .collect(Collectors.toList());
+
+                                // 오늘 확정 예약(RES_CONFIRMED) 목록 (이미 접수된 예약은 제외)
+                                List<Reservation> candidates = reservationRepository
+                                                .findByPatientAndStartTimeBetweenAndStatusCodes(
+                                                                patientId, start, end, List.of("RES_CONFIRMED", "RES_PENDING"));
+                                confirmedReservations = candidates.stream()
+                                                .filter(r -> !visitRepository.existsByReservationId(
+                                                                r.getReservation_id()))
+                                                .collect(Collectors.toList());
                         }
                 }
 
                 model.addAttribute("selectedPatient", selectedPatient);
                 model.addAttribute("visitHistories", visitHistories);
                 model.addAttribute("outHistories", outHistories);
+                model.addAttribute("confirmedReservations", confirmedReservations);
 
                 // 4) 드롭다운 데이터 (DB 연동)
                 List<Department> departments = departmentRepository.findActive();
@@ -230,6 +244,7 @@ public class VisitController {
                         @RequestParam(name = "departmentCode") String departmentCode, // 진료과 코드 (예: ORTHO)
                         @RequestParam(name = "visit_type") String visit_type, // first / follow-up
                         @RequestParam(name = "visitRoute") String visitRoute, // walk-in / reservation
+                        @RequestParam(name = "reservationId", required = false) Long reservationId, // 예약 기반 접수(선택)
                         @RequestParam(name = "insurance_code", required = false) String insuranceCode, // 보험 코드
                         @RequestParam(name = "note", required = false) String note,
                         RedirectAttributes redirectAttributes) {
@@ -242,6 +257,35 @@ public class VisitController {
 
                 Department department = departmentRepository.findById(departmentCode)
                                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 진료과 코드입니다."));
+
+                Reservation reservation = null;
+                if (reservationId != null) {
+                        reservation = reservationRepository.findById(reservationId)
+                                        .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 예약입니다."));
+
+                        if (reservation.getPatient() == null
+                                        || reservation.getPatient().getPatient_id() == null
+                                        || !reservation.getPatient().getPatient_id().equals(patientId)) {
+                                throw new IllegalArgumentException("해당 환자의 예약이 아닙니다.");
+                        }
+
+                        String resStatus = reservation.getStatus_code() != null ? reservation.getStatus_code().getStatus_code()
+                                        : null;
+                        if (resStatus == null
+                                        || !(resStatus.equalsIgnoreCase("RES_CONFIRMED")
+                                                        || resStatus.equalsIgnoreCase("RES_PENDING"))) {
+                                throw new IllegalArgumentException("접수 가능한 예약 상태가 아닙니다.");
+                        }
+
+                        if (visitRepository.existsByReservationId(reservationId)) {
+                                throw new IllegalArgumentException("이미 접수된 예약입니다.");
+                        }
+
+                        // 예약 정보로 의사/진료과를 강제 매핑 (폼 값보다 우선)
+                        doctor = reservation.getUser();
+                        department = reservation.getDepartment();
+                        visitRoute = "예약";
+                }
 
                 Insurance_code insurance = null;
                 if (insuranceCode != null && !insuranceCode.isBlank()) {
@@ -257,7 +301,7 @@ public class VisitController {
 
                 Visit visit = new Visit();
                 visit.setPatient(patient);
-                visit.setReservation(null); // 예약 기반 접수면 나중에 설정
+                visit.setReservation(reservation); // 예약 기반 접수면 연결
                 visit.setUser_account(doctor);
                 visit.setDepartment(department);
                 visit.setVisit_datetime(now);
@@ -270,6 +314,14 @@ public class VisitController {
 
                 // 3) 저장
                 visitRepository.save(visit);
+
+                // 4) 예약 기반 접수면 예약 상태를 RES_COMPLETED 로 변경
+                if (reservation != null) {
+                        Status_code completed = statusCodeRepository.findById("RES_COMPLETED")
+                                        .orElseThrow(() -> new IllegalArgumentException("예약 완료 상태코드가 없습니다."));
+                        reservation.setStatus_code(completed);
+                        reservationRepository.save(reservation);
+                }
 
                 redirectAttributes.addFlashAttribute("message", "접수가 등록되었습니다.");
                 return "redirect:/receptions?patientId=" + patientId;

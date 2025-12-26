@@ -42,10 +42,12 @@ public class PaymentService {
     }
 
     public PaymentPageModel loadPaymentPage(Long visitId) {
-        if (visitId == null) return PaymentPageModel.empty();
+        if (visitId == null)
+            return PaymentPageModel.empty();
 
         Visit visit = visitRepository.findDetail(visitId);
-        if (visit == null) return PaymentPageModel.empty();
+        if (visit == null)
+            return PaymentPageModel.empty();
 
         Claim claim = claimRepository.findByVisitId(visitId).orElse(null);
 
@@ -106,12 +108,15 @@ public class PaymentService {
 
     @Transactional
     public void pay(Long visitId, String paymentMethodCode) {
-        if (paymentRepository.existsByVisitId(visitId)) return;
+        if (paymentRepository.existsByVisitId(visitId))
+            return;
 
         PaymentPageModel m = loadPaymentPage(visitId);
         Visit visit = m.visit();
-        if (visit == null) throw new IllegalArgumentException("visit not found");
-        if (!m.claimReady()) throw new IllegalStateException("청구/청구항목이 없습니다. 결제 전에 청구를 생성해 주세요.");
+        if (visit == null)
+            throw new IllegalArgumentException("visit not found");
+        if (!m.claimReady())
+            throw new IllegalStateException("청구/청구항목이 없습니다. 결제 전에 청구를 생성해 주세요.");
 
         Payment payment = new Payment();
         payment.setVisit(visit);
@@ -121,8 +126,9 @@ public class PaymentService {
         payment.setPayment_method(pm);
 
         payment.setAmount(m.finalAmount());
+        payment.setPaid_at(LocalDateTime.now());
 
-        Status_code paid = statusCodeRepository.findById("PAYMENT_DONE")
+        Status_code paid = statusCodeRepository.findById("PAY_COMPLETED")
                 .orElseThrow(() -> new IllegalArgumentException("status_code PAYMENT_DONE not found"));
         payment.setStatus_code(paid);
 

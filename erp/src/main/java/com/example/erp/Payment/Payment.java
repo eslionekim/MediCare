@@ -6,6 +6,7 @@ import com.example.erp.Payment_method.Payment_method;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Visit.Visit;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -40,6 +41,7 @@ public class Payment { //결제
 
     private int amount; //금액 필드
 
+    @Column(nullable = false)
     private LocalDateTime paid_at; //결제시각 필드
 
     @ManyToOne(fetch = FetchType.LAZY)

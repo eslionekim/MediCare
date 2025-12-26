@@ -71,4 +71,7 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
                 where v.visit_id = :visitId
             """)
     Visit findDetail(@Param("visitId") Long visitId);
+
+    @Query("select (count(v) > 0) from Visit v where v.reservation.reservation_id = :reservationId")
+    boolean existsByReservationId(@Param("reservationId") Long reservationId);
 }
