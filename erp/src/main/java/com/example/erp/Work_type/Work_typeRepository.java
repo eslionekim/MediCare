@@ -18,4 +18,8 @@ public interface Work_typeRepository extends JpaRepository<Work_type, String> {
 	        where ua.user_id = :user_id
 	    """)
 	List<Work_type> findByUserRole(@Param("user_id") String user_id);
+	
+	//인사-> 전체 스케줄 조회-> 근무형태 드롭다운
+	@Query("SELECT w FROM Work_type w")
+    List<Work_type> findAllWorkTypes();
 }

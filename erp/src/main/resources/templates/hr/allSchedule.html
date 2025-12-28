@@ -247,6 +247,27 @@
 			</div>
 			
 			<div class="user">
+				<div id="userSearchArea" style="display:none; width:90%; margin:10px auto; gap:10px; justify-content:center;">
+					
+
+					    <!-- 진료과 -->
+					    <select id="departmentSelect">
+					        <option value="">진료과 전체</option>
+					    </select>
+
+					    <!-- 근무형태 -->
+					    <select id="workTypeSelect">
+					        <option value="">근무형태 전체</option>
+					    </select>
+
+					    <!-- 직원 검색 -->
+					    <input type="text" id="nameFilter" placeholder="직원명 / 직원ID">
+ 
+					    <button onclick="searchUserSchedule()">검색</button>
+					
+				</div>
+
+				
 				<table border="1" width="100%">
 				    <thead id="userScheduleHead" style="display:none;">
 				        <tr>
@@ -269,6 +290,10 @@
 	<!-- 콘텐츠 영역 끝-->
 	
 	<script>
+	let originScheduleData = []; // 날짜 기준 전체 데이터
+	let allWorkTypes = [];   // 전체 근무형태
+
+
 	document.addEventListener('DOMContentLoaded', function() {
 	    const calendarEl = document.getElementById('calendar');
 	    const userEl = document.getElementById('userSchedule');
@@ -299,10 +324,13 @@
 				     backgroundColor: '#D5DDED'
 				});
 
+				document.getElementById('userSearchArea').style.display = 'flex';
+				
 				// 직원 스케줄 조회
 				fetch(`/hr/allSchedule/byDate?date=${selectedDate}`)
 				     .then(res => res.json())
 				     .then(data => {
+					 originScheduleData = data;   // 🔥 원본 저장
 				     renderUserSchedule(data);
 				});
 			}
@@ -310,7 +338,26 @@
 	    });
 
 	    calendar.render();
+		loadDepartments();
+		loadWorkTypes();
+
 	});
+	
+	document.getElementById('departmentSelect').addEventListener('change', function () {
+	    const selectedDeptName =
+	        this.options[this.selectedIndex].text;
+
+	    const role = getRoleByDepartment(selectedDeptName);
+
+	    if (!role) {
+	        renderWorkTypeOptions(allWorkTypes); // 전체
+	        return;
+	    }
+
+	    const filtered = allWorkTypes.filter(w => w.roleCode === role);
+	    renderWorkTypeOptions(filtered);
+	});
+
 	
 	function renderUserSchedule(data) {
 	    const tbody = document.getElementById('userScheduleBody');
@@ -343,6 +390,92 @@
 	        tbody.appendChild(tr);
 	    });
 	}
+	
+	function loadDepartments() { //진료과 드롭다운
+	    fetch('/hr/allSchedule/departments')
+	        .then(res => res.json())
+	        .then(data => {
+	            const select = document.getElementById('departmentSelect');
+	            select.innerHTML = '<option value="">진료과 전체</option>';
+
+	            data.forEach(d => {
+	                const opt = document.createElement('option');
+	                opt.value = d.departmentCode;
+	                opt.textContent = d.name;
+	                select.appendChild(opt);
+	            });
+	        });
+	}
+
+	function loadWorkTypes() { // 근무형태 드롭다운 
+	    fetch('/hr/allSchedule/work-types')
+	        .then(res => res.json())
+	        .then(data => {
+	            allWorkTypes = data;     // 전체 저장
+	            renderWorkTypeOptions(data); // 최초 전체 표시
+	        });
+	}
+	
+	function renderWorkTypeOptions(list) { // 근무형태 드롭다운
+	    const select = document.getElementById('workTypeSelect');
+	    select.innerHTML = '<option value="">근무형태 전체</option>';
+
+	    list.forEach(w => {
+	        const opt = document.createElement('option');
+	        opt.value = w.workTypeCode;
+	        opt.textContent = w.workName;
+	        opt.dataset.role = w.roleCode; // 🔥 중요
+	        select.appendChild(opt);
+	    });
+	}
+
+	function getRoleByDepartment(deptName) { //과에 따라 근무 형태 다르게
+	    if (['내분비내과', '일반외과', '정형외과', '호흡기내과'].includes(deptName))
+	        return 'DOCTOR';
+	    if (deptName === '약제과')
+	        return 'PHARM';
+	    if (deptName === '원무과')
+	        return 'STAFF';
+	    return null;
+	}
+
+
+	
+	function searchUserSchedule() { //검색
+	    const deptCode = document.getElementById('departmentSelect').value;
+	    const workTypeCode = document.getElementById('workTypeSelect').value;
+	    const keyword = document.getElementById('nameFilter').value.trim();
+
+		let filtered = originScheduleData;
+	    // 1️.진료과 필터
+	    if (deptCode) {
+	        filtered = filtered.filter(item =>
+	            item.departmentCode === deptCode ||
+	            item.departmentName ===
+	            document.querySelector(`#departmentSelect option[value="${deptCode}"]`)?.textContent
+	        );
+	    }
+
+	    // 2️.근무형태 필터
+	    if (workTypeCode) {
+	        filtered = filtered.filter(item =>
+	            item.workTypeCode === workTypeCode ||
+	            item.workName ===
+	            document.querySelector(`#workTypeSelect option[value="${workTypeCode}"]`)?.textContent
+	        );
+	    }
+
+	    // 3️.직원ID / 직원명 LIKE 검색
+	    if (keyword) {
+	        filtered = filtered.filter(item =>
+	            (item.userId && item.userId.includes(keyword)) ||
+	            (item.userName && item.userName.includes(keyword))
+	        );
+	    }
+
+	    renderUserSchedule(filtered);
+	}
+
 	</script>
 
 

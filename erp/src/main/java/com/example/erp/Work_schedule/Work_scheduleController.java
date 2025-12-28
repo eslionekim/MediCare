@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Department.Department;
+import com.example.erp.Department.DepartmentDTO;
 import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Status_code.Status_code;
@@ -40,6 +41,7 @@ import com.example.erp.Work_schedule.Work_scheduleDTO.ScheduleItem;
 import com.example.erp.Work_schedule.Work_scheduleDTO.WorkScheduleSaveRequest;
 import com.example.erp.Work_schedule.ScheduleCalendarDTO;
 import com.example.erp.Work_type.Work_type;
+import com.example.erp.Work_type.Work_typeDTO;
 import com.example.erp.Work_type.Work_typeRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -306,6 +308,33 @@ public class Work_scheduleController {
     ) {
         return work_scheduleRepository.findDailySchedule(date);
     }
+    
+    @GetMapping("/hr/allSchedule/departments") // 인사 -> 전체 스케줄 조회 -> 진료과 드롭다운 by 은서
+    @ResponseBody
+    public List<DepartmentDTO> getDepartments() {
+        return departmentRepository.findActive()
+                .stream()
+                .map(d -> new DepartmentDTO(
+                        d.getDepartment_code(),
+                        d.getName()
+                ))
+                .toList();
+    }
+    
+    @GetMapping("/hr/allSchedule/work-types")// 인사 -> 전체 스케줄 조회 -> 근무형태 드롭다운 by 은서
+    @ResponseBody
+    public List<Work_typeDTO> getWorkTypes() {
+        return work_typeRepository.findAll()
+                .stream()
+                .map(w -> new Work_typeDTO(
+                        w.getWork_type_code(),
+                        w.getWork_name(),
+                        w.getRole_code().getRole_code()
+                ))
+                .toList();
+    }
+
+
     
     // 출근 by 은서
     @PostMapping("/work/time-in")
