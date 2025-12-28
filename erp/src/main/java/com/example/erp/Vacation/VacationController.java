@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Chart.ChartService;
+import com.example.erp.Department.Department;
+import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeDTO;
 import com.example.erp.Status_code.Status_codeRepository;
@@ -33,6 +35,7 @@ public class VacationController {
 	private final VacationRepository vacationRepository;
 	private final Vacation_typeRepository vacation_typeRepository;
 	private final Status_codeRepository status_codeRepository;
+	private final DepartmentRepository departmentRepository;
 	private final NotificationService notificationService;
 	
 	@GetMapping("/hr/vacationList") //인사 -> 휴가 리스트 by 은서

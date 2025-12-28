@@ -47,13 +47,16 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	        u.user_id,
     	        u.name,
     	        wt.work_name,
-    	        sc.name
+    	        vt.type_name
     	    )
     	    FROM Work_schedule ws
     	    JOIN ws.department d
     	    JOIN ws.user_account u
     	    JOIN ws.work_type wt
-    	    LEFT JOIN ws.status_code sc
+    	    LEFT JOIN Vacation v
+			    ON v.user_account = u
+			    AND :date BETWEEN v.start_date AND v.end_date
+			LEFT JOIN v.vacation_type vt
     	    WHERE ws.work_date = :date
     	""")
     List<Work_scheduleDTO.HrDailyScheduleItem> findDailySchedule(@Param("date") LocalDate date);

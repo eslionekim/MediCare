@@ -64,6 +64,9 @@ public class Work_scheduleController {
     @GetMapping("/hr/scheduleAssignment") // 인사 -> 스케줄 부여-> 날짜 by 은서
     public String getSchedulePage(@RequestParam(value="year",required = false) Integer year,
                                   @RequestParam(value="month",required = false) Integer month,
+                                  @RequestParam(value="departmentCode", required = false) String departmentCode,
+                                  @RequestParam(value="keyword", required = false) String keyword,
+                                  @RequestParam(value="status", required = false) String status,
                                   Model model) {
         // 기본값: 현재 연도·월 (기본 달력 날짜용)
         LocalDate now = LocalDate.now();
@@ -77,16 +80,46 @@ public class Work_scheduleController {
         LocalDate firstDay = LocalDate.of(year, month, 1);
         List<Map<String, Object>> userWithFlag = new ArrayList<>();
         for (User_account u : user) {
-            boolean hasSchedule = work_scheduleRepository.findByUserAndMonth(
-                    u.getUser_id(), firstDay, firstDay
-            ).size() > 0;
+        	boolean hasSchedule =work_scheduleRepository
+        	                .findByUserAndMonth(u.getUser_id(), firstDay, firstDay)
+        	                .size() > 0;
 
+    		// ======================
+            // 🔍 필터링 시작
+            // ======================
+
+            // 1️ 진료과 필터
+            if (departmentCode != null && !departmentCode.isBlank()) {
+                if (u.getStaff_profile().isEmpty()) continue;
+                if (!departmentCode.equals(
+                        u.getStaff_profile().get(0).getDepartment().getDepartment_code()
+                )) continue;
+            }
+
+            // 2️ 키워드 (ID or 이름)
+            if (keyword != null && !keyword.isBlank()) {
+                String userId = u.getUser_id();
+                String name = u.getName();
+
+                boolean matchId = userId != null && userId.contains(keyword);
+                boolean matchName = name != null && name.contains(keyword);
+
+                if (!(matchId || matchName)) continue;
+            }
+
+
+            // 3️ 상태 필터
+            if ("Y".equals(status) && !hasSchedule) continue;
+            if ("N".equals(status) && hasSchedule) continue;
+		
+            		
             Map<String, Object> map = new HashMap<>();
             map.put("user", u);
             map.put("hasScheduleOnFirst", hasSchedule);
             userWithFlag.add(map);
         }
-        
+        List<Department> departments = departmentRepository.findActive();
+        model.addAttribute("departments", departments);
         model.addAttribute("year", year);
         model.addAttribute("month", month);
         model.addAttribute("userWithFlag", userWithFlag);

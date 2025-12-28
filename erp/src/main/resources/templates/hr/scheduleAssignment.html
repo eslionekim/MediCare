@@ -254,14 +254,31 @@
 		<!-- 상태 필터링 -->
 			<div class="user_list">
 				<div> <!-- 검색창 -->
-					<form method="get" action="/hr/schedule">
-					  <label>
-					    년도<input type="number" name="year" th:value="${year}" min="2000" max="2099">
-					  </label>
+					<form method="get" action="/hr/scheduleAssignment">
+						<!-- 진료과 -->
+						  <select name="departmentCode">
+						    <option value="">진료과 전체</option>
+						    <option th:each="d : ${departments}"
+						            th:value="${d.department_code}"
+						            th:text="${d.name}">
+						    </option>
+						  </select>
 
-					  <label>
-					    월<input type="number" name="month" th:value="${month}" min="1" max="12">
-					  </label>
+						  <!-- 이름 or ID 검색 -->
+						  <input type="text" name="keyword" placeholder="직원명 / ID">
+
+						  <!-- 상태 -->
+						  <select name="status">
+						    <option value="">상태 전체</option>
+						    <option value="Y">부여</option>
+						    <option value="N">미부여</option>
+						  </select>
+						
+						
+					  <!-- 날짜 -->
+					  <label><input type="number" name="year" th:value="${year}" min="2000" max="2099"></label>
+
+					  <label><input type="number" name="month" th:value="${month}" min="1" max="12"></label>
 
 					  <button type="submit">조회</button>
 					</form>
