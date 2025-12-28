@@ -366,8 +366,6 @@ public class Work_scheduleController {
                 ))
                 .toList();
     }
-
-
     
     // 출근 by 은서
     @PostMapping("/work/time-in")
@@ -438,11 +436,52 @@ public class Work_scheduleController {
 
     // 인사 -> 근태 조회 by 은서
     @GetMapping("/hr/allWork") 
-    public String allWork(Model model) {
-    	List<User_account> user = user_accountRepository.findAll();
-    	model.addAttribute("user", user);
-    	return "hr/allWork";
+    public String allWork(
+            @RequestParam(value="departmentCode", required=false) String departmentCode,
+            @RequestParam(value="keyword", required=false) String keyword,
+            Model model
+    ) {
+        List<User_account> users = user_accountRepository.findAll();
+
+        List<User_account> filtered = new ArrayList<>();
+
+        for (User_account u : users) {
+
+            // 1️⃣ 진료과 필터
+            if (departmentCode != null && !departmentCode.isBlank()) {
+                if (u.getStaff_profile().isEmpty()) continue;
+
+                String userDeptCode =
+                        u.getStaff_profile().get(0).getDepartment().getDepartment_code();
+
+                if (!departmentCode.equals(userDeptCode)) continue;
+            }
+
+            // 2️⃣ 키워드 필터 (ID or 이름)
+            if (keyword != null && !keyword.isBlank()) {
+                String id = u.getUser_id();
+                String name = u.getName();
+
+                boolean match =
+                        (id != null && id.contains(keyword)) ||
+                        (name != null && name.contains(keyword));
+
+                if (!match) continue;
+            }
+
+            filtered.add(u);
+        }
+
+        model.addAttribute("user", filtered);
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("departmentCode", departmentCode);
+
+        // 진료과 드롭다운용
+        model.addAttribute("departments", departmentRepository.findActive());
+
+        return "hr/allWork";
     }
+
     
     // 인사 -> 근태 조회 by 은서
     @GetMapping("/hr/allWork/schedule")

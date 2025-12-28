@@ -247,6 +247,28 @@
     <div class="content-area">
 		<div class="container">
 			<div class="user"> <!-- 직원 영역-->
+				<!-- 🔍 검색 영역 -->
+				<form method="get" action="/hr/allWork" style="margin-bottom:10px;">
+				    <!-- 진료과 -->
+				    <select name="departmentCode">
+				        <option value="">진료과 전체</option>
+				        <option th:each="d : ${departments}"
+				                th:value="${d.department_code}"
+				                th:text="${d.name}"
+				                th:selected="${d.department_code == departmentCode}">
+				        </option>
+				    </select>
+
+				    <!-- 직원 ID / 이름 -->
+				    <input type="text"
+				           name="keyword"
+				           placeholder="직원명 / ID"
+				           th:value="${keyword}"/>
+
+				    <button type="submit">검색</button>
+				</form>
+
+				
 				<table class="user-table">
 			        <thead>
 			            <tr>
