@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Chart.ChartService;
 import com.example.erp.Status_code.Status_code;
+import com.example.erp.Status_code.Status_codeDTO;
 import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.User_account.User_account;
 import com.example.erp.Vacation_type.Vacation_type;
+import com.example.erp.Vacation_type.Vacation_typeDTO;
 import com.example.erp.Vacation_type.Vacation_typeRepository;
 import com.example.erp.notification.NotificationService;
 
@@ -41,6 +43,33 @@ public class VacationController {
         model.addAttribute("username", user_id);
         return "hr/vacationList";
     }
+	
+	@GetMapping("/hr/vacationList/types") //인사 -> 휴가 리스트->검색창 휴가분류 by 은서
+	@ResponseBody
+	public List<Vacation_typeDTO> getVacationTypes() {
+	    return vacation_typeRepository.findByIsActiveTrue()
+	            .stream()
+	            .map(v -> new Vacation_typeDTO(
+	                    v.getVacation_type_code(),
+	                    v.getType_name()
+	            ))
+	            .toList();
+	}
+	
+	@GetMapping("/hr/vacation/status")//인사 -> 휴가 리스트->검색창 휴가상태 by 은서
+	@ResponseBody
+	public List<Status_codeDTO> getVacationStatus() {
+	    return status_codeRepository
+	            .findByCategoryAndIsActiveTrue("vacation")
+	            .stream()
+	            .map(s -> new Status_codeDTO(
+	                    s.getStatus_code(),
+	                    s.getName()
+	            ))
+	            .toList();
+	}
+
+
 	
 	// 상태 변경 AJAX
     @PostMapping("/hr/vacation/updateStatus") //인사 -> 휴가 승인/취소/반려 by 은서
@@ -80,7 +109,7 @@ public class VacationController {
         
         model.addAttribute("vacation", vacation);
         model.addAttribute("vacationTypes", vacationTypes);
-        model.addAttribute("username", user_id); // ✅ username 추가
+        model.addAttribute("username", user_id);
         
         return "doctor/applyVacation";
     }

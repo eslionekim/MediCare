@@ -225,16 +225,33 @@
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
-		<!-- 상태 필터링 -->
-		<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
-		    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
-		        <option value="">전체 보기</option>
-		        <option value="대기 중">대기 중</option>
-		        <option value="진료중">진료중</option>
-		        <option value="진료종료">진료종료</option>
-		        <option value="수납/청구완료">수납/청구완료</option>
+		<!-- 검색 영역 -->
+		<div id="vacationSearchArea" style="width:90%; margin:10px auto; display:flex; gap:10px; justify-content:flex-end;">
+
+		    <!-- 진료과 -->
+		    <select id="departmentSelect">
+		        <option value="">진료과 전체</option>
 		    </select>
+
+		    <!-- 분류 -->
+		    <select id="typeSelect">
+		        <option value="">분류 전체</option>
+		    </select>
+
+		    <!-- 상태 -->
+		    <select id="statusSelect">
+		        <option value="">상태 전체</option>
+		    </select>
+
+		    <!-- 직원 검색 -->
+		    <input type="text" id="keyword" placeholder="직원명 / 직원ID">
+
+		    <!-- 날짜 -->
+		    <input type="date" id="Date">
+
+		    <button>검색</button>
 		</div>
+
 
 		<!-- 금일 진료 리스트 -->
 		<table id="table" border="1">
@@ -327,6 +344,127 @@
 	const popupFooter = document.getElementById('popupFooter'); //하단 DOM요소 접근
 	const popupTitle = document.getElementById('popupTitle'); //상단 DOM요소 접근
 
+	document.querySelector('#vacationSearchArea button').addEventListener('click', filterVacationTable); //드롭다운
+
+			document.addEventListener('DOMContentLoaded', () => { //드롭다운
+			    loadDepartments();
+			    loadVacationTypes();
+			    loadVacationStatuses();
+			});
+
+			/* =====================
+			   진료과 드롭다운
+			===================== */
+			function loadDepartments() {
+			    fetch('/hr/allSchedule/departments')
+			        .then(res => res.json())
+			        .then(data => {
+			            const select = document.getElementById('departmentSelect');
+			            select.innerHTML = '<option value="">진료과 전체</option>';
+
+			            data.forEach(d => {
+			                const opt = document.createElement('option');
+							opt.value = d.name;      // 코드 → 이름
+							                opt.textContent = d.name;
+			                select.appendChild(opt);
+			            });
+			        });
+			}
+
+			/* =====================
+			   휴가 분류 드롭다운
+			===================== */
+			function loadVacationTypes() {
+			    fetch('/hr/vacationList/types')
+			        .then(res => res.json())
+			        .then(data => {
+			            const select = document.getElementById('typeSelect');
+			            select.innerHTML = '<option value="">분류 전체</option>';
+
+			            data.forEach(t => {
+			                const opt = document.createElement('option');
+							opt.value = t.typeName;   // 코드 → 이름
+							opt.textContent = t.typeName;
+			                select.appendChild(opt);
+			            });
+			        });
+			}
+
+			/* =====================
+			   휴가 상태 드롭다운
+			===================== */
+			function loadVacationStatuses() {
+			    fetch('/hr/vacation/status')
+			        .then(res => res.json())
+			        .then(data => {
+			            const select = document.getElementById('statusSelect');
+			            select.innerHTML = '<option value="">상태 전체</option>';
+
+			            data.forEach(s => {
+			                const opt = document.createElement('option');
+							opt.value = s.name;      // 코드 → 이름
+							opt.textContent = s.name;
+			                select.appendChild(opt);
+			            });
+			        });
+			}
+			
+			function filterVacationTable() { //검색
+			    const deptValue   = document.getElementById('departmentSelect').value;
+			    const typeValue   = document.getElementById('typeSelect').value;
+			    const statusValue = document.getElementById('statusSelect').value;
+			    const keyword     = document.getElementById('keyword').value.trim().toLowerCase();
+			    const selectedDate = document.getElementById('Date').value;
+
+			    const rows = document.querySelectorAll('#table tbody tr');
+
+			    rows.forEach(row => {
+			        // "내역이 없습니다" / 빈 행 제외
+			        if (row.children.length < 9) return;
+
+			        const department = row.children[5].innerText.trim(); // 진료과
+			        const type       = row.children[1].innerText.trim(); // 분류
+			        const status     = row.children[2].innerText.trim(); // 상태
+			        const userId     = row.children[3].innerText.trim().toLowerCase();
+			        const userName   = row.children[4].innerText.trim().toLowerCase();
+			        const periodText = row.children[6].innerText.trim(); // yyyy-MM-dd ~ yyyy-MM-dd
+
+			        let isVisible = true;
+
+			        /* ===== 진료과 ===== */
+			        if (deptValue && department !== deptValue) {
+			            isVisible = false;
+			        }
+
+			        /* ===== 분류 ===== */
+			        if (typeValue && type !== typeValue) {
+			            isVisible = false;
+			        }
+
+			        /* ===== 상태 ===== */
+			        if (statusValue && status !== statusValue) {
+			            isVisible = false;
+			        }
+
+			        /* ===== 키워드 (ID or 이름 LIKE) ===== */
+			        if (keyword) {
+			            if (!userId.includes(keyword) && !userName.includes(keyword)) {
+			                isVisible = false;
+			            }
+			        }
+
+			        /* ===== 날짜 (start_date ~ end_date 사이) ===== */
+			        if (selectedDate) {
+			            const [startDate, endDate] = periodText.split(' ~ ');
+			            if (selectedDate < startDate || selectedDate > endDate) {
+			                isVisible = false;
+			            }
+			        }
+
+			        row.style.display = isVisible ? '' : 'none';
+			    });
+			}
+	
 	document.querySelectorAll('.btnView').forEach(btn => { //각 선택 버튼
 	    btn.addEventListener('click', () => { //클릭
 	        const tr = btn.closest('tr'); // 클릭한 행 기준으로 데이터 가져오기
@@ -400,11 +538,12 @@
 	        } else {
 	            alert('변경 실패');
 	        }
-	    });
+		    });
 	}
 	</script>
 	<script src="/js/notify.js"></script>
-	<script>
+	<script> //웹소켓
+
 		// 1. Notification 권한 요청
 		function requestNotificationPermission() {
 		    return new Promise((resolve, reject) => {
