@@ -80,7 +80,16 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	    WHERE ws.work_date <= :targetDate
     	      AND ws.status_code IS NULL
     	    """)
-    	    List<Work_schedule> findTargetSchedules(@Param("targetDate") LocalDate targetDate);
+    List<Work_schedule> findTargetSchedules(@Param("targetDate") LocalDate targetDate);
 
+    //로그아웃 버튼-> 퇴근찍었는지
+    @Query("""
+    	    SELECT ws
+    	    FROM Work_schedule ws
+    	    WHERE ws.user_account.user_id = :userId
+    	      AND ws.start_time IS NOT NULL
+    	      AND ws.end_time IS NULL
+    	""")
+    Optional<Work_schedule> findUnfinishedWork(@Param("userId") String userId);
 }
 

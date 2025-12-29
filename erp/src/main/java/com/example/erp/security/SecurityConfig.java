@@ -19,7 +19,9 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
-
+    private final CustomLoginSuccessHandler customLoginSuccessHandler;
+    
+    
     @Bean //보안 정책
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomLoginSuccessHandler successHandler) throws Exception {
         http
@@ -38,7 +40,12 @@ public class SecurityConfig {
                 .successHandler(successHandler) //역할별 리다이렉트
                 .permitAll() // 모두 접근 허용
             )
-            .logout(logout -> logout.permitAll()); //모두 접근 허용
+            .logout(logout -> logout
+                .logoutUrl("/logout")
+                .logoutSuccessUrl("/login")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
+            );
 
         return http.build();
     }
@@ -58,5 +65,6 @@ public class SecurityConfig {
         // return new BCryptPasswordEncoder();
         return NoOpPasswordEncoder.getInstance();
     }
+    
 }
 

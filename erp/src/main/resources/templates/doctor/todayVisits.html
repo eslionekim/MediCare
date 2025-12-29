@@ -210,6 +210,25 @@
 				        .catch(msg => alert(msg));
 			});
 		});
+		
+		function logoutCheck() {
+		    fetch('/logout/check')
+		        .then(res => {
+		            if (!res.ok) {
+		                return res.text().then(msg => {
+		                    alert(msg); // 퇴근 안 했음
+		                    throw new Error();
+		                });
+		            }
+		            return res.text();
+		        })
+		        .then(() => {
+		            if (confirm("로그아웃 하시겠습니까?")) {
+		                location.href = '/logout';
+		            }
+		        });
+		}
+
 	</script>
 
 
@@ -225,7 +244,9 @@
             </div>
             <div class="user-info">
                 <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
+				<button type="button" class="btn-logout" onclick="logoutCheck()">로그아웃</button>
+
+
 			</div>
             <div class="action-buttons">
                 <button class="time-in">출근</button>

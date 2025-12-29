@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -431,6 +432,24 @@ public class Work_scheduleController {
         work_scheduleRepository.save(ws);
 
         return ResponseEntity.ok("퇴근 처리 완료");
+    }
+    
+    @GetMapping("/logout/check") // 로그아웃 -> 퇴근했는지
+    @ResponseBody
+    public ResponseEntity<String> checkLogout() {
+
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        // 퇴근 안 한 근무가 있으면 로그아웃 차단
+        if (work_scheduleService.hasUnfinishedWork(userId)) {
+            return ResponseEntity
+                    .status(HttpStatus.FORBIDDEN)
+                    .body("퇴근 처리가 되지 않았습니다. 퇴근 후 로그아웃하세요.");
+        }
+
+        return ResponseEntity.ok("LOGOUT_POSSIBLE");
     }
 
 
