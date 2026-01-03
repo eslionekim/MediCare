@@ -511,42 +511,71 @@
 				            </tbody>
 				        </table>
 		</div>
-		
+		<button type="button"
+				        th:onclick="'window.location.href=\'/doctor/chartWrite?visit_id=' + ${visit.visit_id} + '&patient_id=' + ${patient.patient_id} + '\';'">
+				    수정
+				</button>
 		<!-- 6. 처방 폼 -->
 		<div class="box fee">
 			<table id="fee">
-							            <thead>
-							                <tr>
-							                    <th>검색</th>
-												<th>코드</th>
-							                    <th>분류</th>
-							                    <th>명칭</th>
-							                    <th>단가</th>
-												<th>수량</th>
-							                </tr>
-							            </thead>
-							            <tbody>
-							                <tr th:each="claim_item : ${claim_item}">
-												<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
-												<td><input name="fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly></td>
-												<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
-												<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
-												<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
-												<td><input name="quantity[]" th:value="${claim_item.quantity}" readonly></td>
-							                </tr>
-							            </tbody>
-							        </table>
-									
-									
+	            <thead>
+	                <tr>
+	                    <th>검색</th>
+						<th>코드</th>
+	                    <th>분류</th>
+	                    <th>명칭</th>
+	                    <th>단가</th>
+						<th>수량</th>
+	                </tr>
+	            </thead>
+				<tbody>
+	                <tr th:each="claim_item : ${normal_claim_items}">
+						<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
+						<td><input name="normal_fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly  required></td>
+						<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
+						<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
+						<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
+						<td><input name="normal_quantity[]" th:value="${claim_item.quantity}"  required></td>
+	                </tr>
+	            </tbody>
+	        </table>
+			
+			<table id="drugFee">
+		        <thead>
+		            <tr>
+		                <th>검색</th>
+		                <th>코드</th>
+		                <th>분류</th>
+		                <th>명칭</th>
+		                <th>단가</th>
+		                <th>수량/횟수/일수</th>
+		            </tr>
+		        </thead>
+		        <tbody>
+					<tr th:each="claim_item : ${drug_claim_items}">
+						<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
+						<td><input name="drug_fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly  required></td>
+						<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
+						<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
+						<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
+						<td class="drug-dose">
+					        1회 <input type="number" name="dose[]" 
+					               th:value="${claim_item.dose}" 
+					               min="1" style="width:45px;" required> /
+					        1일
+					        <input type="number" name="times_per_day[]" 
+					               th:value="${claim_item.times_per_day}" 
+					               min="1" style="width:45px;" required> 회 /
+					        <input type="number" name="days[]" 
+					               th:value="${claim_item.days}" 
+					               min="1" style="width:45px;" required> 일
+					    </td>
+	                </tr>
+				</tbody>
+		    </table>		
+						
 		</div>
-		<button type="button"
-		        th:onclick="'window.location.href=\'/doctor/chartWrite?visit_id=' + ${visit.visit_id} + '&patient_id=' + ${patient.patient_id} + '\';'">
-		    수정
-		</button>
-
-
-
-
+		
 	</div>
 	
 </body>

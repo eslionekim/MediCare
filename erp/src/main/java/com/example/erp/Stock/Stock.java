@@ -2,6 +2,7 @@ package com.example.erp.Stock;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -40,5 +41,6 @@ public class Stock {
 
     private LocalDate expiry_date; //유통기한
     private LocalDate outbound_deadline; //출고마감일
+    private LocalDateTime created_at;
 }
 

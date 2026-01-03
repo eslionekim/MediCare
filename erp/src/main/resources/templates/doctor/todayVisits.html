@@ -197,23 +197,18 @@
 		            .catch(msg => alert(msg));
 		    });
 
-			document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+			document.querySelector('.time-out').addEventListener('click', () => {
+			    if (!confirm('퇴근하시겠습니까?')) return;
 
-				fetch('/work/time-out/check')
-				        .then(res =>
-				            res.text().then(msg => {
-				                if (!res.ok) throw msg; // 퇴근 불가능
-
-				                if (!confirm('퇴근하시겠습니까?')) return;
-
-				                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-				                    .then(res => res.text())
-				                    .then(msg => alert(msg))
-				                    .catch(() => alert('퇴근 처리 실패'));
-				            })
-				        )
-				        .catch(msg => alert(msg));
+			    fetch('/work/time-out', { method: 'POST' })
+			        .then(res => res.text().then(msg => {
+			            if (!res.ok) throw msg;
+			            alert(msg);
+			        }))
+			        .catch(msg => alert(msg));
 			});
+
+
 		});
 		
 		function logoutCheck() {
@@ -222,7 +217,7 @@
 		            if (!res.ok) {
 		                return res.text().then(msg => {
 		                    alert(msg); // 퇴근 안 했음
-		                    throw new Error();
+		                    throw new Error("퇴근 안 됨");
 		                });
 		            }
 		            return res.text();

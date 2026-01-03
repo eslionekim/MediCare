@@ -445,17 +445,21 @@
             td.appendChild(select);
             row.appendChild(td);
 
-            if ((day + startDay) % 7 === 0 || day === totalDays) {
-                if(day === totalDays){
-                    const remaining = 7 - ((day + startDay) % 7);
-                    for(let i=0;i<remaining;i++){
-                        const emptyTd = document.createElement('td');
-                        row.appendChild(emptyTd);
-                    }
-                }
-                tbody.appendChild(row);
-                row = document.createElement('tr');
-            }
+			if ((day + startDay) % 7 === 0) {
+			    tbody.appendChild(row);
+			    row = document.createElement('tr');
+			}
+
+			// 마지막 날 처리
+			if (day === totalDays) {
+			    const remaining = (7 - (row.children.length)) % 7; // row.children.length만큼 채워져 있음
+			    for(let i=0; i<remaining; i++){
+			        const emptyTd = document.createElement('td');
+			        row.appendChild(emptyTd);
+			    }
+			    tbody.appendChild(row);
+			}
+
         }
     }
 

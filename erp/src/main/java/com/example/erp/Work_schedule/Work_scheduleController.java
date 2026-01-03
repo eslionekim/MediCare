@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -394,15 +395,21 @@ public class Work_scheduleController {
 
     // 퇴근 가능 여부 체크 by 은서
     @GetMapping("/work/time-out/check")
-    public ResponseEntity<?> checkTimeOut() {
+    public ResponseEntity<String> checkTimeOut() {
         String userId = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+                .getAuthentication()
+                .getName();
 
         LocalDate today = LocalDate.now();
 
-        Work_schedule ws = work_scheduleRepository
-                .findByUser_account_UserIdAndWork_date(userId, today)
-                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+        Optional<Work_schedule> wsOpt = work_scheduleRepository
+                .findByUser_account_UserIdAndWork_date(userId, today);
+
+        if (wsOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body("오늘 출근 기록이 없습니다.");
+        }
+
+        Work_schedule ws = wsOpt.get();
 
         if (ws.getEnd_time() != null) {
             return ResponseEntity.badRequest().body("이미 퇴근 처리되었습니다.");
@@ -414,41 +421,67 @@ public class Work_scheduleController {
 
         return ResponseEntity.ok("퇴근 가능");
     }
-
     
     // 퇴근 by 은서
     @PostMapping("/work/time-out")
-    public ResponseEntity<?> timeOut() {
-        String userId = SecurityContextHolder.getContext()
-                .getAuthentication().getName();
+    public ResponseEntity<String> timeOut() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        LocalDate today = LocalDate.now();
+        try {
+            Optional<Work_schedule> lastWorkOpt = work_scheduleRepository.findMostRecentWork(userId);
 
-        Work_schedule ws = work_scheduleRepository
-                .findByUser_account_UserIdAndWork_date(userId, today)
-                .orElseThrow(() -> new RuntimeException("오늘 스케줄 없음"));
+            if (lastWorkOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("출근 기록이 없습니다. 먼저 출근하세요.");
+            }
 
-        ws.setEnd_time(LocalTime.now());
-        work_scheduleRepository.save(ws);
+            Work_schedule ws = lastWorkOpt.get();
 
-        return ResponseEntity.ok("퇴근 처리 완료");
+            if (ws.getStart_time() == null) {
+                return ResponseEntity.badRequest().body("출근 기록이 없습니다. 먼저 출근하세요.");
+            }
+
+            if (ws.getEnd_time() != null) {
+                return ResponseEntity.badRequest().body("이미 퇴근 처리되었습니다.");
+            }
+
+            ws.setEnd_time(LocalTime.now());
+            work_scheduleRepository.save(ws);
+
+            return ResponseEntity.ok("퇴근 처리 완료");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        }
     }
+
+
+
+
     
     @GetMapping("/logout/check") // 로그아웃 -> 퇴근했는지
     @ResponseBody
     public ResponseEntity<String> checkLogout() {
 
-        String userId = SecurityContextHolder.getContext()
-                .getAuthentication()
-                .getName();
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        // 퇴근 안 한 근무가 있으면 로그아웃 차단
-        if (work_scheduleService.hasUnfinishedWork(userId)) {
-            return ResponseEntity
-                    .status(HttpStatus.FORBIDDEN)
-                    .body("퇴근 처리가 되지 않았습니다. 퇴근 후 로그아웃하세요.");
+        Optional<Work_schedule> lastWorkOpt = work_scheduleRepository.findMostRecentWork(userId);
+
+        if (lastWorkOpt.isEmpty()) {
+            // 오늘 출근 기록이 아예 없으면 로그아웃 차단
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                 .body("출근 기록이 없습니다. 먼저 출근하세요.");
         }
 
+        Work_schedule ws = lastWorkOpt.get();
+
+        if (ws.getEnd_time() == null) {
+            // 마지막 출근 기록이 있고 아직 퇴근 안 했으면 로그아웃 차단
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                                 .body("퇴근 처리가 되지 않았습니다. 퇴근 후 로그아웃하세요.");
+        }
+
+        // 마지막 출근 기록이 있고 퇴근 처리 완료이면 로그아웃 가능
         return ResponseEntity.ok("LOGOUT_POSSIBLE");
     }
 

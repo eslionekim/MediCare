@@ -26,8 +26,8 @@ public class Medication_guide {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long guide_id; //복약지도 번호
 
-    @Column(nullable = false, length = 50)
-    private String item_code; //물품 코드
+    @Column(nullable = false)
+    private Long item_code; //물품 코드
 
     @Lob
     private String description; //설명

@@ -17,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -34,9 +35,9 @@ public class Chart { //차트
     @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 생성
     private Long chart_id; //차트 번호 필드
 
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY: 지연로딩 -> 필요할때만 가져옴
-    @JoinColumn(name = "visit_id", nullable = false) //visit_id: 외래키로 받아올 자바 필드값
-    private Visit visit; //방문번호 필드
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "visit_id", nullable = false, unique = true)
+	private Visit visit;
 
     private String subjective; //주증상 필드
     private String objective; //객관적검사자료 필드

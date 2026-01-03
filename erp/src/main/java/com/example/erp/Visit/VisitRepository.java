@@ -117,5 +117,12 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
             @Param("doctor") String doctor,
             @Param("keyword") String keyword,
             @Param("date") LocalDate date);
+    
+    //준광이 코드 오류나서 은서가 만듦 VistController 244,310줄
+    @Query("SELECT COUNT(v) FROM Visit v WHERE v.reservation.reservation_id = :reservationId")
+    long countByReservationId(@Param("reservationId") Long reservationId);
 
+    default boolean existsByReservationId(Long reservationId) {
+        return countByReservationId(reservationId) > 0;
+    }
 }

@@ -94,42 +94,48 @@ public class VisitController {
         }
 
 
-        @GetMapping("/doctor/chartWrite") // 금일 진료 리스트 -> 진료시작 -> 차트 생성-> 차트 작성 페이지 이동
+        @GetMapping("/doctor/chartWrite") 
         public String chartWrite(@RequestParam("visit_id") Long visit_id, @RequestParam("patient_id") Long patient_id,
-                        Model model) {
+                                Model model) {
 
-                Chart chart = chartService.createBasicChart(visit_id); // userId로 차트 기본 생성
-                Patient patient = patientService.findById(patient_id); // patientId로 환자 정보 조회
-                List<Visit> pastVisits = visitService.findByPatientId(patient_id); // 해당 환자의 과거 방문 기록
-                Visit visit = visitService.findWithDepartmentAndInsurance(visit_id); // 진료과, 보험명 조회
+            Chart chart = chartService.createBasicChart(visit_id);
+            Patient patient = patientService.findById(patient_id);
+            List<Visit> pastVisits = visitService.findByPatientId(patient_id);
+            Visit visit = visitService.findWithDepartmentAndInsurance(visit_id);
 
-                // 차트 조회 > 상병 조회 (Chart_diseases -> Diseases_code)
-                List<Chart_diseases> chart_diseases = chart_diseasesRepository.findByChart(chart);
-                List<Diseases_code> diseasesList = chart_diseases.stream()
-                                .map(Chart_diseases::getDiseases_code) // Chart_diseases -> Diseases_code
-                                .collect(Collectors.toList());
+            // 상병 조회
+            List<Chart_diseases> chart_diseases = chart_diseasesRepository.findByChart(chart);
+            List<Diseases_code> diseasesList = chart_diseases.stream()
+                            .map(Chart_diseases::getDiseases_code)
+                            .collect(Collectors.toList());
 
-                // 차트 조회 > 처방 조회 (Claim -> Claim_item -> Fee_item)
-                Claim claim = claimRepository.findByVisitId(visit_id).orElse(null);
-                List<Fee_item> fee_item = new ArrayList<>();
-                List<Claim_item> claim_item = new ArrayList<>();
-                if (claim != null) {
-                        claim_item = claim_itemRepository.findByClaim(claim);
-                        fee_item = claim_item.stream()
-                                        .map(Claim_item::getFee_item) // Claim_item -> Fee_item
-                                        .collect(Collectors.toList());
+            // 처방 조회 (Claim_item 바로 visit_id로 조회)
+            List<Fee_item> fee_item = new ArrayList<>();
+            List<Claim_item> normalClaimItems = new ArrayList<>();
+            List<Claim_item> drugClaimItems = new ArrayList<>();
+
+            List<Claim_item> allClaimItems = claim_itemRepository.findAllByVisitId(visit_id); // 수정된 부분
+            for (Claim_item ci : allClaimItems) {
+                if ("약품".equals(ci.getFee_item().getCategory())) {
+                    drugClaimItems.add(ci);
+                } else {
+                    normalClaimItems.add(ci);
                 }
+                fee_item.add(ci.getFee_item()); // 필요하면 수집
+            }
 
-                model.addAttribute("chart", chart);
-                model.addAttribute("patient", patient);
-                model.addAttribute("pastVisits", pastVisits);
-                model.addAttribute("visit", visit);
-                model.addAttribute("diseases_code", diseasesList);
-                model.addAttribute("fee_item", fee_item);
-                model.addAttribute("claim_item", claim_item);
+            model.addAttribute("chart", chart);
+            model.addAttribute("patient", patient);
+            model.addAttribute("pastVisits", pastVisits);
+            model.addAttribute("visit", visit);
+            model.addAttribute("diseases_code", diseasesList);
+            model.addAttribute("fee_item", fee_item);
+            model.addAttribute("normal_claim_items", normalClaimItems);
+            model.addAttribute("drug_claim_items", drugClaimItems);
 
-                return "doctor/chartWrite";
+            return "doctor/chartWrite";
         }
+
 
         @GetMapping("/doctor/chartView")
         public String chartView(@RequestParam("visit_id") Long visit_id, @RequestParam("patient_id") Long patient_id,
@@ -145,15 +151,22 @@ public class VisitController {
                                 .map(Chart_diseases::getDiseases_code) // Chart_diseases -> Diseases_code
                                 .collect(Collectors.toList());
 
-                // 차트 조회 > 처방 조회 (Claim -> Claim_item -> Fee_item)
-                Claim claim = claimRepository.findByVisitId(visit_id).orElse(null);
+             // 차트 조회 > 처방 조회
+                List<Claim> claims = claimRepository.findAllByVisitId(visit_id);
                 List<Fee_item> fee_item = new ArrayList<>();
-                List<Claim_item> claim_item = new ArrayList<>();
-                if (claim != null) {
-                        claim_item = claim_itemRepository.findByClaim(claim);
-                        fee_item = claim_item.stream()
-                                        .map(Claim_item::getFee_item) // Claim_item -> Fee_item
-                                        .collect(Collectors.toList());
+                List<Claim_item> normalClaimItems = new ArrayList<>();
+                List<Claim_item> drugClaimItems = new ArrayList<>();
+
+                for (Claim claim : claims) {
+                    List<Claim_item> allClaimItems = claim_itemRepository.findAllByVisitId(visit_id);
+                    for (Claim_item ci : allClaimItems) {
+                        if ("약품".equals(ci.getFee_item().getCategory())) {
+                            drugClaimItems.add(ci);
+                        } else {
+                            normalClaimItems.add(ci);
+                        }
+                        fee_item.add(ci.getFee_item()); // 모든 Fee_item 수집 (선택 사항)
+                    }
                 }
 
                 model.addAttribute("chart", chart);
@@ -162,7 +175,8 @@ public class VisitController {
                 model.addAttribute("visit", visit);
                 model.addAttribute("diseases_code", diseasesList);
                 model.addAttribute("fee_item", fee_item);
-                model.addAttribute("claim_item", claim_item);
+                model.addAttribute("normal_claim_items", normalClaimItems);
+                model.addAttribute("drug_claim_items", drugClaimItems);
 
                 return "doctor/chartView";
         }

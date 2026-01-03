@@ -19,7 +19,9 @@ public class Work_scheduleService {
 	}
 	
 	public boolean hasUnfinishedWork(String userId) { // 로그아웃->퇴근 찍었는지
-        return work_scheduleRepository.findUnfinishedWork(userId).isPresent();
+		Optional<Work_schedule> lastWork = work_scheduleRepository.findMostRecentWork(userId);
+	    // 마지막 출근 기록이 있고, end_time이 null이면 아직 퇴근 안 함
+	    return lastWork.isPresent() && lastWork.get().getEnd_time() == null;
     }
 
 }

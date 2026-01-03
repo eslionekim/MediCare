@@ -82,14 +82,14 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	    """)
     List<Work_schedule> findTargetSchedules(@Param("targetDate") LocalDate targetDate);
 
-    //로그아웃 버튼-> 퇴근찍었는지
+    //로그아웃 버튼-> 가장 최근 출근 기록 1개만 가져와서 퇴근찍었는지
     @Query("""
     	    SELECT ws
     	    FROM Work_schedule ws
     	    WHERE ws.user_account.user_id = :userId
     	      AND ws.start_time IS NOT NULL
-    	      AND ws.end_time IS NULL
+    	    ORDER BY ws.work_date DESC, ws.start_time DESC
     	""")
-    Optional<Work_schedule> findUnfinishedWork(@Param("userId") String userId);
+    Optional<Work_schedule> findMostRecentWork(@Param("userId") String userId);
 }
 

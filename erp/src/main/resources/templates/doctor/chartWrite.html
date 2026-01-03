@@ -520,32 +520,72 @@
 		<div class="box fee">
 			<button type="button" onclick="addFeeRow()">+</button>
 			<table id="fee">
-							            <thead>
-							                <tr>
-							                    <th>검색</th>
-												<th>코드</th>
-							                    <th>분류</th>
-							                    <th>명칭</th>
-							                    <th>단가</th>
-												<th>수량</th>
-												<th>삭제</th>
-							                </tr>
-							            </thead>
-							            <tbody>
-							                <tr th:each="claim_item : ${claim_item}">
-												<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
-												<td><input name="fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly  required></td>
-												<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
-												<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
-												<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
-												<td><input name="quantity[]" th:value="${claim_item.quantity}"  required></td>
-												<td><button type="button" onclick="removeRow(this)">삭제</button></td>
-							                </tr>
-							            </tbody>
-							        </table>
-									
-									
+	            <thead>
+	                <tr>
+	                    <th>검색</th>
+						<th>코드</th>
+	                    <th>분류</th>
+	                    <th>명칭</th>
+	                    <th>단가</th>
+						<th>수량</th>
+						<th>삭제</th>
+	                </tr>
+	            </thead>
+	            <tbody>
+	                <tr th:each="claim_item : ${normal_claim_items}">
+						<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
+						<td><input name="normal_fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly  required></td>
+						<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
+						<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
+						<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
+						<td><input name="normal_quantity[]" th:value="${claim_item.quantity}"  required></td>
+						<td><button type="button" onclick="removeRow(this)">삭제</button></td>
+	                </tr>
+	            </tbody>
+	        </table>					
 		</div>
+		<!-- 6-1. 약품 처방 폼 -->
+		<div class="box fee-drug">
+		    <h4>약품 처방</h4>
+		    <button type="button" onclick="addDrugRow()">+</button>
+
+		    <table id="drugFee">
+		        <thead>
+		            <tr>
+		                <th>검색</th>
+		                <th>코드</th>
+		                <th>분류</th>
+		                <th>명칭</th>
+		                <th>단가</th>
+		                <th>수량/횟수/일수</th>
+		                <th>삭제</th>
+		            </tr>
+		        </thead>
+		        <tbody>
+					<tr th:each="claim_item : ${drug_claim_items}">
+						<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
+						<td><input name="drug_fee_item_code[]" th:value="${claim_item.fee_item.fee_item_code}" readonly  required></td>
+						<td><input name="category[]" th:value="${claim_item.fee_item.category}" readonly></td>
+						<td><input name="name[]" th:value="${claim_item.fee_item.name}" readonly></td>
+						<td><input name="base_price[]" th:value="${claim_item.fee_item.base_price}" readonly></td>
+						<td class="drug-dose">
+					        1회 <input type="number" name="dose[]" 
+					               th:value="${claim_item.dose}" 
+					               min="1" style="width:45px;" required> /
+					        1일
+					        <input type="number" name="times_per_day[]" 
+					               th:value="${claim_item.times_per_day}" 
+					               min="1" style="width:45px;" required> 회 /
+					        <input type="number" name="days[]" 
+					               th:value="${claim_item.days}" 
+					               min="1" style="width:45px;" required> 일
+					    </td>
+						<td><button type="button" onclick="removeRow(this)">삭제</button></td>
+	                </tr>
+				</tbody>
+		    </table>
+		</div>
+
 		<button type="submit">저장</button>
 		</form>
 	</div>
@@ -603,84 +643,184 @@
 				    );
 				}
 			
-				function setFee(fee_item_code, category, name, base_price) {  // 팝업에서 선택한 값을 부모창 input에 넣는 함수
-					if (!currentRow) return; // 혹시 currentRow 없으면 무시
-					
-					currentRow.querySelector('input[name="fee_item_code[]"]').value = fee_item_code;
-					currentRow.querySelector('input[name="category[]"]').value = category;
-					currentRow.querySelector('input[name="name[]"]').value = name;
-					currentRow.querySelector('input[name="base_price[]"]').value = base_price;
-				}
-				
-				function addFeeRow() { // 행 추가
-				    const tbody = document.querySelector("#fee tbody");
-				    const newRow = document.createElement("tr");
-				    newRow.innerHTML = `
-					<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
-					<td><input name="fee_item_code[]" readonly  required></td>
-					<td><input name="category[]"  readonly></td>
-					<td><input name="name[]" readonly></td>
-					<td><input name="base_price[]" readonly></td>
-					<td><input name="quantity[]" required></td>
-					<td><button type="button" onclick="removeRow(this)">삭제</button></td>
-				    `;
-				    tbody.appendChild(newRow);
-				}
+		function setFee(fee_item_code, category, name, base_price) {  // 팝업에서 선택한 값을 부모창 input에 넣는 함수
+			if (!currentRow) return; // 혹시 currentRow 없으면 무시
+			// 일반 수가
+		    if (currentRow.querySelector('input[name="normal_fee_item_code[]"]')) {
+		        currentRow.querySelector('input[name="normal_fee_item_code[]"]').value = fee_item_code;
+		    }
+
+		    // 약품
+		    if (currentRow.querySelector('input[name="drug_fee_item_code[]"]')) {
+		        currentRow.querySelector('input[name="drug_fee_item_code[]"]').value = fee_item_code;
+		    }
+			currentRow.querySelector('input[name="category[]"]').value = category;
+			currentRow.querySelector('input[name="name[]"]').value = name;
+			currentRow.querySelector('input[name="base_price[]"]').value = base_price;
+		}
 		
-				function chartWriteForm() { // 유효성 체크
-					const fields = [
-					        {id: 'subjective', name: '주증상'},
-					        {id: 'objective', name: '객관적 검사'},
-					        {id: 'assessment', name: '평가 및 진단'},
-					        {id: 'plan', name: '계획 및 치료'},
-					        {id: 'note', name: '진료 메모'}
-					];
+		function addFeeRow() { // 행 추가
+		    const tbody = document.querySelector("#fee tbody");
+		    const newRow = document.createElement("tr");
+		    newRow.innerHTML = `
+			<td><button type="button" onclick="openFeePopup(this)">검색</button></td>
+			<td><input name="normal_fee_item_code[]" readonly  required></td>
+			<td><input name="category[]"  readonly></td>
+			<td><input name="name[]" readonly></td>
+			<td><input name="base_price[]" readonly></td>
+			<td><input name="normal_quantity[]" required></td>
+			<td><button type="button" onclick="removeRow(this)">삭제</button></td>
+		    `;
+		    tbody.appendChild(newRow);
+		}
+		
+		/* 약품 검색 팝업 */
+		function openDrugPopup(btn) {
+		    currentRow = btn.closest("tr"); // 클릭한 버튼의 tr 기억
+		    window.open(
+		        "/doctor/popup/drug",
+		        "drugPopup",
+		        "width=600,height=600,scrollbars=yes"
+		    );
+		}
+		
+		function addDrugRow() {
+		    const tbody = document.querySelector("#drugFee tbody");
+		    const newRow = document.createElement("tr");
 
-					for (let f of fields) {
-					        const val = document.getElementById(f.id).value.trim();
-					        if (!val) {
-					            alert(`${f.name}를 입력하세요.`);
-					            document.getElementById(f.id).focus();
-					            return false;
-					        }
-					}	
-					
-					// 상병 최소 1개 체크
-					const diseaseRows = document.querySelectorAll('#diseases tbody tr');
-					let hasDisease = false;
+		    newRow.innerHTML = `
+		        <td>
+		            <button type="button" onclick="openDrugPopup(this)">검색</button>
+		        </td>
+		        <td>
+		            <input name="drug_fee_item_code[]" readonly required>
+		        </td>
+		        <td>
+		            <input name="category[]" readonly>
+		        </td>
+		        <td>
+		            <input name="name[]" readonly>
+		        </td>
+		        <td>
+		            <input name="base_price[]" readonly>
+		        </td>
 
-					diseaseRows.forEach(row => {
-					    const codeInput = row.querySelector('input[name="diseases_code[]"]');
-					    if (codeInput && codeInput.value.trim() !== '') {
-					        hasDisease = true;
-					    }
-					});
+		        <!-- 약품 전용 수량 -->
+		        <td class="drug-dose">
+		            1회 <input type="number" name="dose[]" min="1" style="width:45px;" required> /
+		            1일
+		            <input type="number" name="times_per_day[]" min="1" style="width:45px;" required> 회 /
+		            <input type="number" name="days[]" min="1" style="width:45px;" required> 일
+		        </td>
 
-					if (!hasDisease) {
-					    alert("질병 정보를 최소 1개 이상 입력하세요.");
-					    return false;
-					}
+		        <td>
+		            <button type="button" onclick="removeRow(this)">삭제</button>
+		        </td>
+		    `;
 
-					// 처방 최소 1개 체크
-					const feeRows = document.querySelectorAll('#fee tbody tr');
-					let hasFee = false;
+		    tbody.appendChild(newRow);
+		}
 
-					feeRows.forEach(row => {
-					    const codeInput = row.querySelector('input[name="fee_item_code[]"]');
-					    const qtyInput = row.querySelector('input[name="quantity[]"]');
-					    if (codeInput && codeInput.value.trim() !== '' &&
-					        qtyInput && qtyInput.value.trim() !== '') {
-					        hasFee = true;
-					    }
-					});
 
-					if (!hasFee) {
-					    alert("처방 정보를 최소 1개 이상 입력하고 수량을 입력하세요.");
-					    return false;
-					}
+		function chartWriteForm() { // 유효성 체크
+			const fields = [
+			        {id: 'subjective', name: '주증상'},
+			        {id: 'objective', name: '객관적 검사'},
+			        {id: 'assessment', name: '평가 및 진단'},
+			        {id: 'plan', name: '계획 및 치료'},
+			        {id: 'note', name: '진료 메모'}
+			];
 
-				    return true;
-				}
+			for (let f of fields) {
+			        const val = document.getElementById(f.id).value.trim();
+			        if (!val) {
+			            alert(`${f.name}를 입력하세요.`);
+			            document.getElementById(f.id).focus();
+			            return false;
+			        }
+			}	
+			
+			// 상병 최소 1개 체크
+			const diseaseRows = document.querySelectorAll('#diseases tbody tr');
+			let hasDisease = false;
+
+			diseaseRows.forEach(row => {
+			    const codeInput = row.querySelector('input[name="diseases_code[]"]');
+			    if (codeInput && codeInput.value.trim() !== '') {
+			        hasDisease = true;
+			    }
+			});
+
+			if (!hasDisease) {
+			    alert("질병 정보를 최소 1개 이상 입력하세요.");
+			    return false;
+			}
+
+			// 처방 최소 1개 체크 (일반 수가)
+			const feeRows = document.querySelectorAll('#fee tbody tr');
+			let hasValidFee = false;
+
+			for (const row of feeRows) {
+			    const codeInput = row.querySelector('input[name="normal_fee_item_code[]"]');
+			    const qtyInput = row.querySelector('input[name="normal_quantity[]"]');
+
+			    // 수가 선택 안 된 빈 행은 무시
+			    if (!codeInput || codeInput.value.trim() === '') {
+			        continue;
+			    }
+
+			    // 수가 선택했는데 수량 없으면 바로 실패
+			    if (!qtyInput || qtyInput.value.trim() === '') {
+			        alert("수가항목 수량을 입력하세요.");
+			        qtyInput?.focus();
+			        return false;
+			    }
+
+			    hasValidFee = true;
+			}
+
+			if (!hasValidFee) {
+			    alert("처방 정보를 최소 1개 이상 입력하세요.");
+			    return false;
+			}
+
+			
+			// 약품 처방 최소 1개 + 투약정보 체크
+			const drugRows = document.querySelectorAll('#drugFee tbody tr');
+			let hasValidDrug = false;
+
+			for (const row of drugRows) {
+			    const codeInput = row.querySelector('input[name="drug_fee_item_code[]"]');
+
+			    if (!codeInput || codeInput.value.trim() === '') {
+			        continue;
+			    }
+
+			    const dose = row.querySelector('input[name="dose[]"]');
+			    const times = row.querySelector('input[name="times_per_day[]"]');
+			    const days = row.querySelector('input[name="days[]"]');
+
+			    if (
+			        !dose.value.trim() ||
+			        !times.value.trim() ||
+			        !days.value.trim()
+			    ) {
+			        alert("약품은 1회 / 1일 / 일수를 모두 입력해야 합니다.");
+			        return false;
+			    }
+
+			    hasValidDrug = true;
+			}
+
+			if (!hasValidDrug) {
+			    alert("약품 처방을 최소 1개 이상 입력하세요.");
+			    return false;
+			}
+
+
+
+		    return true;
+		}
 				
 	</script>
 </body>

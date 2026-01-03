@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>/* 전체 리셋 및 기본 배경 */
+	body {
+	    margin: 0;
+	    padding: 0;
+	    font-family: 'Inter', '맑은 고딕', sans-serif;
+	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	
+	}
+	
+	
+	/* 상단 헤더 배경 및 레이아웃 */
+	.top-bar {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    padding: 5px 15px;
+	    background-color: #ffffff; /* 흰색 배경 */
+	    font-size: 14px;
+	}
+	
+	/* 상단 헤더 텍스트 스타일 */
+	.user-info {
+	    color: #555;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 배열 */
+	.action-buttons {
+	    display: flex;
+	    gap: 5px;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 공통스타일 */
+	.action-buttons button {
+	    padding: 4px 12px;
+	    border: none;
+	    border-radius: 4px;
+	    cursor: pointer;
+	    font-weight: 500;
+	    font-size: 13px;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 버튼 스타일 */
+	.btn-logout {
+		padding: 4px 12px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		font-size: 13px;
+		color: white;
+	    background-color: #FF4B4B;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 출근 버튼 스타일 */
+	.time-in {
+	    background-color: #879BD5;
+		color:#ffffff;
+	}
+	
+	/* 상단 헤더 -> 퇴근 버튼 스타일 */
+	.time-out {
+	    background-color: #D5DDED;
+	    color: #000;
+	}
+
+	/* 중앙 헤더 -> 카테고리 배치 */
+	.tab-list {
+	    list-style: none; /* 앞에 점 제거*/
+	    margin: 0;
+	    padding: 0;
+	    display: flex; /* 가로 나열*/
+	}
+	
+	/* 중앙 헤더 -> 카테고리 요소 스타일 */
+	.tab-item a {
+	    display: block;
+	    padding: 8px 15px;
+	    text-decoration: none; /* 카테고리 밑줄 제거*/
+	    color: #333; /* 글자 색*/
+	    background-color: transparent; /* 배경색 투명 (nav-tabs의 배경색 사용) */
+	    border: none; /* 경계선 제거 */
+	    font-size: 14px;
+	    font-weight: normal;
+	}
+	
+	/* 2. 중앙 헤더 공통 ⭐ */
+	.nav-tabs {
+		background-color: #D5DDED; /* 이미지의 균일한 하늘색 배경 */
+		padding: 0 10px;
+	}
+	
+	/* 중앙 헤더 -> 카테고리 호버 */
+	.tab-item:hover {
+	    background-color: rgba(255, 255, 255, 0.3); /* 마지막 숫자가 컬러 세기 정도*/
+	}
+	
+	/* 중앙 헤더 -> 선택된 카테고리 스타일 */
+	.tab-item.active a {
+	    color: #333; /* 텍스트 색상은 검은색 유지 (사진처럼) */
+	    font-weight: 550;
+	    /* 하단에 진한 파란색 선으로 강조 */
+	}
+	
+	
+	/* 3. 하단 헤더  */
+	.sub-menu {
+	    background-color: #BACCFF; /* 흰색 배경 */
+	    padding: 5px 15px; /* 패딩을 줄여서 메뉴와 붙은 느낌 */
+	    font-size: 14px;
+	    color: #555;
+		font-weight: 530;
+	    /* 이미지처럼 '금일 진료 리스트' 텍스트를 진하게 표현 */
+	}
+	
+	/* 컨텐츠 영역 (전체 배경색 확인용) */
+	.content-area {
+	    min-height: 500px; /* 임시 높이 */
+	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	}
+	
+	/* 금일 진료 리스트 */
+	#table{ /* div 영역 및 레이아웃 */
+		margin:5px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	table { 
+	    width: 90%; /* 너비 */
+	    border-collapse: collapse; /* 표 한줄로 합치기 */
+	    font-size: 14px;
+	    background-color: white;
+		
+	 }
+
+	 th, td {
+	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+	     padding: 0;
+		 height: 25px; /* 원하는 셀 높이 */
+	     text-align: center; /* 텍스트 중앙 */
+	 }
+
+	 th {
+	     background-color: #879BD5; 
+		 font-weight: normal; /* 글씨 굵기 보통으로 */
+		 color: rgb(31, 31, 31);
+	 }
+
+	 tr:nth-child(even) {
+	     background-color: #ffffffff;
+	 }
+
+	 /* 접수 시작 */
+	 .first {
+		 display: flex;             /* flex로 변환 */
+		 justify-content: center;   /* 가로 중앙 */
+		 align-items: center;       /* 세로 중앙 */
+		 width: 100%;               /* 가로 꽉 */
+		 height: 100%;              /* 세로 꽉 */
+		 box-sizing: border-box;    /* 패딩 포함 계산 */
+		 border: none;
+		 background-color: #00FF08;
+		 color: black;
+		 cursor: pointer;
+		 font-size: 14px;
+		 font-weight: 300; /* 글씨 굵기 보통으로 */
+		 text-decoration: none;
+	  }
+
+	  .container {
+  	      display: grid;
+  	      grid-template-columns: 1fr 1fr; /* 왼쪽, 오른쪽 */
+  	      gap: 5px;
+  	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
+  	      padding: 5px;
+  	      box-sizing: border-box;
+  	  }
+  	
+  	.item{
+  		grid-column:1/2 ;
+  	}
+	
+	.request{
+		grid-column:2/3 ;
+	}
+	</style>
+	
+</head>
+<body>
+    <header class="main-header">
+		<!-- 상단 헤더 -->
+        <div class="top-bar">
+            <div class="user-info">
+                <span>(아이콘)</span>
+                <span>MediCare |</span>
+                <span>사용자ID: </span>
+            </div>
+            <div class="user-info">
+                <span>진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout">로그아웃</button>
+			</div>
+            <div class="action-buttons">
+                <button class="time-in">출근</button>
+                <button class="time-out">퇴근</button>
+            </div>
+        </div>
+		<!-- 상단 헤더 끝-->
+		
+		<!-- 중앙 헤더-->
+        <nav class="nav-tabs">
+            <ul class="tab-list">
+				<li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
+                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
+                <li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
+            </ul>
+        </nav>
+		<!-- 중앙 헤더 끝-->
+		
+		<!-- 하단 헤더-->
+        <div class="sub-menu">
+            <span>전체 진료 리스트</span>
+        </div>
+		<!-- 하단 헤더 끝-->
+    </header>
+
+	<!-- 콘텐츠 영역 시작-->
+    <div class="content-area">
+		<div class="container">
+			<div class="item">
+			<!-- 상태 필터링 -->
+				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+				    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
+				        <option value="">전체 보기</option>
+				        <option value="요청">요청</option>
+				        <option value="승인">승인</option>
+				        <option value="부분출고">부분출고</option>
+				    </select>
+				</div>
+
+				<!-- 금일 진료 리스트 -->
+				<table id="requestTable" border="1">
+					<thead>
+					    <tr>
+					        <th>분류</th>
+					        <th>물품명</th>
+					        <th>요청수량</th>
+					        <th>요청일시</th>
+					        <th>상태</th>
+					        <th>상세보기</th>
+					    </tr>
+					</thead>
+
+						<tbody id="">
+						<tr th:if="${list.size() == 0}">
+						        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
+						    </tr>
+
+							<tr th:each="v : ${list}">
+							    <td th:text="${v.itemType}"></td>
+							    <td th:text="${v.itemName}"></td>
+								<td th:text="${#numbers.formatInteger(v.requestedQty, 0)} + ' ' + ${v.packUnitName}"></td>
+							    <td th:text="${#temporals.format(v.requestedAt, 'yyyy-MM-dd HH:mm')}"></td>
+							    <td class="status" th:text="${v.statusCode}"></td>
+								<td>
+									<button type="button"
+									        class="detail-btn"
+									        th:data-request-id="${v.issueRequestId}"
+									        th:data-department-name="${v.departmentName}"
+									        th:data-requested-at="${#temporals.format(v.requestedAt,'yyyy-MM-dd HH:mm')}"
+									        th:data-status="${v.statusCode}"
+									        th:data-item-code="${v.itemCode}"
+									        th:data-item-name="${v.itemName}"
+									        th:data-qty="${#numbers.formatInteger(v.requestedQty,0)}"
+									        th:data-unit="${v.packUnitName}">
+									    상세보기
+									</button>
+
+								</td>
+
+							</tr>
+
+							<tr th:if="${list.size() > 0}"
+							    th:each="i : ${#numbers.sequence(list.size() + 1, 20)}">
+							    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+							    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+							</tr>
+					</tbody>
+				</table>
+		</div>
+		<div class="request">
+
+		    <!-- 선택 전 안내 -->
+		    <p id="emptyMsg">요청을 선택해주세요</p>
+
+			<div id="requestDetail" style="display:none;">
+
+			    <!-- ✅ 공통 상세 영역 (그대로 유지) -->
+			    <p>요청번호:
+			        <span id="detailRequestId"></span>
+			    </p>
+
+			    <p>요청부서:
+			        <span id="detailDepartmentName"></span>
+			    </p>
+
+			    <p>요청일시:
+			        <span id="detailRequestedAt"></span>
+			    </p>
+
+			    <p>상태:
+			        <span id="detailStatusCode"></span>
+			    </p>
+
+			    <table border="1">
+			        <thead>
+			            <tr>
+			                <th>물품코드</th>
+			                <th>물품명</th>
+			                <th>요청수량</th>
+			            </tr>
+			        </thead>
+			        <tbody id="detailItemBody"></tbody>
+			    </table>
+
+			    <!-- ✅ 요청 상태 전용 버튼 -->
+			    <div class="action-buttduons" id="requestActionArea">
+			        <input type="hidden" id="issueRequestId">
+			        <button id="approveBtn">승인</button>
+			        <button id="rejectBtn">반려</button>
+			    </div>
+
+			    <!-- ✅ 승인 상태 전용 출고 영역 (추가된 부분) -->
+			    <div id="outboundArea" style="display:none; margin-top:20px;">
+
+			        <h4>출고 정보</h4>
+
+			        <p>
+			            가용재고:
+			            <span id="totalAvailableQty"></span>
+			        </p>
+
+			        <p>
+			            요청 환산 수량:
+			            <span id="convertedRequestQty"></span>
+			        </p>
+
+			        <table border="1">
+			            <thead>
+			                <tr>
+			                    <th>LOT 코드</th>
+			                    <th>출고마감일</th>
+			                    <th>가용수량</th>
+			                    <th>출고수량</th>
+			                </tr>
+							<p id="remainingQtyContainer" style="display:none;">
+							    남은 환산 수량:
+							    <span id="remainingQty"></span>
+							</p>
+
+			            </thead>
+			            <tbody id="lotTableBody"></tbody>
+			        </table>
+
+			        <div class="action-buttons">
+			            <button id="outboundBtn">출고</button>
+			            <button id="partialOutboundBtn" style="display:none;">부분출고</button>
+			        </div>
+			    </div>
+
+			</div>
+
+		</div>
+	</div>
+	<!-- 콘텐츠 영역 끝-->
+	<script>
+	document.addEventListener("DOMContentLoaded", () => {
+	
+	    const detailBox = document.getElementById("requestDetail");
+	    const emptyMsg = document.getElementById("emptyMsg");
+	
+	    const approveBtn = document.getElementById("approveBtn");
+	    const rejectBtn = document.getElementById("rejectBtn");
+	
+	    const requestActionArea = document.getElementById("requestActionArea");
+	    const outboundArea = document.getElementById("outboundArea");
+	
+	    approveBtn.addEventListener("click", () => {
+	        updateStatus("IR_APPROVED");
+	    });
+	
+	    rejectBtn.addEventListener("click", () => {
+	        updateStatus("IR_REJECTED");
+	    });
+	
+	    document.querySelectorAll(".detail-btn").forEach(btn => {
+	        btn.addEventListener("click", () => {
+	
+	            const status = btn.dataset.status;
+	
+	            emptyMsg.style.display = "none";
+	            detailBox.style.display = "block";
+	
+	            if (status === "요청") {
+	                requestActionArea.style.display = "block";
+	                outboundArea.style.display = "none";
+	            }
+	
+	            if (status === "승인"|| status === "부분출고") {
+	                requestActionArea.style.display = "none";
+	                outboundArea.style.display = "block";
+					
+					loadOutboundExtra(
+					        btn.dataset.requestId,
+					        btn.dataset.itemCode,
+							status
+					    );
+	            }
+	
+	            document.getElementById("detailRequestId").textContent = btn.dataset.requestId;
+	            document.getElementById("detailDepartmentName").textContent = btn.dataset.departmentName;
+	            document.getElementById("detailRequestedAt").textContent = btn.dataset.requestedAt;
+	            document.getElementById("detailStatusCode").textContent = status;
+	
+	            document.getElementById("issueRequestId").value = btn.dataset.requestId;
+	
+	            const tbody = document.getElementById("detailItemBody");
+	            tbody.innerHTML = `
+	                <tr>
+	                    <td>${btn.dataset.itemCode}</td>
+	                    <td>${btn.dataset.itemName}</td>
+	                    <td>${btn.dataset.qty} ${btn.dataset.unit}</td>
+	                </tr>
+	            `;
+	        });
+	    });
+	
+	    function updateStatus(statusCode) {
+	        const issueRequestId = document.getElementById("issueRequestId").value;
+	
+	        fetch(`/logis/itemRequest/status?issueRequestId=${issueRequestId}&statusCode=${statusCode}`, {
+	            method: "POST"
+	        })
+	        .then(res => {
+	            if (!res.ok) throw new Error("상태 변경 실패");
+	            alert("처리되었습니다.");
+	            location.reload();
+	        })
+	        .catch(err => alert(err.message));
+	    }
+		
+		function loadOutboundExtra(issueRequestId, itemCode, status) { //출고
+
+		    fetch(`/logis/itemRequest/outbound/extra?issueRequestId=${issueRequestId}&itemCode=${itemCode}`)
+		        .then(res => {
+		            if (!res.ok) throw new Error("출고 정보 조회 실패");
+		            return res.json();
+		        })
+		        .then(data => {
+		            renderOutboundArea(data, status);
+		        })
+		        .catch(err => alert(err.message));
+		}
+		
+		function renderOutboundArea(data, status) { // 출고시 필드에 정보 뜨게하기
+			const totalAvailableQty = Number(data.totalAvailableQty || 0);
+		    const convertedRequestQty = Number(data.convertedRequestQty || 0);
+		    const approvedQty = Number(data.approvedQty || 0);
+		
+		    // 가용재고 / 요청환산수량
+		    document.getElementById("totalAvailableQty").textContent =
+		        `${totalAvailableQty} ${data.baseUnit}`;
+
+		    document.getElementById("convertedRequestQty").textContent =
+		        `${convertedRequestQty} ${data.baseUnit}`;
+
+			// 남은 환산 수량 (부분출고일 때만)
+		    const remainingQtyContainer = document.getElementById("remainingQtyContainer");
+		    const remainingQty = document.getElementById("remainingQty");
+			if (status === "부분출고") {
+			    const remaining = (!isNaN(convertedRequestQty) && !isNaN(approvedQty))
+			        ? convertedRequestQty - approvedQty
+			        : 0;
+
+			    remainingQty.textContent = `${remaining} ${data.baseUnit || ''}`;
+			    remainingQtyContainer.style.display = "block";
+			} else {
+			    remainingQtyContainer.style.display = "none";
+			}
+			
+		    // LOT 테이블
+		    const tbody = document.getElementById("lotTableBody");
+		    tbody.innerHTML = "";
+
+			let lotRows = '';
+			data.lotList.forEach(lot => {
+				const avail = Number(lot.availableQty || 0);
+			    if (avail > 0) {
+			        lotRows += `
+			            <tr>
+			                <td>${lot.lotCode}</td>
+							<td>${lot.outboundDeadline ?? '-'}</td>
+
+			                <td>${avail}</td>
+			                <td>
+			                    <input type="number"
+			                           min="0"
+			                           max="${avail}"
+			                           data-lot-code="${lot.lotCode}"
+			                           data-stock-id="${lot.stockId}">
+			                </td>
+			            </tr>
+			        `;
+			    }
+			});
+
+			tbody.innerHTML = lotRows;
+
+
+		    // 출고 / 부분출고 버튼 분기
+		    const outboundBtn = document.getElementById("outboundBtn");
+		    const partialBtn = document.getElementById("partialOutboundBtn");
+			
+			const compareQty = status === "부분출고"
+			        ? data.convertedRequestQty - data.approvedQty // 남은 환산 수량
+			        : data.convertedRequestQty; // 최초 요청 환산 수량
+
+		    if (data.totalAvailableQty >= data.convertedRequestQty) {
+		        outboundBtn.style.display = "inline-block";
+		        partialBtn.style.display = "none";
+		    } else {
+		        outboundBtn.style.display = "none";
+		        partialBtn.style.display = "inline-block";
+		    }
+		}
+		
+		// 부분 출고 버튼
+		document.getElementById("partialOutboundBtn")?.addEventListener("click", () => {
+		    const issueRequestId = document.getElementById("issueRequestId").value;
+			const remainingQty = Number(document.getElementById("remainingQty").textContent.split(" ")[0] || 0);
+
+		    const lotList = [];
+			let isValid = true;
+		    document.querySelectorAll("#lotTableBody tr").forEach(row => {
+				const stockId = row.querySelector("input").dataset.stockId;
+		        const lotCode = row.querySelector("input").dataset.lotCode;
+		        const qty = parseFloat(row.querySelector("input").value || "0");
+				const availableQty = parseInt(row.children[2].textContent || "0");
+				if (qty > availableQty) {
+				    alert("가용재고가 부족합니다.");
+					isValid = false;
+				    return;
+				 }
+				 if (qty > remainingQty) {
+			         alert("환산 수량을 초과했습니다.");
+					 isValid = false;
+			         return;
+			     }
+		        if (qty > 0) {
+		            lotList.push({ stockId: Number(stockId),lotCode, qty });
+		        }
+		    });
+
+			if (!isValid) return;
+		    if (lotList.length === 0) {
+		        alert("출고 수량을 입력하세요.");
+		        return;
+		    }
+
+		    fetch("/logis/itemRequest/outbound/partial", {
+		        method: "POST",
+		        headers: { "Content-Type": "application/json" },
+		        body: JSON.stringify({
+		            issueRequestId: Number(issueRequestId),
+		            lotList: lotList,
+					isPartial: true // 부분출고
+		        })
+		    })
+		    .then(res => res.text())
+		    .then(msg => {
+		        alert(msg);
+		        location.reload();
+		    })
+		    .catch(err => alert(err.message));
+		});
+		
+		// 전체출고 버튼 클릭
+		document.getElementById("outboundBtn")?.addEventListener("click", () => {
+		    const issueRequestId = Number(document.getElementById("issueRequestId").value);
+			const remainingQty = Number(document.getElementById("convertedRequestQty").textContent.split(" ")[0] || 0);
+
+		    const lotList = [];
+			let isValid = true;
+			let totalQty = 0; // 전체 행 합계
+			
+		    document.querySelectorAll("#lotTableBody tr").forEach(row => {
+		        const stockId = row.querySelector("input").dataset.stockId;
+		        const lotCode = row.querySelector("input").dataset.lotCode;
+		        const qty = parseFloat(row.querySelector("input").value || "0");
+				const availableQty = parseInt(row.children[2].textContent || "0");
+				if (qty > availableQty) {
+				    alert("가용재고가 부족합니다.");
+					isValid = false;
+				    return;
+				 }
+				
+				 totalQty+=qty;
+				 lotList.push({ stockId: Number(stockId), lotCode, qty });
+		    });
+
+			if (!isValid) return;
+
+			if (totalQty !== remainingQty) { // 전체 합계 체크
+		        alert(`출고 수량 합계가 요청 환산 수량과 일치해야 합니다.\n요청 환산 수량: ${remainingQty}, 현재 합계: ${totalQty}`);
+		        return;
+		    }
+			console.log("전송할 lotList:", lotList);
+
+		    fetch("/logis/itemRequest/outbound/partial", { // 기존 컨트롤러 재활용
+		        method: "POST",
+		        headers: { "Content-Type": "application/json" },
+		        body: JSON.stringify({
+		            issueRequestId: Number(issueRequestId),
+		            lotList: lotList,
+		            isPartial: false // 전체출고임을 표시
+		        })
+		    })
+		    .then(res => res.text())
+		    .then(msg => {
+		        alert(msg);
+		        location.reload();
+		    })
+		    .catch(err => alert(err.message));
+		});
+
+
+	});
+	document.addEventListener("DOMContentLoaded", () => {
+
+	    const statusFilter = document.getElementById("statusFilter");
+	    const tableRows = document.querySelectorAll("#requestTable tbody tr");
+
+	    statusFilter.addEventListener("change", function() {
+	        const selected = this.value;
+
+	        tableRows.forEach(row => {
+	            const statusCell = row.querySelector(".status");
+	            if (!statusCell) return; // 상태 셀이 없으면 건너뛰기
+
+	            const status = statusCell.textContent.trim();
+	            row.style.display = (selected === "" || status === selected) ? "" : "none";
+	        });
+	    });
+
+	});
+
+</script>
+</body>
+</html>
