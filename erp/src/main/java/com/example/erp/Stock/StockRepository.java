@@ -30,7 +30,10 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 		        s.quantity
 		    )
 		    from Stock s
+		    join Warehouse w
+			    on s.warehouse_code = w.warehouse_code
 		    where s.item_code = :itemCode
+		      and w.name = '물류창고'
 		      and (s.outbound_deadline is null or s.outbound_deadline >= CURRENT_DATE)
 		    order by s.outbound_deadline asc
 		""")
@@ -40,4 +43,8 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 	// 물류 -> 불출요청리스트 -> 출고 by 은서
 	@Query("SELECT s FROM Stock s WHERE s.lot_code = :lotCode")
     Optional<Stock> findByLotCode(@Param("lotCode") String lotCode);
+	
+	// 물류 -> 전체재고현황 -> lot를 물류창고에서만 가져오기 by 은서
+	@Query("SELECT s FROM Stock s JOIN Warehouse w ON s.warehouse_code = w.warehouse_code WHERE s.item_code = :itemCode AND w.name = '물류창고'")
+    List<Stock> findByItemCode(@Param("itemCode") Long itemCode);
 }

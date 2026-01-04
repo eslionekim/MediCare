@@ -3,6 +3,7 @@ package com.example.erp.Fee_item;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class Fee_item { //수가항목
 
     private String name; // 명칭 필드
 
-    private int base_price; // 기본 단가 필드
+    private Integer base_price; // 기본 단가 필드
 
     private boolean is_active = true; //사용여부 필드
     

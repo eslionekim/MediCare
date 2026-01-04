@@ -46,5 +46,8 @@ public class Stock_move {
 
     @Column(length = 255)
     private String note;
+    
+    @Column(length = 255)
+    private String quantity;
 }
 

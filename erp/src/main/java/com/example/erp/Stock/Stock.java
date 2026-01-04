@@ -31,7 +31,7 @@ public class Stock {
     private String warehouse_code; //창고코드
 
     @Column(nullable = false, length = 50)
-    private String item_code; //물품코드
+    private Long item_code; //물품코드
 
     @Column(length = 100)
     private String lot_code; //로트코드

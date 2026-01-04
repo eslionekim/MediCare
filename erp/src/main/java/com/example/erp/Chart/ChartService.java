@@ -167,7 +167,7 @@ public class ChartService {
                         .findById(normal_fee_item_code.get(i))
                         .orElseThrow(() -> new RuntimeException("수가항목 없음"));
 
-                int price = fee.getBase_price(); // DB 기준
+                int price = (fee.getBase_price()); // DB 기준
                 int qty = normal_quantity.get(i);
                 int total = price * qty;
 

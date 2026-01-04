@@ -42,7 +42,7 @@ public class Item {
 
     private BigDecimal safety_stock; //안전재고
  
-    private Integer unit_price; //기본 단가
+    private BigDecimal unit_price; //기본 단가
 
     @Column(nullable = false)
     private Boolean is_active = true; //사용여부

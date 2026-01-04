@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>/* 전체 리셋 및 기본 배경 */
+	body {
+	    margin: 0;
+	    padding: 0;
+	    font-family: 'Inter', '맑은 고딕', sans-serif;
+	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	
+	}
+	
+	
+	/* 상단 헤더 배경 및 레이아웃 */
+	.top-bar {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    padding: 5px 15px;
+	    background-color: #ffffff; /* 흰색 배경 */
+	    font-size: 14px;
+	}
+	
+	/* 상단 헤더 텍스트 스타일 */
+	.user-info {
+	    color: #555;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 배열 */
+	.action-buttons {
+	    display: flex;
+	    gap: 5px;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 공통스타일 */
+	.action-buttons button {
+	    padding: 4px 12px;
+	    border: none;
+	    border-radius: 4px;
+	    cursor: pointer;
+	    font-weight: 500;
+	    font-size: 13px;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 버튼 스타일 */
+	.btn-logout {
+		padding: 4px 12px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		font-size: 13px;
+		color: white;
+	    background-color: #FF4B4B;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 출근 버튼 스타일 */
+	.time-in {
+	    background-color: #879BD5;
+		color:#ffffff;
+	}
+	
+	/* 상단 헤더 -> 퇴근 버튼 스타일 */
+	.time-out {
+	    background-color: #D5DDED;
+	    color: #000;
+	}
+
+	/* 중앙 헤더 -> 카테고리 배치 */
+	.tab-list {
+	    list-style: none; /* 앞에 점 제거*/
+	    margin: 0;
+	    padding: 0;
+	    display: flex; /* 가로 나열*/
+	}
+	
+	/* 중앙 헤더 -> 카테고리 요소 스타일 */
+	.tab-item a {
+	    display: block;
+	    padding: 8px 15px;
+	    text-decoration: none; /* 카테고리 밑줄 제거*/
+	    color: #333; /* 글자 색*/
+	    background-color: transparent; /* 배경색 투명 (nav-tabs의 배경색 사용) */
+	    border: none; /* 경계선 제거 */
+	    font-size: 14px;
+	    font-weight: normal;
+	}
+	
+	/* 2. 중앙 헤더 공통 ⭐ */
+	.nav-tabs {
+		background-color: #D5DDED; /* 이미지의 균일한 하늘색 배경 */
+		padding: 0 10px;
+	}
+	
+	/* 중앙 헤더 -> 카테고리 호버 */
+	.tab-item:hover {
+	    background-color: rgba(255, 255, 255, 0.3); /* 마지막 숫자가 컬러 세기 정도*/
+	}
+	
+	/* 중앙 헤더 -> 선택된 카테고리 스타일 */
+	.tab-item.active a {
+	    color: #333; /* 텍스트 색상은 검은색 유지 (사진처럼) */
+	    font-weight: 550;
+	    /* 하단에 진한 파란색 선으로 강조 */
+	}
+	
+	
+	/* 3. 하단 헤더  */
+	.sub-menu {
+	    background-color: #BACCFF; /* 흰색 배경 */
+	    padding: 5px 15px; /* 패딩을 줄여서 메뉴와 붙은 느낌 */
+	    font-size: 14px;
+	    color: #555;
+		font-weight: 530;
+	    /* 이미지처럼 '금일 진료 리스트' 텍스트를 진하게 표현 */
+	}
+	
+	/* 컨텐츠 영역 (전체 배경색 확인용) */
+	.content-area {
+	    min-height: 500px; /* 임시 높이 */
+	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	}
+	
+	/* 금일 진료 리스트 */
+	#table{ /* div 영역 및 레이아웃 */
+		margin:5px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	table { 
+	    width: 90%; /* 너비 */
+	    border-collapse: collapse; /* 표 한줄로 합치기 */
+	    font-size: 14px;
+	    background-color: white;
+		
+	 }
+
+	 th, td {
+	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+	     padding: 0;
+		 height: 25px; /* 원하는 셀 높이 */
+	     text-align: center; /* 텍스트 중앙 */
+	 }
+
+	 th {
+	     background-color: #879BD5; 
+		 font-weight: normal; /* 글씨 굵기 보통으로 */
+		 color: rgb(31, 31, 31);
+	 }
+
+	 tr:nth-child(even) {
+	     background-color: #ffffffff;
+	 }
+
+	 /* 접수 시작 */
+	 .first {
+		 display: flex;             /* flex로 변환 */
+		 justify-content: center;   /* 가로 중앙 */
+		 align-items: center;       /* 세로 중앙 */
+		 width: 100%;               /* 가로 꽉 */
+		 height: 100%;              /* 세로 꽉 */
+		 box-sizing: border-box;    /* 패딩 포함 계산 */
+		 border: none;
+		 background-color: #00FF08;
+		 color: black;
+		 cursor: pointer;
+		 font-size: 14px;
+		 font-weight: 300; /* 글씨 굵기 보통으로 */
+		 text-decoration: none;
+	  }
+
+	  .container {
+  	      display: grid;
+  	      grid-template-columns: 1fr 1fr; /* 왼쪽, 오른쪽 */
+  	      gap: 5px;
+  	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
+  	      padding: 5px;
+  	      box-sizing: border-box;
+  	  }
+  	
+  	.item{
+  		grid-column:1/2 ;
+  	}
+	
+	.lot{
+		grid-column:2/3 ;
+	}
+	
+	.popup-form {
+	    position: fixed;
+	    top: 50%;
+	    left: 50%;
+	    transform: translate(-50%, -50%);
+	    background: #fff;
+	    border: 1px solid #7B7B7B;
+	    padding: 20px;
+	    z-index: 1000;
+	    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+	}
+
+	.popup-form form label {
+	    display: inline-block;
+	    width: 100px;
+	}
+
+	.popup-form form input, .popup-form form select {
+	    margin-bottom: 10px;
+	}
+
+	.popup-form h3 {
+	    margin-top: 0;
+	}
+	</style>
+	
+</head>
+    <header class="main-header">
+		<!-- 상단 헤더 -->
+        <div class="top-bar">
+            <div class="user-info">
+                <span>(아이콘)</span>
+                <span>MediCare |</span>
+                <span>사용자ID: </span>
+            </div>
+            <div class="user-info">
+                <span>진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout">로그아웃</button>
+			</div>
+            <div class="action-buttons">
+                <button class="time-in">출근</button>
+                <button class="time-out">퇴근</button>
+            </div>
+        </div>
+		<!-- 상단 헤더 끝-->
+		
+		<!-- 중앙 헤더-->
+        <nav class="nav-tabs">
+            <ul class="tab-list">
+				<li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+				<li class="tab-item"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
+                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
+                <li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
+            </ul>
+        </nav>
+		<!-- 중앙 헤더 끝-->
+		
+		<!-- 하단 헤더-->
+        <div class="sub-menu">
+            <span>전체 진료 리스트</span>
+        </div>
+		<!-- 하단 헤더 끝-->
+    </header>
+
+	<!-- 콘텐츠 영역 시작-->
+    <div class="content-area">
+		<div class="container">
+			<div class="item">
+			<!-- 상태 필터링 -->
+				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+				    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
+				        <option value="">전체 보기</option>
+				        <option value="요청">요청</option>
+				        <option value="승인">승인</option>
+				        <option value="부분출고">부분출고</option>
+				    </select>
+					<button id="purchaseRequestBtn">신규등록요청</button>
+				</div>
+
+				<!-- 금일 진료 리스트 -->
+				<table id="requestTable" border="1">
+					<thead>
+					    <tr>
+					        <th>품목코드</th>
+					        <th>종류</th>
+					        <th>품목명</th>
+					        <th>현재고</th>
+					        <th>최소재고</th>
+							<th>가용재고</th>
+							<th>상태</th>
+							<th>상세</th>
+					    </tr>
+					</thead>
+
+					<tbody>
+					<tr th:if="${itemList.size() == 0}">
+					        <td colspan="10" class="no-data" style="height: 500px;">물품을 등록해주세요.</td>
+					    </tr>
+
+						<tr th:each="item : ${itemList}">
+							<td th:text="${item.item_code}"></td>
+			                <td th:text="${item.item_type}"></td>
+							
+			                <td th:text="${item.name}"></td>
+			                <td th:text="${#numbers.formatInteger(item.current_stock,0)}"></td>
+			                <td th:text="${#numbers.formatInteger(item.safety_stock,0)}"></td>
+			                <td th:text="${#numbers.formatInteger(item.available_stock,0)}"></td>
+			                <td th:text="${item.status}"></td>
+			                <td>
+								<button type="button"
+								        class="show-lot-btn"
+								        th:data-item-code="${item.item_code}">
+								    상세보기
+								</button>
+			                </td>
+						</tr>
+
+						<tr th:if="${itemList.size() > 0}"
+						    th:each="i : ${#numbers.sequence(itemList.size() + 1, 20)}">
+						    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+						    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+							<td>&nbsp;</td><td>&nbsp;</td>
+						</tr>
+					</tbody>
+				</table>
+		</div>
+		<div class="lot">
+			<div class="lot-empty-msg" style="display:none;">로트 정보가 없습니다.</div>
+
+			<div class="lotList" style="display: none;">
+				
+				<button id="purchaseRequestBtn">구매요청</button>
+				<button id="stockInBtn">입고등록</button>
+				<table id="lotTable" border="1">
+					<thead>
+		                <tr>
+		                    <th>로트코드</th>
+		                    <th>입고일</th>
+		                    <th>위치</th>
+		                    <th>유통기한</th>
+		                    <th>출고마감</th>
+		                    <th>수량</th>
+		                    <th>상태</th>
+		                    <th>폐기</th>
+		                    <th>수량조정</th>
+		                </tr>
+		            </thead>
+		            <tbody id="lotTableBody"></tbody>
+				</table>
+			</div>
+			
+		</div>
+		
+		<!-- 신규등록요청 폼 (초기에는 숨김) -->
+		<div id="purchaseForm" class="popup-form" style="display:none;">
+		    <h3>신규등록 요청</h3>
+		    <form id="newItemForm">
+		        <label>분류:</label>
+		        <select name="item_type" required>
+		            <option value="">선택</option>
+		            <option value="약품">약품</option>
+		            <option value="소모품">소모품</option>
+		            <option value="자재">자재</option>
+		        </select><br>
+
+		        <label>물품명:</label>
+		        <input type="text" name="name" required><br>
+
+		        <label>기본단위:</label>
+		        <input type="text" name="base_unit" required><br>
+
+		        <label>포장단위명:</label>
+		        <input type="text" name="pack_name" required><br>
+
+		        <label>포장단위수량:</label>
+		        <input type="number" name="pack_quantity" min="1" required><br>
+
+		        <label>안전재고:</label>
+		        <input type="number" name="safety_stock" min="0" required><br>
+
+		        <label>기본 단가:</label>
+		        <input type="number" name="base_price" min="0" step="0.01" required><br>
+
+				<label>과세 여부:</label>
+				<select name="taxable" required>
+				    <option value="">선택</option>
+				    <option value="true">과세</option>
+				    <option value="false">비과세</option>
+				</select><br>
+
+				
+		        <button type="submit">요청</button>
+		        <button type="button" class="closeBtn">닫기</button>
+		    </form>
+		</div>
+
+		<!-- 입고등록 폼 (초기에는 숨김) -->
+		<div id="stockInForm" class="popup-form" style="display:none;">
+		    <h3>입고등록</h3>
+		    <form id="stockInFormElement">
+				<input type="hidden" name="item_code" id="stockInItemCode">
+		        <label>로트코드:</label>
+		        <input type="text" name="lot_code" required><br>
+
+		        <label>입고일:</label>
+		        <input type="date" name="created_at" required><br>
+
+				<label>위치:</label>
+				<select name="location" id="locationSelect" required></select><br>
+				
+		        <label>구간:</label>
+		        <select name="zone" id="zoneSelect" required></select><br>
+
+		        <label>유통기한:</label>
+		        <input type="date" name="expiry_date"><br>
+
+		        <label>출고마감일:</label>
+		        <input type="date" name="outbound_deadline"><br>
+
+		        <label>수량:</label>
+		        <input type="number" name="quantity" min="1" required><br>
+
+				<label>총액:</label>
+				<input type="text" id="totalPrice" readonly><br>
+
+				
+		        <button type="submit">입고등록</button>
+		        <button type="button" class="closeBtn">닫기</button>
+		    </form>
+		</div>
+		
+		<!-- 폐기 모달 -->
+		<div id="discardForm" class="popup-form" style="display:none;">
+		  <form id="discardFormElement">
+		    <h3>폐기 사유 선택</h3>
+		    <label>사유:</label>
+		      <select id="discardReason">
+		        <option value="">선택</option>
+		        <option value="유통기한 만료">유통기한 만료</option>
+		        <option value="파손">파손</option>
+		        <option value="오염">오염</option>
+		        <option value="회수">회수</option>
+		        <option value="기타">기타</option>
+		      </select><br>
+		    <label>상세 사유 (기타일 때 필수):</label>
+		      <textarea id="discardDetail" placeholder="기타 사유 입력"></textarea><br>
+		    <button type="submit" id="discardSubmit">확인</button>
+		    <button type="button" class="closeBtn">취소</button>
+		  </form>
+		</div>
+
+		<!-- 수량조정 모달 -->
+		<div id="adjustForm" class="popup-form" style="display:none;">
+		  <form id="adjustFormElement">
+		    <h3>수량 조정</h3>
+		    <label>유형:</label>
+		      <select id="adjustType">
+		        <option value="">선택</option>
+		        <option value="증가">증가</option>
+		        <option value="감소">감소</option>
+		      </select><br>
+		    <label>수량:</label>
+		      <input type="number" id="adjustQty" min="1"><br>
+		    <label>사유:</label>
+		      <select id="adjustReason">
+		        <option value="">선택</option>
+		        <option value="실사오차">실사오차</option>
+		        <option value="전산오류">전산오류</option>
+		        <option value="반품">반품</option>
+		        <option value="기타">기타</option>
+		      </select><br>
+		    <label>상세사유:</label>
+		      <textarea id="adjustDetail" placeholder="기타 사유 입력"></textarea><br>
+		    <button type="submit" id="adjustSubmit">확인</button>
+		    <button type="button" class="closeBtn">취소</button>
+			</form>
+		</div>
+	</div>
+	</div>
+	<script>
+	document.addEventListener("DOMContentLoaded", () => {
+
+	    const lotListDiv = document.querySelector(".lotList");
+	    const lotTableBody = document.getElementById("lotTableBody");
+	    const lotEmptyMsg = document.querySelector(".lot-empty-msg");
+		
+		const purchaseBtn = document.getElementById("purchaseRequestBtn");
+	    const stockBtn = document.getElementById("stockInBtn");
+		const discardBtn = document.getElementById("discardBtn");
+		const adjustBtn = document.getElementById("adjustBtn");
+
+	    const purchaseForm = document.getElementById("purchaseForm");
+	    const stockForm = document.getElementById("stockInForm");
+		const discardForm = document.getElementById("discardForm");
+		const adjustForm = document.getElementById("adjustForm");
+		
+		const newItemForm = document.getElementById("newItemForm");
+		
+		let selectedStockId = null; // 폐기,수량조절
+		let selectedItemCode = null;
+
+		
+		let unitPrice = 0; //단가
+		
+		const qtyInput = document.querySelector('input[name="quantity"]'); //수랭
+		const totalPriceInput = document.getElementById("totalPrice"); //전체 금액
+
+		qtyInput.addEventListener("input", () => { //총액계산
+		    const qty = parseInt(qtyInput.value || 0);
+		    const total = unitPrice * qty;
+
+		    totalPriceInput.value = total.toLocaleString(); // 보기 좋게
+		});
+
+
+
+		// location 불러오기
+	    fetch("/logis/warehouse/locations")
+	        .then(res => res.json())
+	        .then(data => {
+	            const locationSelect = document.getElementById("locationSelect");
+	            locationSelect.innerHTML = '<option value="">선택</option>';
+	            data.forEach(loc => {
+	                locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
+	            });
+	        });
+
+	    // location 선택 시 zone 불러오기
+	    document.getElementById("locationSelect").addEventListener("change", function () {
+	        const location = this.value;
+	        const zoneSelect = document.getElementById("zoneSelect");
+	        zoneSelect.innerHTML = '<option value="">선택</option>';
+
+	        if (!location) return;
+
+	        fetch(`/logis/warehouse/zones?location=${location}`)
+	            .then(res => res.json())
+	            .then(data => {
+	                data.forEach(zone => {
+	                    zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`;
+	                });
+	            });
+	    });
+
+	    // 열기
+	    purchaseBtn.addEventListener("click", () => {
+	        purchaseForm.style.display = "block";
+	    });
+
+	    stockBtn.addEventListener("click", () => {
+	        stockForm.style.display = "block";
+			qtyInput.value = "";
+			totalPriceInput.value = "0";
+	    });
+		
+		// 이벤트 위임
+		lotTableBody.addEventListener("click", (e) => {
+		    if (e.target.classList.contains("discardBtn")) {
+				selectedStockId = e.target.dataset.stockId;
+		        discardForm.style.display = "block";
+		    }
+		    if (e.target.classList.contains("adjustBtn")) {
+				selectedStockId = e.target.dataset.stockId;
+		        adjustForm.style.display = "block";
+		    }
+		});
+
+
+	    // 닫기 버튼
+	    document.querySelectorAll(".closeBtn").forEach(btn => {
+	        btn.addEventListener("click", (e) => {
+	            e.target.closest(".popup-form").style.display = "none";
+	        });
+	    });
+
+		//신규등록요청폼
+		newItemForm.addEventListener("submit", (e) => {
+	        e.preventDefault(); // 기본 submit 막기
+	
+	        const formData = new FormData(newItemForm);
+	
+	        fetch("/logis/item/new", {
+	            method: "POST",
+	            body: formData
+	        })
+	        .then(res => {
+	            if (!res.ok) throw new Error("요청 실패");
+	            return res.text();
+	        })
+	        .then(msg => {
+	            alert(msg); // "신규 등록 요청 완료"
+	            purchaseForm.style.display = "none";
+	            newItemForm.reset();
+	        })
+	        .catch(err => {
+	            console.error(err);
+	            alert("신규 등록 요청 중 오류가 발생했습니다.");
+	        });
+	    });
+	    
+		//상세보기 클릭시 로트 리스트
+	    document.querySelectorAll(".show-lot-btn").forEach(btn => {
+	        btn.addEventListener("click", () => {
+	            const itemCode = btn.dataset.itemCode;
+				selectedItemCode = itemCode;
+				document.getElementById("stockInItemCode").value = itemCode;
+				
+				fetch(`/logis/item/${itemCode}/price`) //입고등록->단가 조회
+				    .then(res => res.json())
+				    .then(price => {
+						console.log(price);
+						unitPrice = Number(price); // ⭐ 중요
+						totalPriceInput.value = "0";
+				    })
+					.catch(err => {
+					        console.error(err);
+					        unitPrice = 0;
+				});
+
+	            fetch(`/logis/item/${itemCode}/lots`)
+	                .then(res => res.json())
+	                .then(data => {
+	                    // LOT 테이블 초기화
+	                    lotTableBody.innerHTML = "";
+
+	                    if (data.length === 0) {
+	                        lotListDiv.style.display = "none";
+	                        lotEmptyMsg.style.display = "block";
+	                        return;
+	                    }
+
+	                    data.forEach(lot => {
+							console.log(lot);
+	                        const tr = document.createElement("tr");
+	                        tr.innerHTML = `
+	                            <td>${lot.lot_code}</td>
+	                            <td>${lot.created_at ? lot.created_at : "-"}</td>
+	                            <td>${lot.location}</td>
+	                            <td>${lot.expiry_date ? lot.expiry_date : "-"}</td>
+	                            <td>${lot.outbound_deadline ? lot.outbound_deadline : "-"}</td>
+	                            <td>${lot.quantity}</td>
+	                            <td>${lot.status}</td>
+	                            <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+	                            <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+	                        `;
+	                        lotTableBody.appendChild(tr);
+	                    });
+
+	                    lotListDiv.style.display = "block";
+	                    lotEmptyMsg.style.display = "none";
+	                })
+	                .catch(err => {
+	                    console.error(err);
+	                    alert("LOT 데이터를 불러오지 못했습니다.");
+	                });
+	        });
+	    });
+		
+		document.getElementById("stockInFormElement").addEventListener("submit", function (e) {
+		    e.preventDefault(); // 기본 submit 막기
+
+		    const form = e.target;
+		    const data = new FormData(form);
+
+
+		    fetch("/logis/stock/in", {
+		        method: "POST",
+		        body: data
+		    })
+		    .then(res => {
+		        if (!res.ok) throw new Error("입고 실패");
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert(msg);
+		        form.reset();
+		        document.getElementById("stockInForm").style.display = "none";
+
+		        // 입고 후 로트 리스트 갱신
+				const itemCode = document.getElementById("stockInItemCode").value;
+				loadLotList(itemCode);
+		    })
+		    .catch(err => {
+		        console.error(err);
+		        alert("입고 중 오류 발생");
+		    });
+		});
+		
+
+		
+		function loadLotList(itemCode) { // 입고 시 새로고침?
+		    fetch(`/logis/item/${itemCode}/lots`)
+		        .then(res => res.json())
+		        .then(data => {
+		            lotTableBody.innerHTML = "";
+
+		            if (data.length === 0) {
+		                lotListDiv.style.display = "none";
+		                lotEmptyMsg.style.display = "block";
+		                return;
+		            }
+
+		            data.forEach(lot => {
+						console.log(lot);
+		                const tr = document.createElement("tr");
+		                tr.innerHTML = `
+		                    <td>${lot.lot_code}</td>
+		                    <td>${lot.created_at ?? "-"}</td>
+		                    <td>${lot.location}</td>
+		                    <td>${lot.expiry_date ?? "-"}</td>
+		                    <td>${lot.outbound_deadline ?? "-"}</td>
+		                    <td>${lot.quantity}</td>
+		                    <td>${lot.status}</td>
+		                    <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+		                    <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+		                `;
+		                lotTableBody.appendChild(tr);
+		            });
+
+		            lotListDiv.style.display = "block";
+		            lotEmptyMsg.style.display = "none";
+		        })
+		        .catch(err => {
+		            console.error(err);
+		            alert("LOT 데이터를 불러오지 못했습니다.");
+		        });
+		}
+
+		//폐기
+		document.getElementById("discardFormElement").addEventListener("submit", (e) => {
+		    e.preventDefault();
+
+		    const reason = document.getElementById("discardReason").value;
+		    const detail = document.getElementById("discardDetail").value;
+
+		    if (!reason) {
+		        alert("폐기 사유를 선택하세요");
+		        return;
+		    }
+
+		    if (reason === "기타" && !detail) {
+		        alert("기타 사유를 입력하세요");
+		        return;
+		    }
+
+		    const params = new URLSearchParams();
+		    params.append("reason", reason);
+		    if (detail) params.append("detail", detail);
+
+		    fetch(`/logis/stock/${selectedStockId}/discard`, {
+		        method: "POST",
+		        body: params
+		    })
+		    .then(res => {
+		        if (!res.ok) throw new Error();
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert(msg);
+		        discardForm.style.display = "none";
+		        loadLotList(selectedItemCode); // 재조회
+		    })
+		    .catch(() => alert("폐기 중 오류 발생"));
+		});
+
+		// 수량조절
+		document.getElementById("adjustFormElement").addEventListener("submit", (e) => {
+		    e.preventDefault();
+		
+		    const type = document.getElementById("adjustType").value;
+		    const qty = document.getElementById("adjustQty").value;
+		    const reason = document.getElementById("adjustReason").value;
+		    const detail = document.getElementById("adjustDetail").value;
+		
+		    if (!type || !qty || qty <= 0) {
+		        alert("유형과 수량을 입력하세요");
+		        return;
+		    }
+		
+		    const params = new URLSearchParams();
+		    params.append("type", type);
+		    params.append("quantity", qty);
+		    if (reason) params.append("reason", reason);
+		    if (detail) params.append("detail", detail);
+		
+		    fetch(`/logis/stock/${selectedStockId}/adjust`, {
+		        method: "POST",
+		        body: params
+		    })
+		    .then(res => {
+		        if (!res.ok) throw new Error();
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert(msg);
+		        adjustForm.style.display = "none";
+		        loadLotList(selectedItemCode);
+		    })
+		    .catch(() => alert("수량 조정 중 오류 발생"));
+		});
+
+
+	});
+	
+	</script>
+</body>
+</html>
