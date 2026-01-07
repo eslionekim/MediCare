@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>어드민 대시보드</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#eef1f8; font-size:13px; }
+        .top-left { display:flex; gap:10px; align-items:center; }
+        .top-center { font-weight:600; }
+        .top-right { display:flex; gap:6px; align-items:center; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-red { background:#ff5d5d; color:#fff; border-color:#ff5d5d; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .tabs { display:flex; gap:18px; padding:6px 12px; background:#dde2f0; font-size:13px; }
+        .tabs span { cursor:pointer; }
+        .sub-bar { padding:6px 12px; background:#baccff; font-size:13px; font-weight:600; }
+
+        .content { padding:14px; }
+        .filter-row { display:flex; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .filter-row .date { width:110px; }
+
+        .summary-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin:14px 0; }
+        .summary-card { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; }
+        .summary-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px; text-align:center; }
+        .summary-body { padding:8px; font-size:12px; text-align:center; line-height:1.5; }
+
+        .main-grid { display:grid; grid-template-columns:1.2fr 1fr 1.2fr; gap:10px; }
+        .panel { border:1px solid #b0b7c7; background:#fff; border-radius:4px; overflow:hidden; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .bar { height:10px; background:#3bc14a; }
+        .bar-track { background:#eef2fb; border-radius:4px; overflow:hidden; }
+
+        .flow-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+        .flow-cell { border:1px solid #c9cfde; background:#fff; padding:6px; text-align:center; }
+        .flow-arrow { text-align:center; font-size:16px; }
+
+        .bottom-grid { display:grid; grid-template-columns:1.6fr 1fr; gap:10px; margin-top:10px; }
+        .inline-badges { display:flex; gap:6px; align-items:center; }
+        .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+        .dot-red { background:#e74c3c; }
+        .small-btn { padding:2px 8px; font-size:11px; border-radius:10px; border:1px solid #b0b7c7; background:#f4f6fb; }
+        .split-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    </style>
+</head>
+<body>
+<div class="admin-frame">
+    <div class="top-bar">
+        <div class="top-left">
+            <span>(아이콘)</span>
+            <span>시스템명 | 사용자ID : dlwnsrhkdD</span>
+        </div>
+        <div class="top-center">원무과 이준광</div>
+        <div class="top-right">
+            <button class="btn btn-red">로그아웃</button>
+            <button class="btn btn-blue">출근</button>
+            <button class="btn">퇴근</button>
+        </div>
+    </div>
+
+    <div class="tabs">
+        <span>대시보드</span>
+        <span>모니터링</span>
+        <span>리포트</span>
+        <span>승인/확인</span>
+        <span>사용자/권한</span>
+        <span>코드관리</span>
+        <span>근무관리</span>
+    </div>
+    <div class="sub-bar">대시보드</div>
+
+    <div class="content">
+        <div class="filter-row">
+            <select><option>진료과 선택</option></select>
+            <select><option>담당 의사 선택</option></select>
+            <select><option>보험 구분</option></select>
+            <input class="date" type="text" value="2025.12.24" />
+            <span>-</span>
+            <input class="date" type="text" value="2025.12.24" />
+            <button class="btn btn-blue">검색</button>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-title">오늘 방문 수</div>
+                <div class="summary-body">
+                    외래: <span th:text="${summary.outpatientCount}">0</span>명<br>
+                    입원: <span th:text="${summary.inpatientCount}">0</span>명
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">접수/예약</div>
+                <div class="summary-body">
+                    접수: <span th:text="${summary.receptionCount}">0</span>명<br>
+                    예약: <span th:text="${summary.reservationCount}">0</span>명
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">진료 현황</div>
+                <div class="summary-body">
+                    완료: <span th:text="${summary.visitCompleted}">0</span>명<br>
+                    대기: <span th:text="${summary.visitWaiting}">0</span>명
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">수납/매출</div>
+                <div class="summary-body">
+                    ₩<span th:text="${#numbers.formatInteger(summary.salesTotal, 0, 'COMMA')}">0</span><br>
+                    급/비: <span th:text="${summary.coveredRatio.coveredPercent}">0</span>%
+                    / <span th:text="${summary.coveredRatio.noncoveredPercent}">0</span>%
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">미수금</div>
+                <div class="summary-body">
+                    <span th:text="${summary.receivableCount}">0</span>건<br>
+                    ₩<span th:text="${#numbers.formatInteger(summary.receivableAmount, 0, 'COMMA')}">0</span>
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">청구 상태</div>
+                <div class="summary-body">
+                    대기: <span th:text="${summary.claimPending}">0</span>개<br>
+                    완료: <span th:text="${summary.claimDone}">0</span>개
+                </div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-title">재고 경고</div>
+                <div class="summary-body">
+                    경고: <span th:text="${summary.stockWarning}">0</span>개<br>
+                    위험: <span th:text="${summary.stockCritical}">0</span>개
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-title">진료과별 진료량 / 환자 수</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>진료과</th>
+                            <th>진료량</th>
+                            <th>환자 수</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${deptStats}">
+                            <td th:text="${row.departmentName}">정형외과</td>
+                            <td>
+                                <div class="bar-track">
+                                    <div class="bar" th:style="'width:' + ${row.percent} + '%'"></div>
+                                </div>
+                            </td>
+                            <td><span th:text="${row.patientCount}">0</span>명</td>
+                        </tr>
+                        <tr th:if="${deptStats == null or #lists.isEmpty(deptStats)}">
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">의사별 진료 실적</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>진료과</th>
+                            <th>건수</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${doctorStats}">
+                            <td th:text="${row.doctorName}">&nbsp;</td>
+                            <td th:text="${row.departmentName}"></td>
+                            <td th:text="${row.visitCount}"></td>
+                        </tr>
+                        <tr th:if="${doctorStats == null or #lists.isEmpty(doctorStats)}">
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">매출 요약</div>
+                <div class="panel-body">
+                    <div style="margin-bottom:6px;">총매출</div>
+                    <div style="height:18px; background:#e9edf7; border:1px solid #c9cfde;"></div>
+                    <div style="margin-top:8px;">급여/비급여</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <div style="flex:1; height:16px; border:1px solid #c9cfde; background:#e9edf7;">
+                            <div th:style="'width:' + ${summary.coveredRatio.coveredPercent} + '%; height:100%; background:#6b80bf;'"></div>
+                        </div>
+                        <span><span th:text="${summary.coveredRatio.coveredPercent}">0</span>% / <span th:text="${summary.coveredRatio.noncoveredPercent}">0</span>%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-grid" style="margin-top:10px;">
+            <div class="panel">
+                <div class="panel-title">원무 흐름 파이프라인</div>
+                <div class="panel-body">
+                    <div class="flow-grid">
+                        <div class="flow-cell">접수완료<br><span th:text="${pipeline.registered}">0</span>건</div>
+                        <div class="flow-cell">진료중<br><span th:text="${pipeline.inProgress}">0</span>건</div>
+                        <div class="flow-cell">진료완료<br><span th:text="${pipeline.completed}">0</span>건</div>
+                        <div class="flow-cell">수납대기<br><span th:text="${pipeline.waiting}">0</span>건</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-arrow">→</div>
+                        <div></div>
+                        <div class="flow-cell">수납완료<br><span th:text="${pipeline.claimed}">0</span>건</div>
+                        <div class="flow-cell">청구대기<br><span th:text="${summary.claimPending}">0</span>건</div>
+                        <div class="flow-cell">청구완료<br><span th:text="${summary.claimDone}">0</span>건</div>
+                        <div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">보험구분별 매출</div>
+                <div class="panel-body">
+                    <table>
+                        <tbody>
+                        <tr th:each="row : ${insuranceStats}">
+                            <td th:text="${row.insuranceName}">건강보험</td>
+                            <td style="width:65%">
+                                <div class="bar-track">
+                                    <div class="bar" th:style="'width:' + ${row.percent} + '%'"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${insuranceStats == null or #lists.isEmpty(insuranceStats)}">
+                            <td colspan="2">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <div class="panel">
+                <div class="panel-title">재고 부족 Top 리스트</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>항목</th>
+                            <th>현재고</th>
+                            <th>안전재고</th>
+                            <th>상태</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${stockAlerts}">
+                            <td th:text="${row.itemName}">거즈</td>
+                            <td th:text="${row.quantity}">0</td>
+                            <td th:text="${row.safetyStock}">0</td>
+                            <td><span class="dot" th:classappend="${row.critical} ? ' dot-red' : ''"></span></td>
+                        </tr>
+                        <tr th:if="${stockAlerts == null or #lists.isEmpty(stockAlerts)}">
+                            <td colspan="4">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="split-col">
+                <div class="panel">
+                    <div class="panel-title">매출 요약</div>
+                    <div class="panel-body">
+                        <div class="inline-badges">
+                            <span>구매 승인 대기: 3건</span>
+                            <button class="small-btn">상세보기</button>
+                        </div>
+                        <div class="inline-badges">
+                            <span>기준치 초과: 1건</span>
+                            <button class="small-btn">상세보기</button>
+                        </div>
+                        <div class="inline-badges">
+                            <span>입출고 관리 대기: 2건</span>
+                            <button class="small-btn">상세보기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">관리자 확인 알림</div>
+                    <div class="panel-body">
+                        - 미수금 3건 발생<br>
+                        - 재고 부족 품목 4건<br>
+                        - 구매 승인 대기 3건<br>
+                        - 기준치 초과 요청 1건
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

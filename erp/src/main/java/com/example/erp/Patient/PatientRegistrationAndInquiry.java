@@ -4,7 +4,6 @@ import com.example.erp.Visit.OutHistoryDTO;
 import com.example.erp.Visit.Visit;
 import com.example.erp.Visit.VisitRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,6 +14,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -84,7 +85,7 @@ public class PatientRegistrationAndInquiry {
             @RequestParam("name") String name,
             @RequestParam(value = "rrn", required = false) String rrn,
             @RequestParam(value = "gender", required = false) String gender,
-            @RequestParam(value = "birth_date", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
+            @RequestParam(value = "birth_date", required = false) String birthDateRaw,
             @RequestParam(value = "phone", required = false) String phone,
             @RequestParam(value = "email", required = false) String email,
             @RequestParam(value = "address1", required = false) String address1,
@@ -103,7 +104,7 @@ public class PatientRegistrationAndInquiry {
         patient.setName(name);
         patient.setRrn(rrn);
         patient.setGender(gender);
-        patient.setBirth_date(birthDate);
+        patient.setBirth_date(parseBirthDate(birthDateRaw));
         patient.setPhone(phone);
         patient.setEmail(email);
         patient.setAddress1(address1);
@@ -115,6 +116,18 @@ public class PatientRegistrationAndInquiry {
         redirectAttributes.addFlashAttribute("message", "환자 정보가 저장되었습니다.");
 
         return "redirect:/patients?mode=detail&patientId=" + saved.getPatient_id();
+    }
+
+    private LocalDate parseBirthDate(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String normalized = raw.trim().replace('/', '-').replace('.', '-');
+        try {
+            return LocalDate.parse(normalized, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException e) {
+            return null;
+        }
     }
 
     private void addPatientList(String keyword, Model model) {

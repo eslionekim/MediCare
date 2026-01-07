@@ -1,6 +1,5 @@
 package com.example.erp.security;
 
-
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -16,31 +15,34 @@ import java.util.Collection;
 public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, 
-                                        HttpServletResponse response,
-                                        Authentication authentication) 
-                                        throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request,
+            HttpServletResponse response,
+            Authentication authentication)
+            throws IOException, ServletException {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        
+
         // 역할에 따라 페이지 이동
         String redirectURL = request.getContextPath();
         // 의사일 경우
         if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"))) {
             redirectURL += "/doctor/todayVisits";
-        } 
+        }
         // 인사일 경우
         else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_HR"))) {
             redirectURL += "/hr/vacationList";
-        } 
+        }
         // 원무일 경우
         else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_STAFF"))) {
             redirectURL += "/patients";
-        } 
+        }
         // 물류일 경우
         else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_logis"))) {
             redirectURL += "/logis/itemRequest";
         }
-        else {
+        // 관리자일 경우
+        else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
+            redirectURL += "/admin/dashboard";
+        } else {
             redirectURL += "/home"; // 기본
         }
 
