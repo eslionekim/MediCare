@@ -40,7 +40,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
             redirectURL += "/logis/itemRequest";
         }
         // 관리자일 경우
-        else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_logis"))) {
+        else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             redirectURL += "/admin/dashboard";
         } else {
             redirectURL += "/home"; // 기본
