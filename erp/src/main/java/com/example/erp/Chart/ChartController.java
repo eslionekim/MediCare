@@ -32,14 +32,14 @@ public class ChartController {
 
 	        // ===== 일반 수가 =====
 	        @RequestParam(value = "normal_fee_item_code[]", required = false)
-	        List<Long> normal_fee_item_code,
+	        List<String> normal_fee_item_code,
 
 	        @RequestParam(value = "normal_quantity[]", required = false)
 	        List<Integer> normal_quantity,
 
 	        // ===== 약품 =====
 	        @RequestParam(value = "drug_fee_item_code[]", required = false)
-	        List<Long> drug_fee_item_code,
+	        List<String> drug_fee_item_code,
 
 	        @RequestParam(value = "dose[]", required = false)
 	        List<Integer> dose,

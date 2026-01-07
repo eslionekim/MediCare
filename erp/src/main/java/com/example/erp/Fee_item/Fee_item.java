@@ -26,8 +26,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Fee_item { //수가항목
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 생성
-    private Long fee_item_code;  //수가항목코드 필드
+    private String fee_item_code;  //수가항목코드 필드
 
     private String category; // 카테고리 필드 (이거 상태코드랑 엮는다했었나..?)
 

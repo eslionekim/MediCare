@@ -29,7 +29,7 @@ public class Prescription_item {
     private Long prescription_id; //처방번호
 
     @Column(nullable = false)
-    private Long item_code; //물품코드
+    private String item_code; //물품코드
 
     private BigDecimal dose; //1회투여량
     private Integer frequency; //1일 횟수

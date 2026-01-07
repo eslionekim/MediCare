@@ -92,11 +92,11 @@ public class ChartService {
             List<String> diseases_code,
 
             // ===== 일반 수가 =====
-            List<Long> normal_fee_item_code,
+            List<String> normal_fee_item_code,
             List<Integer> normal_quantity,
 
             // ===== 약품 =====
-            List<Long> drug_fee_item_code,
+            List<String> drug_fee_item_code,
             List<Integer> dose,
             List<Integer> times_per_day,
             List<Integer> days
@@ -243,7 +243,7 @@ public class ChartService {
                 //item_code 가져오기
                 Item item = itemRepository.findByFeeItemCode(fee.getFee_item_code())
                         .orElseThrow(() -> new RuntimeException("아이템 없음"));
-                Long item_code = item.getItem_code(); // 실제 Prescription_item에 넣을 값
+                String item_code = item.getItem_code(); // 실제 Prescription_item에 넣을 값
 
                 BigDecimal doseValue = BigDecimal.valueOf(dose.get(i));
                 int freq = times_per_day.get(i);

@@ -26,7 +26,7 @@ public class StockService {
 	
 	//물류->불출요청리스트-> 출고 폼 by 은서
 	@Transactional(readOnly = true)
-	public StockDTO getOutboundExtra(Long issueRequestId, Long itemCode) {
+	public StockDTO getOutboundExtra(Long issueRequestId, String itemCode) {
 
 	    BigDecimal convertedQty =issue_request_itemRepository.findConvertedQty(issueRequestId, itemCode);
 	    BigDecimal totalAvailableQty = stockRepository.findTotalAvailableQty(itemCode);
@@ -90,7 +90,7 @@ public class StockService {
 	    move.setFrom_warehouse_code(stock.getWarehouse_code());
 	    move.setMoved_at(LocalDateTime.now());
 	    move.setStatus_code("sm_quantity");
-	    move.setQuantity(String.valueOf(movedQty));
+	    //move.setQuantity(String.valueOf(movedQty));
 
 	    String note = type;
 	    if (reason != null && !reason.isBlank()) {

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>조제</title>
+<style>
+    table { width:100%; border-collapse: collapse; }
+    th, td { border:1px solid #ccc; padding:6px; text-align:center; }
+    input { width:80px; }
+</style>
+</head>
+<body>
+
+<h3>조제 상세</h3>
+<div>
+    <p><b>환자명:</b> <span th:text="${popup.patientName}"></span></p>
+    <p><b>생년월일:</b> <span th:text="${popup.birth}"></span></p>
+    <p><b>진단명:</b> <span th:text="${popup.diagnosis}"></span></p>
+    <p><b>담당의:</b> 
+        <span th:text="${popup.name}"></span>
+        (<span th:text="${popup.departmentName}"></span>)
+    </p>
+    <p><b>최근 방문일:</b> 
+        <span th:text="${popup.recentVisitAt}"></span>
+    </p>
+</div>
+
+<hr>
+
+<table>
+<thead>
+<tr>
+    <th>약품명</th>
+	<th>개수/횟수/일수</th>
+	<th>약품코드</th>
+    <th>처방량</th>
+    <th>재고</th>
+    <th>상태</th>
+</tr>
+</thead>
+<tbody id="dispenseItems">
+<tr th:each="i : ${popup.items}">
+	<!-- prescriptionId 불러오기-->
+	<input type="hidden" id="prescriptionId" th:value="${popup.prescriptionId}">
+
+    <td th:text="${i.itemName}"></td>
+	<td th:text="${i.dosage}"></td>
+
+	<!-- 약품코드 입력 -->
+    <td>
+        <input type="text" class="itemCodeInput">
+		<button
+		    type="button"
+		    th:data-item-code="${i.itemCode}"
+		    onclick="checkItemCode(this)">
+		    약품 검증
+		</button>
+
+    </td>
+	
+    <!-- 처방량 입력 -->
+	<td>
+	    <div style="display:flex; gap:10px;">
+	        <!-- 좌측: 로트 정보 -->
+	        <div>
+	            <div th:each="lot : ${i.lots}">
+	                <small>
+						<!-- stock_id 보낼 히든값 -->
+						<input type="hidden" name="stockId" th:value="${lot.stockId}">
+						위치 : <span th:text="${lot.location}"></span>
+	                    LOT: <span th:text="${lot.lotCode}"></span>>
+	                    수량: <span th:text="${lot.quantity.intValue()}"></span>
+	                    유통기한: <span th:text="${lot.expiryDate}"></span>
+	                </small>
+	                <hr>
+	            </div>
+	        </div>
+
+	        <!-- 우측: 입력 -->
+	        <div>
+	            <div th:each="lot : ${i.lots}">
+	                <input type="number"
+	                       class="lotQtyInput"
+	                       min="0"
+	                       th:max="${lot.quantity.intValue()}">
+	            </div>
+
+	            <button type="button"
+	                    th:data-required-qty="${i.requiredQty.intValue()}"
+	                    onclick="checkLotQty(this)">
+	                수량 검증
+	            </button>
+	        </div>
+	    </div>
+	</td>
+
+
+    <td th:text="${i.stockQty.intValue()}"></td>
+
+    <td class="status">미완료</td>
+</tr>
+</tbody>
+</table>
+
+<br>
+<button type="button" onclick="deleteAndClose()">닫기</button>
+<button id="completeBtn" disabled>제조 완료</button>
+
+<script>
+	function checkItemCode(btn) { //약품코드 검증
+	
+	    // 입력값
+	    const inputValue = btn.previousElementSibling.value;
+	
+	    // 정답(처방 itemCode)
+	    const correctCode = btn.dataset.itemCode;
+	
+	    if (inputValue === correctCode) {
+	        alert("약품코드 검증 성공");
+	
+	        // 상태 플래그 저장
+	        btn.dataset.ok = "true";
+	
+	        // 버튼 비활성화
+	        btn.disabled = true;
+			// 입력 필드 잠금
+			btn.previousElementSibling.readOnly = true;
+	        // 같은 행이 완료인지 검사
+	        checkRowComplete(btn.closest("tr"));
+	
+	    } else {
+	        alert("약품코드 불일치");
+	    }
+	}
+	
+	function checkLotQty(btn) { //수량 검증
+
+	    const required = Number(btn.dataset.requiredQty);
+
+	    // 같은 블럭 안의 LOT 입력값 다 가져오기
+	    const inputs = btn.parentElement.querySelectorAll(".lotQtyInput");
+
+	    let sum = 0;
+
+	    inputs.forEach(input => {
+	        sum += Number(input.value || 0);
+	    });
+
+	    if (sum === required) {
+	        alert("수량 검증 성공");
+
+	        btn.dataset.ok = "true";
+	        btn.disabled = true;
+
+			// LOT 입력창 모두 잠금
+	        inputs.forEach(input => {
+	            input.readOnly = true;     // 수정 불가
+	        });
+	
+	        checkRowComplete(btn.closest("tr"));
+
+	    } else {
+	        alert("총 투약수량 불일치 (현재: " + sum + ", 필요: " + required + ")");
+	    }
+	}
+	
+	function checkRowComplete(tr) { //약품코드,수량 모두 검증-> 상태 값 완료로 변경
+
+		//해당 줄의 물품검증,수량검증 여부 확인
+	    const codeOk = tr.querySelector("button[onclick^='checkItemCode']")?.dataset.ok === "true";
+	    const qtyOk  = tr.querySelector("button[onclick^='checkLotQty']")?.dataset.ok === "true";
+
+	    if (codeOk && qtyOk) {
+
+	        // 상태 TD가 .status 라고 가정
+	        const statusTd = tr.querySelector(".status");
+
+	        if (statusTd) {
+	            statusTd.textContent = "완료";
+	            statusTd.style.color = "green"; //컬러 변경
+	        }
+	    }
+		
+		checkAllRowsComplete(); //전체 행이 모두 완료인지 검사
+	}
+	
+	function checkAllRowsComplete() { //조제버튼 활성화
+
+	    // 상태값 TD 모두 가져오기
+	    const allStatus = document.querySelectorAll("td.status");
+
+	    // 하나라도 미완료면 false
+	    const allDone = Array.from(allStatus).every(td => td.textContent === "완료");
+
+	    // 제조 완료 버튼
+	    const btn = document.getElementById("completeBtn");
+
+	    if (allDone) {
+	        btn.disabled = false;   // 활성화
+	    } else {
+	        btn.disabled = true;    // 다시 비활성화 가능
+	    }
+	}
+	
+	function deleteAndClose() { //닫기 버튼-> dispense 삭제
+
+	    const prescriptionId = document.getElementById("prescriptionId").value;
+
+	    if (!prescriptionId) {
+	        alert("prescriptionId 없음");
+	        window.close();
+	        return;
+	    }
+
+	    fetch(`/dispense/${prescriptionId}`, {
+	        method: "DELETE"
+	    })
+	    .then(res => {
+	        if (!res.ok) throw new Error("삭제 실패");
+	        return res.text();
+	    })
+	    .then(() => {
+	        window.close();
+	    })
+	    .catch(err => {
+	        alert("오류 발생: " + err);
+	        window.close();
+	    });
+	}
+</script>
+
+
+</body>
+</html>

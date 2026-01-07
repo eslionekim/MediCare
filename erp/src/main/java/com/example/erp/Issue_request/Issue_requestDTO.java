@@ -26,5 +26,5 @@ public class Issue_requestDTO {
     // ===== 상세보기용 (추가) =====
     private Long issueRequestId;      // 불출요청 ID
     private String departmentName;    // 부서명
-    private Long itemCode;          // 물품코드
+    private String itemCode;          // 물품코드
 }

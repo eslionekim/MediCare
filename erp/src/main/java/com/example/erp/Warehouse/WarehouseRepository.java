@@ -37,4 +37,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String>{
 	        @Param("location") String location,
 	        @Param("zone") String zone
 	    );
+	
+	
 }

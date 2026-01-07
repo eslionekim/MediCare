@@ -45,13 +45,6 @@ public class Patient { // 환자
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime created_at; // 생성일시 필드
 
-    public LocalDateTime getCreatedAt() {
-        return created_at;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.created_at = created_at;
-    }
 
     @OneToMany(mappedBy = "patient") // patient_id : 다른 엔터티에서 나를 참조할 자바 필드명
     private List<Visit> visit = new ArrayList<>(); // 방문 리스트

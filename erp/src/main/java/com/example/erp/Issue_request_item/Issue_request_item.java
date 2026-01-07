@@ -29,7 +29,7 @@ public class Issue_request_item {
     private Long issue_request_id; //불출요청번호
 
     @Column(nullable = false)
-    private Long item_code; //물품코드
+    private String item_code; //물품코드
 
     @Column(nullable = false)
     private BigDecimal requested_qty; //요청수량
