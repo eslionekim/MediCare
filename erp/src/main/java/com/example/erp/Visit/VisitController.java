@@ -116,7 +116,7 @@ public class VisitController {
 
             List<Claim_item> allClaimItems = claim_itemRepository.findAllByVisitId(visit_id); // 수정된 부분
             for (Claim_item ci : allClaimItems) {
-                if ("약품".equals(ci.getFee_item().getCategory())) {
+                if ("검사".equals(ci.getFee_item().getCategory())) {
                     drugClaimItems.add(ci);
                 } else {
                     normalClaimItems.add(ci);

@@ -218,10 +218,10 @@
 		<!-- 중앙 헤더-->
         <nav class="nav-tabs">
             <ul class="tab-list">
-				<li class="tab-item active"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
+				<li class="tab-item active"><a th:href="@{/logis/itemRequest}">불출 요청 리스트</a></li>
 				<li class="tab-item"><a th:href="@{/logis/item}">전체 재고 현황</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
+                <li class="tab-item"><a>출고 리스트</a></li>
+                <li class="tab-item"><a>요청 리스트</a></li>
             </ul>
         </nav>
 		<!-- 중앙 헤더 끝-->
@@ -268,7 +268,7 @@
 							<tr th:each="v : ${list}">
 							    <td th:text="${v.itemType}"></td>
 							    <td th:text="${v.itemName}"></td>
-								<td th:text="${#numbers.formatInteger(v.requestedQty, 0)} + ' ' + ${v.packUnitName}"></td>
+								<td th:text="${#numbers.formatInteger(v.requestedQty, 0) + ' ' + v.packUnitName}"></td>
 							    <td th:text="${#temporals.format(v.requestedAt, 'yyyy-MM-dd HH:mm')}"></td>
 							    <td class="status" th:text="${v.statusCode}"></td>
 								<td>
@@ -289,11 +289,11 @@
 
 							</tr>
 
-							<tr th:if="${list.size() > 0}"
-							    th:each="i : ${#numbers.sequence(list.size() + 1, 20)}">
-							    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-							    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-							</tr>
+							<th:block th:if="${list.size() > 0}">
+							    <tr th:each="i : ${#numbers.sequence(list.size() + 1, 20)}">
+							        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+							    </tr>
+							</th:block>
 					</tbody>
 				</table>
 		</div>
@@ -362,15 +362,14 @@
 			                    <th>가용수량</th>
 			                    <th>출고수량</th>
 			                </tr>
-							<p id="remainingQtyContainer" style="display:none;">
-							    남은 환산 수량:
-							    <span id="remainingQty"></span>
-							</p>
-
 			            </thead>
 			            <tbody id="lotTableBody"></tbody>
 			        </table>
-
+					<p id="remainingQtyContainer" style="display:none;">
+					    남은 환산 수량:
+					    <span id="remainingQty"></span>
+					</p>
+					
 			        <div class="action-buttons">
 			            <button id="outboundBtn">출고</button>
 			            <button id="partialOutboundBtn" style="display:none;">부분출고</button>

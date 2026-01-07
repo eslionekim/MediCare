@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.example.erp.Dispense.DispenseLotDTO;
+
 @Repository
 public interface StockRepository extends JpaRepository<Stock,Long>{
 
@@ -19,7 +21,7 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 		    where s.item_code = :itemCode
 		      and s.outbound_deadline >= CURRENT_DATE
 		""")
-	BigDecimal findTotalAvailableQty(@Param("itemCode") Long itemCode);
+	BigDecimal findTotalAvailableQty(@Param("itemCode") String itemCode);
 
 	// 물류->불출요청리스트->승인->lot리스트 by 은서
 	@Query("""
@@ -37,7 +39,7 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 		      and (s.outbound_deadline is null or s.outbound_deadline >= CURRENT_DATE)
 		    order by s.outbound_deadline asc
 		""")
-		List<LotcodeDTO> findOutboundLots(@Param("itemCode") Long itemCode);
+	List<LotcodeDTO> findOutboundLots(@Param("itemCode") String itemCode);
 
 
 	// 물류 -> 불출요청리스트 -> 출고 by 은서
@@ -46,5 +48,38 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 	
 	// 물류 -> 전체재고현황 -> lot를 물류창고에서만 가져오기 by 은서
 	@Query("SELECT s FROM Stock s JOIN Warehouse w ON s.warehouse_code = w.warehouse_code WHERE s.item_code = :itemCode AND w.name = '물류창고'")
-    List<Stock> findByItemCode(@Param("itemCode") Long itemCode);
+    List<Stock> findByItemCode(@Param("itemCode") String itemCode);
+	
+	// 약사-> 조제리스트-> 조제 팝업창->유통기한을 넘기지 않은 해당 아이템 구하기 by은서
+	@Query("""
+		    SELECT new com.example.erp.Dispense.DispenseLotDTO(
+		        s.stock_id,
+		        s.lot_code,
+		        s.quantity,
+		        s.expiry_date,
+		        CONCAT(w.location, '-', w.zone)
+		    )
+		    FROM Stock s
+		    JOIN Warehouse w
+		      ON s.warehouse_code = w.warehouse_code
+		    WHERE s.item_code = :itemCode
+		      AND w.name = '약제창고'
+		      AND s.quantity > 0
+		      AND s.expiry_date >= CURRENT_DATE
+		    ORDER BY s.expiry_date ASC
+		""")
+		List<DispenseLotDTO> findPharmLots(@Param("itemCode") String itemCode);
+
+
+
+	//약사->조제리스트->조제팝업창->재고 by은서
+	@Query("""
+	        SELECT COALESCE(SUM(s.quantity), 0)
+	        FROM Stock s
+	        WHERE s.item_code = :itemCode
+	          AND s.expiry_date >= CURRENT_DATE
+			  AND s.warehouse_code in (select warehouse_code from Warehouse
+			  where name='약제창고')
+	    """)
+	BigDecimal sumAvailableStock(@Param("itemCode") String itemCode);
 }

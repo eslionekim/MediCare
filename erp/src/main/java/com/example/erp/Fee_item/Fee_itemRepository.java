@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 
 
 @Repository
-public interface Fee_itemRepository extends JpaRepository<Fee_item, Long> {
+public interface Fee_itemRepository extends JpaRepository<Fee_item, String> {
 	@Query("SELECT f FROM Fee_item f WHERE f.name LIKE %:keyword%")
 	List<Fee_item> searchAll(@Param("keyword") String keyword);
 }

@@ -21,7 +21,7 @@ public interface Issue_request_itemRepository extends JpaRepository<Issue_reques
 	""")
 	BigDecimal findConvertedQty(
 	    @Param("issueRequestId") Long issueRequestId,
-	    @Param("itemCode") Long itemCode
+	    @Param("itemCode") String itemCode
 	);
 
 	// issue_request_id로 해당 아이템 조회

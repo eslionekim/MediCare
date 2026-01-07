@@ -23,8 +23,7 @@ import lombok.Setter;
 public class Item { 
 
 	@Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // 자동 생성
-    private Long item_code; //물품 코드
+    private String item_code; //물품 코드
 
     @Column(nullable = false, length = 20)
     private String item_type; //분류(약품/소모품/자재)
@@ -48,7 +47,7 @@ public class Item {
     private Boolean is_active = true; //사용여부
 
     @Column(length = 50)
-    private Long fee_item_code; //수가항목 코드
+    private String fee_item_code; //수가항목 코드
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime created_at; //일시

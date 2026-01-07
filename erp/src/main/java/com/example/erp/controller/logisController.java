@@ -104,7 +104,7 @@ public class logisController {
 	@ResponseBody
 	public Map<String, Object> getOutboundExtra(
 	        @RequestParam("issueRequestId") Long issueRequestId,
-	        @RequestParam("itemCode") Long itemCode) {
+	        @RequestParam("itemCode") String itemCode) {
 
 	    // 1️⃣ stockService에서 기존 출고 정보 가져오기 (lot 리스트 등)
 	    StockDTO stockData = stockService.getOutboundExtra(issueRequestId, itemCode);
@@ -156,7 +156,7 @@ public class logisController {
 	            move.setIssue_request_id(issueRequestId);
 	            move.setStatus_code(isPartial ? "SM_DRAFT" : "SM_request");
 	            move.setMoved_at(LocalDateTime.now());
-	            move.setQuantity("-" + qty); // 빠져나간 수량 기록
+	            //move.setQuantity("-" + qty); // 빠져나간 수량 기록
 	            stock_moveRepository.save(move);
 	        }
 	
@@ -238,7 +238,7 @@ public class logisController {
 	//물류->전체재고현황->상세보기 by 은서
     @GetMapping("/logis/item/{itemCode}/lots")
     @ResponseBody
-    public List<Map<String, Object>> getItemLots(@PathVariable("itemCode") Long itemCode) {
+    public List<Map<String, Object>> getItemLots(@PathVariable("itemCode") String itemCode) {
         LocalDate today = LocalDate.now();
 
         List<Stock> stocks = stockRepository.findByItemCode(itemCode)
@@ -296,7 +296,7 @@ public class logisController {
 
         fee_itemRepository.save(feeItem);
 
-        Long feeItemCode = feeItem.getFee_item_code(); // 생성된 PK
+        String feeItemCode = feeItem.getFee_item_code(); // 생성된 PK
 
         /* =======================
          * 2. Item 저장
@@ -314,7 +314,6 @@ public class logisController {
         item.setCreated_at(LocalDateTime.now());
 
         itemRepository.save(item);
-
         return ResponseEntity.ok("신규 등록 요청 완료");
     }
     
@@ -337,7 +336,7 @@ public class logisController {
     @ResponseBody
     @Transactional
     public ResponseEntity<?> stockIn(
-    		@RequestParam("item_code") Long item_code,
+    		@RequestParam("item_code") String item_code,
             @RequestParam("location") String location,
             @RequestParam("zone") String zone,
             @RequestParam("lot_code") String lot_code,
@@ -368,7 +367,7 @@ public class logisController {
     
     @GetMapping("/logis/item/{itemCode}/price") // 입고등록->단가조회
     @ResponseBody
-    public BigDecimal getItemPrice(@PathVariable("itemCode") Long itemCode) {
+    public BigDecimal getItemPrice(@PathVariable("itemCode") String itemCode) {
         return itemRepository.findById(itemCode)
                 .orElseThrow()
                 .getUnit_price();

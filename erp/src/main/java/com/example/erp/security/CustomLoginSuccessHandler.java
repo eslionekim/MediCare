@@ -20,7 +20,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
             Authentication authentication)
             throws IOException, ServletException {
         Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-
+        // role_code 대로
         // 역할에 따라 페이지 이동
         String redirectURL = request.getContextPath();
         // 의사일 경우
@@ -38,10 +38,6 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         // 물류일 경우
         else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_logis"))) {
             redirectURL += "/logis/itemRequest";
-        }
-        // 관리자일 경우
-        else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
-            redirectURL += "/admin/dashboard";
         } else {
             redirectURL += "/home"; // 기본
         }

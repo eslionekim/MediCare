@@ -25,11 +25,12 @@ public class SecurityConfig {
     @Bean //보안 정책
     public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomLoginSuccessHandler successHandler) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화 (개발/테스트용)
+            .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화 (개발/테스트용) role_code대로
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/logout").permitAll()
-                .requestMatchers("/doctor/**").hasRole("DOCTOR") 
-                .requestMatchers("/nurse/**").hasRole("NURSE")
+                .requestMatchers("/doctor/**").hasRole("DOCTOR")
+                .requestMatchers("/pharm/**").hasRole("PHARM")
+                .requestMatchers("/logis/**").hasRole("logis")
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/hr/**").hasRole("HR")
                 .requestMatchers("/patients/**").hasRole("STAFF")
