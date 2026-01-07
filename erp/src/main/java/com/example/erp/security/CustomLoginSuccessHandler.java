@@ -42,6 +42,10 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
         // 관리자일 경우
         else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"))) {
             redirectURL += "/admin/dashboard";
+        }
+	    // 약사일 경우
+        else if (authorities.stream().anyMatch(a -> a.getAuthority().equals("ROLE_PHARM"))) {
+            redirectURL += "/pharm/todayPrescription";
         } else {
             redirectURL += "/home"; // 기본
         }
