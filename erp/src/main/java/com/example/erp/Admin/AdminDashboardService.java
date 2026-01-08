@@ -73,7 +73,9 @@ public class AdminDashboardService {
                   coalesce(sum(c.discount_amount),0) as discount_amount
                 from claim c
                 join visit v on c.visit_id = v.visit_id
+                join payment p on p.visit_id = v.visit_id
                 where v.visit_datetime between :start and :end
+                  and p.status_code = 'PAY_COMPLETED'
                 """, "v", dept, doctor, insurance), start, end, dept, doctor, insurance);
 
         long noncoveredAmount = paidAndDiscount[0].longValue();
@@ -233,8 +235,10 @@ public class AdminDashboardService {
                 from claim_item ci
                 join claim c on ci.claim_id = c.claim_id
                 join visit v on c.visit_id = v.visit_id
+                join payment p on p.visit_id = v.visit_id
                 left join insurance_code ic on v.insurance_code = ic.insurance_code
                 where v.visit_datetime between :start and :end
+                  and p.status_code = 'PAY_COMPLETED'
                 group by ic.name
                 order by amount desc
                 """, "v", departmentCode, doctorId, insuranceCode);
@@ -257,8 +261,7 @@ public class AdminDashboardService {
         }
         return stats;
     }
-
-    private List<StockAlert> queryStockAlerts() {
+private List<StockAlert> queryStockAlerts() {
         Query query = entityManager.createNativeQuery("""
                 select i.name, coalesce(sum(s.quantity),0) as qty, i.safety_stock
                 from item i
@@ -519,3 +522,7 @@ public class AdminDashboardService {
     public record DoctorOption(String userId, String name, String departmentCode, String departmentName) {
     }
 }
+
+
+
+

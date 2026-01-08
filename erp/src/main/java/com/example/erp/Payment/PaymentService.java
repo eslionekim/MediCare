@@ -170,8 +170,12 @@ public class PaymentService {
 
     @Transactional
     public void pay(Long visitId, String paymentMethodCode) {
-        if (paymentRepository.existsByVisitId(visitId))
+        Payment existing = paymentRepository.findByVisitId(visitId).orElse(null);
+        if (existing != null
+                && existing.getStatus_code() != null
+                && !"PAY_REFUND".equalsIgnoreCase(existing.getStatus_code().getStatus_code())) {
             return;
+        }
 
         PaymentPageModel m = loadPaymentPage(visitId);
         Visit visit = m.visit();
@@ -180,7 +184,7 @@ public class PaymentService {
         if (!m.claimReady())
             throw new IllegalStateException("청구/청구항목이 없습니다. 결제 전에 청구를 생성해 주세요.");
 
-        Payment payment = new Payment();
+        Payment payment = existing != null ? existing : new Payment();
         payment.setVisit(visit);
 
         Payment_method pm = paymentMethodRepository.findById(paymentMethodCode)
@@ -194,7 +198,7 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("status_code PAYMENT_DONE not found"));
         payment.setStatus_code(paid);
 
-        paymentRepository.save(payment);
+        paymentRepository.saveAndFlush(payment);
     }
 
     @Transactional
