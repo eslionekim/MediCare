@@ -78,15 +78,38 @@
     <div class="sub-bar">대시보드</div>
 
     <div class="content">
-        <div class="filter-row">
-            <select><option>진료과 선택</option></select>
-            <select><option>담당 의사 선택</option></select>
-            <select><option>보험 구분</option></select>
-            <input class="date" type="text" value="2025.12.24" />
+        <form class="filter-row" th:action="@{/admin/dashboard}" method="get">
+            <select name="departmentCode">
+                <option value="" th:selected="${selectedDepartmentCode == null or selectedDepartmentCode == ''}">진료과 선택</option>
+                <option th:each="d : ${departmentOptions}"
+                        th:value="${d.code}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartmentCode != null and selectedDepartmentCode == d.code}">
+                </option>
+            </select>
+            <select name="doctorId">
+                <option value="" th:selected="${selectedDoctorId == null or selectedDoctorId == ''}">담당 의사 선택</option>
+                <option th:each="doc : ${doctorOptions}"
+                        th:value="${doc.userId}"
+                        th:text="${doc.departmentName != '' ? doc.name + ' (' + doc.departmentName + ')' : doc.name}"
+                        th:selected="${selectedDoctorId != null and selectedDoctorId == doc.userId}">
+                </option>
+            </select>
+            <select name="insuranceCode">
+                <option value="" th:selected="${selectedInsuranceCode == null or selectedInsuranceCode == ''}">보험 구분</option>
+                <option th:each="ic : ${insuranceOptions}"
+                        th:value="${ic.code}"
+                        th:text="${ic.name}"
+                        th:selected="${selectedInsuranceCode != null and selectedInsuranceCode == ic.code}">
+                </option>
+            </select>
+            <input class="date" type="date" name="startDate"
+                   th:value="${selectedStartDate != null ? selectedStartDate : ''}" />
             <span>-</span>
-            <input class="date" type="text" value="2025.12.24" />
-            <button class="btn btn-blue">검색</button>
-        </div>
+            <input class="date" type="date" name="endDate"
+                   th:value="${selectedEndDate != null ? selectedEndDate : ''}" />
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
 
         <div class="summary-grid">
             <div class="summary-card">
@@ -201,12 +224,19 @@
                 <div class="panel-body">
                     <div style="margin-bottom:6px;">총매출</div>
                     <div style="height:18px; background:#e9edf7; border:1px solid #c9cfde;"></div>
+                    <div style="margin-top:6px; font-size:12px;">
+                        ₩<span th:text="${#numbers.formatInteger(summary.salesTotal, 0, 'COMMA')}">0</span>
+                    </div>
                     <div style="margin-top:8px;">급여/비급여</div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         <div style="flex:1; height:16px; border:1px solid #c9cfde; background:#e9edf7;">
                             <div th:style="'width:' + ${summary.coveredRatio.coveredPercent} + '%; height:100%; background:#6b80bf;'"></div>
                         </div>
                         <span><span th:text="${summary.coveredRatio.coveredPercent}">0</span>% / <span th:text="${summary.coveredRatio.noncoveredPercent}">0</span>%</span>
+                    </div>
+                    <div style="margin-top:6px; font-size:12px;">
+                        급여 ₩<span th:text="${#numbers.formatInteger(summary.coveredRatio.coveredAmount, 0, 'COMMA')}">0</span>
+                        / 비급여 ₩<span th:text="${#numbers.formatInteger(summary.coveredRatio.noncoveredAmount, 0, 'COMMA')}">0</span>
                     </div>
                 </div>
             </div>
@@ -240,14 +270,17 @@
                         <tbody>
                         <tr th:each="row : ${insuranceStats}">
                             <td th:text="${row.insuranceName}">건강보험</td>
-                            <td style="width:65%">
+                            <td style="width:55%">
                                 <div class="bar-track">
                                     <div class="bar" th:style="'width:' + ${row.percent} + '%'"></div>
                                 </div>
                             </td>
+                            <td style="width:20%; text-align:right; padding-right:6px;">
+                                ₩<span th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">0</span>
+                            </td>
                         </tr>
                         <tr th:if="${insuranceStats == null or #lists.isEmpty(insuranceStats)}">
-                            <td colspan="2">&nbsp;</td>
+                            <td colspan="3">&nbsp;</td>
                         </tr>
                         </tbody>
                     </table>

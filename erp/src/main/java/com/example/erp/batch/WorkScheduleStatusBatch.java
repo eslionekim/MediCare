@@ -30,10 +30,14 @@ public class WorkScheduleStatusBatch {
 	public void updateScheduleStatus() {    	
 	    LocalDate targetDate = LocalDate.now().minusDays(1);
 	
-	    Status_code SCH_CANCELLED = statusCodeRepository.findById("SCH_CANCELLED").orElseThrow();
-	    Status_code SCH_COMPLETED = statusCodeRepository.findById("SCH_COMPLETED").orElseThrow();
-	    Status_code SCH_LATE = statusCodeRepository.findById("SCH_LATE").orElseThrow();
-	    Status_code SCH_ABSENT = statusCodeRepository.findById("SCH_ABSENT").orElseThrow();
+	    Status_code SCH_CANCELLED = statusCodeRepository.findById("SCH_CANCELLED").orElse(null);
+	    Status_code SCH_COMPLETED = statusCodeRepository.findById("SCH_COMPLETED").orElse(null);
+	    Status_code SCH_LATE = statusCodeRepository.findById("SCH_LATE").orElse(null);
+	    Status_code SCH_ABSENT = statusCodeRepository.findById("SCH_ABSENT").orElse(null);
+	
+	    if (SCH_CANCELLED == null || SCH_COMPLETED == null || SCH_ABSENT == null) {
+	        return;
+	    }
 	
 	    List<Work_schedule> schedules = workScheduleRepository.findTargetSchedules(targetDate);
 	
@@ -71,7 +75,7 @@ public class WorkScheduleStatusBatch {
 	        if (!start.isAfter(typeStart) && !end.isBefore(typeEnd)) {
 	            ws.setStatus_code(SCH_COMPLETED);
 	        } else if (start.isAfter(typeStart) && !end.isBefore(typeEnd)) {
-	            ws.setStatus_code(SCH_LATE);
+	            ws.setStatus_code(SCH_LATE != null ? SCH_LATE : SCH_COMPLETED);
 	        } else {
 	            ws.setStatus_code(SCH_ABSENT);
 	        }

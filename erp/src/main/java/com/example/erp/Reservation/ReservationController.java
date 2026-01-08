@@ -29,6 +29,7 @@ public class ReservationController {
     @GetMapping
     public String reservationPage(
             @RequestParam(value = "patientId", required = false) Long patientId,
+            @RequestParam(value = "patientKeyword", required = false) String patientKeyword,
             @RequestParam(value = "date", required = false) String dateStr,
             @RequestParam(value = "departmentCode", required = false) String departmentCode,
             @RequestParam(value = "userId", required = false) String userId,
@@ -96,6 +97,8 @@ public class ReservationController {
         model.addAttribute("selectedPatient", selectedPatient);
         model.addAttribute("selectedReservation", selectedReservation);
         model.addAttribute("selectedTime", selectedTime);
+        model.addAttribute("patientKeyword", patientKeyword);
+        model.addAttribute("patientSearchResults", reservationService.searchPatients(patientKeyword));
 
         return "staff/reservation";
     }

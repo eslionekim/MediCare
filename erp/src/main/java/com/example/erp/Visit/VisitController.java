@@ -185,6 +185,7 @@ public class VisitController {
         @GetMapping("/receptions")
         public String receptionPage(
                         @RequestParam(value = "patientId", required = false) Long patientId,
+                        @RequestParam(value = "patientKeyword", required = false) String patientKeyword,
                         @RequestParam(value = "date", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
                         Model model) {
 
@@ -251,6 +252,8 @@ public class VisitController {
                 model.addAttribute("visitHistories", visitHistories);
                 model.addAttribute("outHistories", outHistories);
                 model.addAttribute("confirmedReservations", confirmedReservations);
+                model.addAttribute("patientKeyword", patientKeyword);
+                model.addAttribute("patientSearchResults", patientService.searchPatients(patientKeyword));
 
                 // 4) 드롭다운 데이터 (DB 연동)
                 List<Department> departments = departmentRepository.findActive();

@@ -65,7 +65,7 @@
                 <td th:text="${v.patient != null ? v.patient.name : ''}">환자명</td>
                 <td th:text="${v.department != null ? v.department.name : v.department_code}">진료과</td>
                 <td th:text="${v.user_account != null ? v.user_account.name : v.user_id}">의사</td>
-                <td th:text="${v.status_code != null ? v.status_code.name : ''}">상태</td>
+                <td th:text="${paymentStatusByVisitId != null ? paymentStatusByVisitId[v.visit_id] : '미결제'}">상태</td>
                 <td>
                   <button class="btn-xs"
                           th:onclick="|location.href='@{/payments(visitId=${v.visit_id})}'|">선택</button>
@@ -183,6 +183,11 @@
               <input readonly th:value="${visit != null && visit.insurance_code != null ? visit.insurance_code.name + ' (' + visit.insurance_code.insurance_code + ')' : '없음'}">
             </div>
 
+            <div class="form-row">
+              <label>결제상태</label>
+              <input readonly th:value="${paymentStatusName}">
+            </div>
+
           </div>
         </div>
 
@@ -210,9 +215,16 @@
               </div>
 
               <div style="text-align:right;">
-                <button class="pay-btn" type="submit" th:disabled="${visit == null or !claimReady}">결제</button>
+                <button class="pay-btn" type="submit"
+                        th:disabled="${visit == null or !claimReady or paymentCompleted}">결제</button>
               </div>
               <div class="hint" th:if="${!claimReady}">청구/청구항목이 없습니다. 차트에서 청구를 생성한 뒤 결제해 주세요.</div>
+            </form>
+            <form th:action="@{/payments/refund}" method="post" style="margin-top:8px; text-align:right;">
+              <input type="hidden" name="visitId" th:value="${visit != null ? visit.visit_id : ''}">
+              <button class="pay-btn" type="submit"
+                      th:disabled="${visit == null or !paymentCompleted}"
+                      style="background:#D5DDED; color:#333;">환불</button>
             </form>
           </div>
         </div>

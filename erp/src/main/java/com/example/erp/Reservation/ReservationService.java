@@ -37,6 +37,15 @@ public class ReservationService {
         return patientRepository.findById(patientId).orElse(null);
     }
 
+    @Transactional(readOnly = true)
+    public List<Patient> searchPatients(String keyword) {
+        if (keyword == null || keyword.isBlank()) {
+            return List.of();
+        }
+        return patientRepository.findByNameContainingIgnoreCaseOrPhoneContainingOrRrnContaining(
+                keyword, keyword, keyword);
+    }
+
     public String getCalendarTitle(LocalDate baseDate) {
         return baseDate.getYear() + "-" + String.format("%02d", baseDate.getMonthValue());
     }

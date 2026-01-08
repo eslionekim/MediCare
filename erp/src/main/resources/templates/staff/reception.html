@@ -52,6 +52,38 @@
                 <section class="card">
                     <div class="card-header"><span>환자 정보</span></div>
                     <div class="card-body">
+                        <form class="form-row" th:action="@{/receptions}" method="get">
+                            <label>환자검색</label>
+                            <input type="text" name="patientKeyword" placeholder="이름/전화/주민번호"
+                                   th:value="${patientKeyword != null ? patientKeyword : ''}">
+                            <input type="hidden" name="date" th:value="${date != null ? #temporals.format(date, 'yyyy-MM-dd') : ''}">
+                            <button type="submit" class="btn btn-primary">검색</button>
+                        </form>
+                        <div th:if="${patientSearchResults != null and !#lists.isEmpty(patientSearchResults)}" style="margin-bottom:8px;">
+                            <table class="history-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>환자명</th>
+                                    <th>생년월일</th>
+                                    <th>전화</th>
+                                    <th>선택</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="p : ${patientSearchResults}">
+                                    <td th:text="${p.patient_id}">1</td>
+                                    <td th:text="${p.name}">환자명</td>
+                                    <td th:text="${p.birth_date != null ? p.birth_date : ''}"></td>
+                                    <td th:text="${p.phone != null ? p.phone : ''}"></td>
+                                    <td>
+                                        <button type="button" class="btn btn-secondary"
+                                                th:onclick="|location.href='@{/receptions(patientId=${p.patient_id}, date=${date})}'|">선택</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="form-row">
                             <label>환자ID</label>
                             <input type="text" th:value="${selectedPatient != null ? selectedPatient.patient_id : ''}" readonly />

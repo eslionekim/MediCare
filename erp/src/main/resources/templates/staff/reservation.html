@@ -30,6 +30,9 @@
         .schedule-table th, .schedule-table td { border:1px solid #ccc; padding:6px 4px; text-align:center; }
         .schedule-table th { background:#F3F6FF; font-weight:600; }
         .schedule-table tbody tr:nth-child(even) { background:#FAFBFF; }
+        .history-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+        .history-table th, .history-table td { border:1px solid #ccc; padding:4px 5px; text-align:center; }
+        .history-table th { background:#f3f6ff; }
         .btn-xs { padding:3px 8px; font-size:12px; border-radius:10px; border:1px solid #7B7B7B; background:#D5DDED; cursor:pointer; }
         .btn-xs-primary { background:#879BD5; color:#fff; }
         .right-panel { display:flex; flex-direction:column; gap:8px; }
@@ -155,6 +158,40 @@
                 <section class="card">
                     <div class="card-header">환자 정보</div>
                     <div class="card-body">
+                        <form class="info-row" th:action="@{/reservations}" method="get">
+                            <label>환자검색</label>
+                            <input type="text" name="patientKeyword" placeholder="이름/전화/주민번호"
+                                   th:value="${patientKeyword != null ? patientKeyword : ''}">
+                            <input type="hidden" name="date" th:value="${selectedDate != null ? selectedDate : ''}">
+                            <input type="hidden" name="departmentCode" th:value="${selectedDepartmentCode != null ? selectedDepartmentCode : ''}">
+                            <input type="hidden" name="userId" th:value="${selectedUserId != null ? selectedUserId : ''}">
+                            <button type="submit" class="btn-xs btn-xs-primary" style="width:60px;">검색</button>
+                        </form>
+                        <div th:if="${patientSearchResults != null and !#lists.isEmpty(patientSearchResults)}" style="margin-bottom:8px;">
+                            <table class="history-table">
+                                <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>환자명</th>
+                                    <th>생년월일</th>
+                                    <th>전화</th>
+                                    <th>선택</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="p : ${patientSearchResults}">
+                                    <td th:text="${p.patient_id}">1</td>
+                                    <td th:text="${p.name}">환자명</td>
+                                    <td th:text="${p.birth_date != null ? p.birth_date : ''}"></td>
+                                    <td th:text="${p.phone != null ? p.phone : ''}"></td>
+                                    <td>
+                                        <button type="button" class="btn-xs"
+                                                th:onclick="|location.href='@{/reservations(patientId=${p.patient_id}, date=${selectedDate}, departmentCode=${selectedDepartmentCode}, userId=${selectedUserId})}'|">선택</button>
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="info-row">
                             <label>환자ID</label>
                             <input type="text" readonly th:value="${selectedPatient != null ? selectedPatient.patient_id : ''}">

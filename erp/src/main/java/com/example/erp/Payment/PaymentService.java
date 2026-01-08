@@ -4,7 +4,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +43,35 @@ public class PaymentService {
         return visitRepository.findTodaysVisits(start, end);
     }
 
+    public Map<Long, String> getPaymentStatusByVisitIds(List<Visit> visits) {
+        if (visits == null || visits.isEmpty()) {
+            return Map.of();
+        }
+
+        List<Long> visitIds = visits.stream()
+                .map(Visit::getVisit_id)
+                .toList();
+
+        Map<Long, Payment> paymentByVisitId = new HashMap<>();
+        for (Payment p : paymentRepository.findByVisitIds(visitIds)) {
+            if (p.getVisit() != null && p.getVisit().getVisit_id() != null) {
+                paymentByVisitId.put(p.getVisit().getVisit_id(), p);
+            }
+        }
+
+        Map<Long, String> statusByVisitId = new HashMap<>();
+        for (Visit v : visits) {
+            Payment p = paymentByVisitId.get(v.getVisit_id());
+            String statusName = "미결제";
+            if (p != null && p.getStatus_code() != null) {
+                statusName = p.getStatus_code().getName();
+            }
+            statusByVisitId.put(v.getVisit_id(), statusName);
+        }
+
+        return statusByVisitId;
+    }
+
     public PaymentPageModel loadPaymentPage(Long visitId) {
         if (visitId == null)
             return PaymentPageModel.empty();
@@ -49,15 +80,17 @@ public class PaymentService {
         if (visit == null)
             return PaymentPageModel.empty();
 
-        Claim claim = claimRepository.findByVisitId(visitId).orElse(null);
+        List<Claim> claims = claimRepository.findAllByVisitId(visitId);
+        Claim claim = claims.isEmpty() ? null : claims.get(0);
+        Payment payment = paymentRepository.findByVisitId(visitId).orElse(null);
 
         int itemsTotal = 0;
         int itemsDiscount = 0;
         int itemCount = 0;
 
         List<Claim_item> items = List.of();
-        if (claim != null) {
-            items = claimItemRepository.findByClaim(claim);
+        if (!claims.isEmpty()) {
+            items = claimItemRepository.findAllByVisitId(visitId);
 
             // 보험 할인율(예: 0.3 = 30%)
             BigDecimal rate = BigDecimal.ZERO;
@@ -65,6 +98,9 @@ public class PaymentService {
             if (ins != null) {
                 rate = BigDecimal.valueOf(ins.getDiscount_rate());
             }
+
+            Map<Long, Integer> totalsByClaim = new HashMap<>();
+            Map<Long, Integer> discountsByClaim = new HashMap<>();
 
             for (Claim_item ci : items) {
                 int price = ci.getUnit_price() * ci.getQuantity();
@@ -78,6 +114,13 @@ public class PaymentService {
                 ci.setDiscount(discount);
                 ci.setTotal(Math.max(0, price - discount));
 
+                Claim itemClaim = ci.getClaim();
+                if (itemClaim != null && itemClaim.getClaim_id() != null) {
+                    Long claimId = itemClaim.getClaim_id();
+                    totalsByClaim.merge(claimId, ci.getTotal(), Integer::sum);
+                    discountsByClaim.merge(claimId, ci.getDiscount(), Integer::sum);
+                }
+
                 itemsTotal += ci.getTotal();
                 itemsDiscount += ci.getDiscount();
             }
@@ -85,9 +128,19 @@ public class PaymentService {
                 claimItemRepository.saveAll(items);
             }
             // 청구 합계도 갱신
-            claim.setTotal_amount(itemsTotal);
-            claim.setDiscount_amount(itemsDiscount);
-            claimRepository.save(claim);
+            for (Claim c : claims) {
+                Integer total = totalsByClaim.get(c.getClaim_id());
+                Integer discount = discountsByClaim.get(c.getClaim_id());
+                if (total != null) {
+                    c.setTotal_amount(total);
+                }
+                if (discount != null) {
+                    c.setDiscount_amount(discount);
+                }
+            }
+            if (!claims.isEmpty()) {
+                claimRepository.saveAll(claims);
+            }
 
             itemCount = items.size();
         }
@@ -100,10 +153,16 @@ public class PaymentService {
         int finalAmount = Math.max(0, totalAmount - discountAmount);
 
         List<Payment_method> methods = paymentMethodRepository.findAll();
-        boolean claimReady = claim != null && itemCount > 0;
+        boolean claimReady = !claims.isEmpty() && itemCount > 0;
+        String paymentStatusName = payment != null && payment.getStatus_code() != null
+                ? payment.getStatus_code().getName()
+                : "미결제";
+        boolean paymentCompleted = payment != null
+                && payment.getStatus_code() != null
+                && "PAY_COMPLETED".equalsIgnoreCase(payment.getStatus_code().getStatus_code());
 
-        return new PaymentPageModel(visit, claim, totalAmount, baseDiscount, insuranceDiscount, discountAmount,
-                finalAmount, methods, claimReady, itemCount, items);
+        return new PaymentPageModel(visit, claim, payment, paymentStatusName, paymentCompleted, totalAmount,
+                baseDiscount, insuranceDiscount, discountAmount, finalAmount, methods, claimReady, itemCount, items);
     }
 
     @Transactional
@@ -135,9 +194,27 @@ public class PaymentService {
         paymentRepository.save(payment);
     }
 
+    @Transactional
+    public void refund(Long visitId) {
+        Payment payment = paymentRepository.findByVisitId(visitId)
+                .orElseThrow(() -> new IllegalArgumentException("payment not found"));
+        if (payment.getStatus_code() == null
+                || !"PAY_COMPLETED".equalsIgnoreCase(payment.getStatus_code().getStatus_code())) {
+            return;
+        }
+
+        Status_code refunded = statusCodeRepository.findById("PAY_REFUND")
+                .orElseThrow(() -> new IllegalArgumentException("status_code PAY_REFUND not found"));
+        payment.setStatus_code(refunded);
+        paymentRepository.save(payment);
+    }
+
     public record PaymentPageModel(
             Visit visit,
             Claim claim,
+            Payment payment,
+            String paymentStatusName,
+            boolean paymentCompleted,
             int totalAmount,
             int baseDiscount,
             int insuranceDiscount,
@@ -148,7 +225,8 @@ public class PaymentService {
             int itemCount,
             List<Claim_item> claimItems) {
         static PaymentPageModel empty() {
-            return new PaymentPageModel(null, null, 0, 0, 0, 0, 0, List.of(), false, 0, List.of());
+            return new PaymentPageModel(null, null, null, "미결제", false, 0, 0, 0, 0, 0, List.of(), false, 0,
+                    List.of());
         }
     }
 }

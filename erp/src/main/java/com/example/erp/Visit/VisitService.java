@@ -107,7 +107,7 @@ public class VisitService {
             AllVisitDTO dto = new AllVisitDTO();
             dto.setChart_id(!v.getChart().isEmpty() ? v.getChart().get(0).getChart_id() : null);
             dto.setVisit_id(v.getVisit_id());
-            dto.setDepartment_name(v.getDepartment().getName());
+            dto.setDepartment_name(v.getDepartment() != null ? v.getDepartment().getName() : null);
             dto.setPatient_id(v.getPatient().getPatient_id());
             dto.setPatient_name(v.getPatient().getName());
             dto.setGender(v.getPatient().getGender());
@@ -115,8 +115,8 @@ public class VisitService {
             dto.setVisit_type(v.getVisit_type());
             dto.setCreated_at(v.getCreated_at());
             dto.setNote(v.getNote());
-            dto.setInsurance_name(v.getInsurance_code().getName());
-            dto.setDoctor_name(v.getUser_account().getName());
+            dto.setInsurance_name(v.getInsurance_code() != null ? v.getInsurance_code().getName() : null);
+            dto.setDoctor_name(v.getUser_account() != null ? v.getUser_account().getName() : null);
 
             result.add(dto);
         }

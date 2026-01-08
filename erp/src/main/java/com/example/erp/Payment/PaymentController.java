@@ -18,11 +18,16 @@ public class PaymentController {
     @GetMapping
     public String page(@RequestParam(value = "visitId", required = false) Long visitId, Model model) {
 
-        model.addAttribute("todayVisits", paymentService.getTodayVisits());
+        var todayVisits = paymentService.getTodayVisits();
+        model.addAttribute("todayVisits", todayVisits);
+        model.addAttribute("paymentStatusByVisitId", paymentService.getPaymentStatusByVisitIds(todayVisits));
 
         PaymentPageModel m = paymentService.loadPaymentPage(visitId);
 
         model.addAttribute("visit", m.visit());
+        model.addAttribute("payment", m.payment());
+        model.addAttribute("paymentStatusName", m.paymentStatusName());
+        model.addAttribute("paymentCompleted", m.paymentCompleted());
         model.addAttribute("totalAmount", m.totalAmount());
         model.addAttribute("baseDiscount", m.baseDiscount());
         model.addAttribute("insuranceDiscount", m.insuranceDiscount());
@@ -41,6 +46,12 @@ public class PaymentController {
             @RequestParam String paymentMethodCode) {
 
         paymentService.pay(visitId, paymentMethodCode);
+        return "redirect:/payments?visitId=" + visitId;
+    }
+
+    @PostMapping("/refund")
+    public String refund(@RequestParam Long visitId) {
+        paymentService.refund(visitId);
         return "redirect:/payments?visitId=" + visitId;
     }
 }

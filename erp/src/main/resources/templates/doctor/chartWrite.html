@@ -364,41 +364,41 @@
 		<div class="box patient_info">
 		    <div class="patient-tabs">
 		        <span class="title">환자 정보</span>
-		        <span class="chart_id"><input type="text" th:value="${chart.chart_id}" readonly></span>
+		        <span class="chart_id"><input type="text" th:value="${chart != null ? chart.chart_id : ''}" readonly></span>
 		    </div>
 
 		    <table class="patient-table">
 		        <tr>
 		            <th>환자ID</th>
-		            <td><input type="text" th:value="${patient.patient_id}" readonly></td>
+		            <td><input type="text" th:value="${patient != null ? patient.patient_id : ''}" readonly></td>
 		            <th >초/재진</th>
-		            <td><input type="text" th:value="${visit.visit_type}" readonly></td>
+		            <td><input type="text" th:value="${visit != null ? visit.visit_type : ''}" readonly></td>
 		        </tr>
 		        <tr>
 		            <th>환자명</th>
-		            <td><input type="text" th:value="${patient.name}" readonly></td>
+		            <td><input type="text" th:value="${patient != null ? patient.name : ''}" readonly></td>
 		            <th>성별</th>
-		            <td><input type="text" th:value="${patient.gender}" readonly></td>
+		            <td><input type="text" th:value="${patient != null ? patient.gender : ''}" readonly></td>
 		        </tr>
 		        <tr>
 		            <th>생년월일</th>
-					<td colspan="3"><input type="text" th:value="${patient.birth_date}" readonly></td>
+					<td colspan="3"><input type="text" th:value="${patient != null ? patient.birth_date : ''}" readonly></td>
 		        </tr>
 		        <tr>
 		            <th>연락처</th>
-		            <td colspan="3"><input type="text" th:value="${patient.phone}" readonly></td>
+		            <td colspan="3"><input type="text" th:value="${patient != null ? patient.phone : ''}" readonly></td>
 		        </tr>
 		        <tr>
 		            <th>주소1</th>
-		            <td colspan="3"><input type="text" th:value="${patient.address1}" readonly></td>
+		            <td colspan="3"><input type="text" th:value="${patient != null ? patient.address1 : ''}" readonly></td>
 		        </tr>
 		        <tr>
 		            <th>주소2</th>
-		            <td colspan="3"><input type="text" th:value="${patient.address2}" readonly></td>
+		            <td colspan="3"><input type="text" th:value="${patient != null ? patient.address2 : ''}" readonly></td>
 		        </tr>
 				<tr>
 					<th>진료과</th>
-					<td><input type="text" th:value="${visit.department.name}" readonly></td>
+					<td><input type="text" th:value="${visit != null && visit.department != null ? visit.department.name : ''}" readonly></td>
 					<th>입원/외래</th>
 					<td><input type="text" value="외래" readonly></td>
 				</tr>
@@ -406,7 +406,7 @@
 					<th>병상</th>
 					<td><input type="text" value="해당 없음" readonly></td>
 					<th>당일/예약</th>
-					<td><input type="text" th:value="${visit.visit_route}" readonly></td>
+					<td><input type="text" th:value="${visit != null ? visit.visit_route : ''}" readonly></td>
 				</tr>
 		    </table>
 		</div>
@@ -430,9 +430,9 @@
 	            <tbody>
 	                <tr th:each="visit : ${pastVisits}">
 	                    <td th:text="${visit.visit_datetime}"></td>
-						<td th:text="${visit.user_account.name}"></td>
+	                    <td th:text="${visit.user_account != null ? visit.user_account.name : ''}"></td>
 	                    <td th:text="${visit.visit_type}"></td>
-	                    <td th:text="${visit.department.name}"></td>
+	                    <td th:text="${visit.department != null ? visit.department.name : ''}"></td>
 	                    <td th:text="${visit.note}"></td>
 	                </tr>
 	            </tbody>
@@ -467,9 +467,9 @@
 	    <div class="box patient_soap">
 			
 	        <h3>차트 정보</h3>
-				<input type="hidden" name="chart_id" th:value="${chart.chart_id}">
-			    <input type="hidden" name="visit_id" th:value="${chart.visit.visit_id}">
-				<input type="hidden" name="patient_id" th:value="${chart.visit.patient.patient_id}">
+				<input type="hidden" name="chart_id" th:value="${chart != null ? chart.chart_id : ''}">
+			    <input type="hidden" name="visit_id" th:value="${chart != null && chart.visit != null ? chart.visit.visit_id : ''}">
+				<input type="hidden" name="patient_id" th:value="${chart != null && chart.visit != null && chart.visit.patient != null ? chart.visit.patient.patient_id : ''}">
 	            <label for="subjective">주증상 (Subjective)</label>
 	            <textarea id="subjective" name="subjective" rows="3" th:text="${chart.subjective}"></textarea>
 

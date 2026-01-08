@@ -293,15 +293,22 @@ public class logisController {
         feeItem.setName(param.get("name"));
         feeItem.setBase_price(Integer.parseInt(param.get("base_price")));
         feeItem.set_active(Boolean.parseBoolean(param.get("taxable"))); // 과세=true
+        String feeItemCode = param.get("fee_item_code");
+        if (feeItemCode == null || feeItemCode.isBlank()) {
+            feeItemCode = param.get("item_code");
+        }
+        if (feeItemCode == null || feeItemCode.isBlank()) {
+            feeItemCode = "FEE-" + System.currentTimeMillis();
+        }
+        feeItem.setFee_item_code(feeItemCode);
 
         fee_itemRepository.save(feeItem);
-
-        String feeItemCode = feeItem.getFee_item_code(); // 생성된 PK
 
         /* =======================
          * 2. Item 저장
          * ======================= */
         Item item = new Item();
+        item.setItem_code(feeItemCode);
         item.setItem_type(param.get("item_type"));
         item.setName(param.get("name"));
         item.setBase_unit(param.get("base_unit"));
