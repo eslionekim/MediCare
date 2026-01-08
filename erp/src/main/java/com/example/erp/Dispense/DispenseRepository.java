@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import com.example.erp.Prescription.Prescription;
+
 import jakarta.transaction.Transactional;
 
 @Repository
@@ -30,4 +32,6 @@ public interface DispenseRepository extends JpaRepository<Dispense, Long>{
     @Transactional
     @Query("DELETE FROM Dispense d WHERE d.prescription_id = :prescriptionId")
 	void deleteByPrescriptionId(@Param("prescriptionId") Long prescriptionId);
+	
+
 }
