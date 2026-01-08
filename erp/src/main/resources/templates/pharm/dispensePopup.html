@@ -104,7 +104,8 @@
 
 <br>
 <button type="button" onclick="deleteAndClose()">닫기</button>
-<button id="completeBtn" disabled>제조 완료</button>
+<button id="completeBtn" type="button" onclick="completeDispense()" disabled>조제 완료</button>
+
 
 <script>
 	function checkItemCode(btn) { //약품코드 검증
@@ -203,7 +204,7 @@
 	}
 	
 	function deleteAndClose() { //닫기 버튼-> dispense 삭제
-
+		//hidden으로 처방전id받아오기
 	    const prescriptionId = document.getElementById("prescriptionId").value;
 
 	    if (!prescriptionId) {
@@ -226,6 +227,76 @@
 	        alert("오류 발생: " + err);
 	        window.close();
 	    });
+	}
+	
+	function completeDispense() { //조제
+		//hidden으로 처방전id받아오기
+		const statuses = document.querySelectorAll("td.status");
+		const allDone = Array.from(statuses).every(td => td.textContent === "완료");
+		
+	    const prescriptionId = document.getElementById("prescriptionId").value;
+		//item 기준, item_name,dosage,item_code,lot있던쪽
+	    const rows = document.querySelectorAll("#dispenseItems tr");
+		
+	    const items = [];
+		
+		if (!allDone) {
+	        alert("아직 완료되지 않은 항목이 있습니다.");
+	        return;
+	    }
+
+	    rows.forEach(row => {
+			//item_code
+	        const itemCode = row.querySelector(".itemCodeInput").value;
+			//stock_id들
+	        const stockIds = row.querySelectorAll("input[name='stockId']");
+	        //수량들
+			const qtyInputs = row.querySelectorAll(".lotQtyInput");
+			
+	        let lots = [];
+
+	        for (let i = 0; i < stockIds.length; i++) {//stock_id들 순회
+	            const qty = qtyInputs[i].value; //수량 하나씩 넣어서
+
+	            if (qty && Number(qty) > 0) { //0보다 크면
+	                lots.push({
+	                    stockId: stockIds[i].value, //해당 재고 id
+	                    quantity: qty //수량 저장
+	                });
+	            }
+	        }
+
+	        items.push({
+	            itemCode: itemCode, //item_code
+	            lots: lots //lots 리스트 저장
+	        });
+	    });
+
+	    const payload = {
+	        prescriptionId: prescriptionId, //처방id
+	        items: items //위 items
+	    };
+
+		fetch(`/pharm/dispense/complete`, {
+		    method: "POST",
+		    headers: { "Content-Type": "application/json" },
+		    body: JSON.stringify(payload)
+		})
+		.then(res => {
+		    if (!res.ok) {                     // HTTP 상태가 200~299가 아니면
+		        return res.text().then(text => { throw new Error(text || "조제 실패"); });
+		    }
+		    return res.text();
+		})
+		.then(message => {
+		    alert(message);                    // 서버에서 보내준 성공 메시지 출력
+		    // 필요하면 조제 완료 후 UI 업데이트 등 추가 가능
+		})
+		.catch(err => {
+		    console.error(err);
+		    alert("조제 처리 중 오류 발생: " + err.message); // 사용자에게 오류 알림
+		});
+
 	}
 </script>
 

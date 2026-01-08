@@ -3,8 +3,10 @@ package com.example.erp.controller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Chart.Chart;
@@ -20,9 +23,11 @@ import com.example.erp.Chart_diseases.Chart_diseases;
 import com.example.erp.Chart_diseases.Chart_diseasesRepository;
 import com.example.erp.Diseases_code.Diseases_code;
 import com.example.erp.Dispense.Dispense;
+import com.example.erp.Dispense.DispenseCompleteRequest;
 import com.example.erp.Dispense.DispenseLotDTO;
 import com.example.erp.Dispense.DispensePopupDTO;
 import com.example.erp.Dispense.DispenseRepository;
+import com.example.erp.Dispense.DispenseService;
 import com.example.erp.Dispense_item.Dispense_itemPopupDTO;
 import com.example.erp.Item.Item;
 import com.example.erp.Item.ItemRepository;
@@ -67,6 +72,7 @@ public class pharmController {
 	private final Chart_diseasesRepository chart_diseasesRepository;
 	private final StockRepository stockRepository;
 	private final WarehouseRepository warehouseRepository;
+	private final DispenseService dispenseService;
 	
 	//약사->조제 리스트 by 은서
 	@GetMapping("/pharm/todayPrescription")
@@ -90,21 +96,31 @@ public class pharmController {
 	        }
 
 	        //처방id로 조제 얻기-> 조제 엔터티 있는지 확인
-	        Optional<Dispense> dispenses = dispenseRepository.findByPrescriptionId(p.getPrescription_id());
-	        if (dispenses.isEmpty()) {
+	        Optional<Dispense> dispenseOpt = dispenseRepository.findByPrescriptionId(p.getPrescription_id());
+
+	        if (dispenseOpt.isEmpty()) {
 	            dto.setDispenseStatus("조제 대기");
 	            dto.setDispenser("-");
-	            dto.setStatusCode("NONE"); //없으면 그거에 따르려고
+	            dto.setStatusCode("NONE");
 	        } else {
-	            Dispense dispense = dispenses.get(); 
-	            Optional<Status_code> status = status_codeRepository.findByCode(dispense.getStatus_code());
-	            dto.setDispenseStatus(status.map(Status_code::getName).orElse("-"));
-	            User_account user = user_accountRepository.findById(dispense.getUser_id()).orElse(null);
-	            dto.setDispenser(user.getName());
+	            Dispense ds = dispenseOpt.get();
+	            // 상태 코드 허용 체크
+	            if (List.of("DIS_STOP","DIS_READY","DIS_ING").contains(ds.getStatus_code())) {
+	                Optional<Status_code> status = status_codeRepository.findByCode(ds.getStatus_code());
+	                dto.setDispenseStatus(status.map(Status_code::getName).orElse("-"));
+
+	                User_account user = user_accountRepository.findById(ds.getUser_id()).orElse(null);
+	                dto.setDispenser(user != null ? user.getName() : "-");
+	                dto.setStatusCode(ds.getStatus_code());
+	            } else {
+	                // 허용되지 않은 상태 코드면 아예 dto 반환하지 않음
+	                return null; 
+	            }
 	        }
-	        
 	        return dto;
-	    }).toList();
+	    })
+				.filter(Objects::nonNull) // <- null 제거
+		        .toList();
 
 	    model.addAttribute("prescriptions", dtoList);
 	    return "pharm/todayPrescription";
@@ -239,6 +255,24 @@ public class pharmController {
 
 	    return ResponseEntity.ok().build();
 	}
-
+	
+	//약사->조제완료 by 은서
+	@PostMapping("/pharm/dispense/complete")
+	@ResponseBody
+	public ResponseEntity<?> completeDispense(@RequestBody DispenseCompleteRequest request) {
+	    try {
+	        dispenseService.completeDispense(request);
+	        return ResponseEntity.ok("조제 완료 처리 완료");
+	    } catch (IllegalArgumentException e) {
+	        // 예외 메시지 그대로 내려주기
+	        return ResponseEntity
+	                .badRequest() // 400
+	                .body("조제 실패: " + e.getMessage());
+	    } catch (Exception e) {
+	        return ResponseEntity
+	                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body("조제 실패(서버 오류): " + e.getMessage());
+	    }
+	}
 
 }
