@@ -67,20 +67,18 @@ public class AdminDashboardService {
         long receptionCount = outpatientCount;
         long inpatientCount = 0;
 
-        Number[] coveredNoncovered = queryPair(buildVisitSql("""
+        Number[] paidAndDiscount = queryPair(buildVisitSql("""
                 select
-                  coalesce(sum(case when fi.is_active = 1 then ci.total else 0 end),0) as covered,
-                  coalesce(sum(case when fi.is_active = 0 then ci.total else 0 end),0) as noncovered
-                from claim_item ci
-                join claim c on ci.claim_id = c.claim_id
+                  coalesce(sum(c.total_amount),0) as paid_amount,
+                  coalesce(sum(c.discount_amount),0) as discount_amount
+                from claim c
                 join visit v on c.visit_id = v.visit_id
-                join fee_item fi on ci.fee_item_code = fi.fee_item_code
                 where v.visit_datetime between :start and :end
-        """, "v", dept, doctor, insurance), start, end, dept, doctor, insurance);
+                """, "v", dept, doctor, insurance), start, end, dept, doctor, insurance);
 
-        long coveredAmount = coveredNoncovered[0].longValue();
-        long noncoveredAmount = coveredNoncovered[1].longValue();
-        long salesTotal = coveredAmount + noncoveredAmount;
+        long noncoveredAmount = paidAndDiscount[0].longValue();
+        long coveredAmount = paidAndDiscount[1].longValue();
+        long salesTotal = noncoveredAmount + coveredAmount;
         Ratio coveredRatio = toRatio(coveredAmount, noncoveredAmount);
 
         Number[] receivable = queryPair(buildVisitSql("""

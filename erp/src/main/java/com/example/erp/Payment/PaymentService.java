@@ -105,14 +105,17 @@ public class PaymentService {
             for (Claim_item ci : items) {
                 int price = ci.getUnit_price() * ci.getQuantity();
                 int discount = 0;
-                if (rate.compareTo(BigDecimal.ZERO) > 0 && ci.getFee_item() != null && ci.getFee_item().is_active()) {
-                    discount = BigDecimal.valueOf(price)
+                int patientPay = price;
+                boolean covered = ci.getFee_item() != null && ci.getFee_item().is_active();
+                if (covered && rate.compareTo(BigDecimal.ZERO) >= 0) {
+                    patientPay = BigDecimal.valueOf(price)
                             .multiply(rate)
                             .setScale(0, RoundingMode.HALF_UP)
                             .intValue();
+                    discount = Math.max(0, price - patientPay);
                 }
                 ci.setDiscount(discount);
-                ci.setTotal(Math.max(0, price - discount));
+                ci.setTotal(Math.max(0, patientPay));
 
                 Claim itemClaim = ci.getClaim();
                 if (itemClaim != null && itemClaim.getClaim_id() != null) {
@@ -146,7 +149,7 @@ public class PaymentService {
         }
 
         // 합계는 항목 합산값 기준 (보험 할인은 항목 discount에 반영됨)
-        int totalAmount = itemsTotal;
+        int totalAmount = itemsTotal + itemsDiscount;
         int baseDiscount = itemsDiscount;
         int insuranceDiscount = 0;
         int discountAmount = baseDiscount + insuranceDiscount;
