@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>복약지도</title>
+
+<style>
+body{
+    font-family: 'Inter','맑은 고딕';
+    background:#EEF3FF;
+}
+
+.container{
+    width:95%;
+    margin:10px auto;
+}
+
+.box{
+    background:white;
+    border-radius:8px;
+    padding:12px 15px;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
+    margin-bottom:10px;
+}
+
+.flex{
+    display:flex;
+    gap:10px;
+}
+
+.left{
+    flex:3;
+}
+.right{
+    flex:1.2;
+}
+
+.title{
+    font-weight:600;
+    margin-bottom:6px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+}
+
+th,td{
+    border:1px solid #bbb;
+    padding:6px;
+    text-align:center;
+}
+
+th{
+    background:#CFE0FF;
+}
+
+.patient-header hr{
+    border:0;
+    border-top:1px solid #999;
+    margin:8px 0;
+}
+</style>
+<!--pdf-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+
+</head>
+
+<body>
+<div class="container">
+
+    <div class="flex">
+
+        <!-- 좌측 전체 -->
+        <div class="left">
+
+            <!-- 좌측 상단 환자 정보 -->
+            <div class="box patient-header">
+				<input type="hidden" id="prescriptionId" th:value="${prescriptionId}">
+
+                <div>
+                    <span th:text="${guide.patientName}"></span> 님
+                </div>
+
+                <div>
+                    <span th:text="${guide.birth}"></span> /
+                    <span th:text="${guide.gender}"></span>
+                </div>
+
+                <hr/>
+
+                <div>
+                    조제일
+                    <span th:text="${guide.dispensedAt}"></span>
+                </div>
+
+                <div>
+                    조제약사
+                    <span th:text="${guide.pharmacistName}"></span>
+                </div>
+
+                <div>
+                    ID
+                    <span th:text="${guide.prescriptionId}"></span>
+                </div>
+
+                <div>
+                    발행기관 ㅇㅇ병원
+                </div>
+            </div>
+
+            <!-- 좌측 중앙 약품 리스트 -->
+            <div class="box">
+
+                <div class="title">처방 약품 목록</div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>이미지</th>
+                            <th>약품명 / 설명</th>
+                            <th>복약안내</th>
+                            <th>투약량</th>
+                            <th>횟수</th>
+                            <th>일수</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <tr th:each="i : ${guide.items}">
+                            <td>💊</td>
+
+                            <td>
+                                <div th:text="${i.name}"></div>
+                                <small th:text="${i.description}"></small>
+                            </td>
+
+                            <td th:text="${i.guidance}"></td>
+
+                            <td th:text="${i.dose}"></td>
+                            <td th:text="${i.frequency}"></td>
+                            <td th:text="${i.days}"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <!-- 우측 상단 금액 요약 -->
+        <div class="right">
+
+            <div class="box">
+                <div class="title">금액 요약</div>
+
+                <div>총액
+                    <b th:text="${#numbers.formatDecimal(guide.totalAmount, 0, 0)}"></b> 원
+                </div>
+
+                <div>과세 총액
+                    <b th:text="${#numbers.formatDecimal(guide.taxAmount, 0, 0)}"></b> 원
+                </div>
+
+                <div>비과세 총액
+                    <b th:text="${#numbers.formatDecimal(guide.nonTaxAmount, 0, 0)}"></b> 원
+                </div>
+				
+				<div>보험명
+                    <b th:text="${guide.insuranceName}"></b>
+                </div>
+				
+				<div>보험율
+                    <b th:text="${#numbers.formatDecimal(guide.discountRate * 100, 0, 0)}"></b>%
+                </div>
+				
+                <div>보험부담금
+                    <b th:text="${#numbers.formatDecimal(guide.insurerAmount, 0, 0)}"></b> 원
+                </div>
+
+                <div>본인 부담금
+                    <b th:text="${#numbers.formatDecimal(guide.patientAmount, 0, 0)}"></b> 원
+                </div>
+            </div>
+
+        </div>
+    </div>
+	<div style="margin-top: 15px; text-align: center;">
+	    <button onclick="completeDispense()">투약 완료</button>
+	    <button onclick="downloadPdf()">복약지도 출력(PDF)</button>
+	</div>
+</div>
+<script>
+	// 투약
+	function completeDispense() {
+	
+	    const prescriptionId = document.getElementById("prescriptionId").value;
+	
+	    if (!prescriptionId) {
+	        alert("처방 ID를 찾을 수 없습니다.");
+	        return;
+	    }
+	
+	    fetch(`/pharm/dispense/complete/${prescriptionId}`, {
+	        method: "POST"
+	    })
+	    .then(res => {
+	        if (!res.ok) throw new Error("투약 처리 실패");
+	        return res.text();
+	    })
+	    .then(() => {
+	        alert("투약 완료되었습니다.");
+	        window.close();
+	        opener.location.reload();
+	    })
+	    .catch(err => alert(err.message));
+	}
+	
+	//복약지도 출력
+	function downloadPdf() { 
+	    const element = document.body;
+
+	    const opt = {
+	        filename: 'medication_guide.pdf',
+	        image: { type: 'jpeg', quality: 0.98 },
+	        html2canvas: { scale: 2 },
+	        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+	    };
+
+	    html2pdf().set(opt).from(element).save();
+	}
+</script>
+
+</body>
+</html>

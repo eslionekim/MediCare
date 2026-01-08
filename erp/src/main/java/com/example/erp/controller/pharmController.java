@@ -2,6 +2,7 @@ package com.example.erp.controller;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,8 +30,15 @@ import com.example.erp.Dispense.DispensePopupDTO;
 import com.example.erp.Dispense.DispenseRepository;
 import com.example.erp.Dispense.DispenseService;
 import com.example.erp.Dispense_item.Dispense_itemPopupDTO;
+import com.example.erp.Fee_item.Fee_item;
+import com.example.erp.Fee_item.Fee_itemRepository;
+import com.example.erp.Insurance_code.Insurance_code;
+import com.example.erp.Insurance_code.Insurance_codeRepository;
 import com.example.erp.Item.Item;
 import com.example.erp.Item.ItemRepository;
+import com.example.erp.Medication_guide.MedicationGuidePopupDTO;
+import com.example.erp.Medication_guide.MedicationItemDTO;
+import com.example.erp.Medication_guide.Medication_guide;
 import com.example.erp.Medication_guide.Medication_guideRepository;
 import com.example.erp.Patient.Patient;
 import com.example.erp.Patient.PatientRepository;
@@ -65,6 +73,8 @@ public class pharmController {
 	private final Prescription_itemRepository prescription_itemRepository;
 	private final VisitRepository visitRepository;
 	private final ItemRepository itemRepository;
+	private final Fee_itemRepository fee_itemRepository;
+	private final Insurance_codeRepository insurance_codeRepository;
 	private final DispenseRepository dispenseRepository;
 	private final Status_codeRepository status_codeRepository;
 	private final User_accountRepository user_accountRepository;
@@ -119,8 +129,8 @@ public class pharmController {
 	        }
 	        return dto;
 	    })
-				.filter(Objects::nonNull) // <- null 제거
-		        .toList();
+		.filter(Objects::nonNull) // <- null 제거
+        .toList();
 
 	    model.addAttribute("prescriptions", dtoList);
 	    return "pharm/todayPrescription";
@@ -274,5 +284,125 @@ public class pharmController {
 	                .body("조제 실패(서버 오류): " + e.getMessage());
 	    }
 	}
+	
+	// 약사->투약 팝업
+	@GetMapping("/pharm/todayPrescription/guide/{prescriptionId}")
+	public String getMedicationGuidePopup(@PathVariable("prescriptionId") Long prescriptionId,Model model) {
+
+	    MedicationGuidePopupDTO dto = new MedicationGuidePopupDTO(); //복약지도
+
+	    // 1) prescription
+	    Prescription prescription = prescriptionRepository.findById(prescriptionId).orElseThrow();
+
+	    // 2) visit / patient
+	    Visit visit = visitRepository.findById(prescription.getVisit_id()).orElseThrow();
+	    Patient patient = visit.getPatient();
+
+	    dto.setPrescriptionId(prescriptionId);
+	    dto.setPatientName(patient.getName());
+	    dto.setBirth(patient.getBirth_date());
+	    dto.setGender(patient.getGender());
+
+	    // 3) dispense 정보
+	    Dispense dispense = dispenseRepository.findByPrescriptionId(prescriptionId).orElseThrow();
+	    dto.setDispensedAt(dispense.getDispensed_at());
+
+	    User_account pharm = user_accountRepository.findById(dispense.getUser_id()).orElse(null);
+	    dto.setPharmacistName(pharm != null ? pharm.getName() : "-");
+
+	    // 4) item 리스트
+	    List<Prescription_item> items = prescription_itemRepository.findByPrescriptionId(prescriptionId);
+
+	    List<MedicationItemDTO> itemDTOs = new ArrayList<>();
+
+	    BigDecimal total = BigDecimal.ZERO;
+	    BigDecimal taxTotal = BigDecimal.ZERO;
+
+	    for (Prescription_item pi : items) {
+
+	        MedicationItemDTO mi = new MedicationItemDTO();
+
+	        Item item = itemRepository.findById(pi.getItem_code()).orElse(null);
+	        Fee_item fee = fee_itemRepository.findById(item.getFee_item_code()).orElse(null);
+	        Medication_guide mg = medication_guideRepository.findByItemCode(item.getItem_code()).orElse(null);
+
+	        mi.setName(item.getName());
+	        mi.setDose(pi.getDose());
+	        mi.setFrequency(pi.getFrequency());
+	        mi.setDays(pi.getDays());
+	        mi.setGuidance(mg != null ? mg.getGuidance() : "-");
+	        mi.setDescription(mg != null ? mg.getDescription() : "-");
+
+	        itemDTOs.add(mi);
+
+	        // 금액 계산
+	        if (fee != null) {
+	        	// base_price × dose × frequency × days
+	            BigDecimal qtyMultiplier =
+	            		pi.getDose()
+                        .multiply(BigDecimal.valueOf(pi.getFrequency()))
+                        .multiply(BigDecimal.valueOf(pi.getDays()));
+
+	            BigDecimal itemTotal =
+	                    BigDecimal.valueOf(fee.getBase_price())
+	                            .multiply(qtyMultiplier);
+
+	            // 총액
+	            total = total.add(itemTotal);
+
+	            // 과세 총액 (is_active == true 인 경우만)
+	            if (fee.is_active()) {
+	                taxTotal = taxTotal.add(itemTotal);
+	                }
+	        }
+	    }
+
+	    dto.setItems(itemDTOs);
+
+	    // 금액 세팅
+	    dto.setTotalAmount(total);
+	    dto.setTaxAmount(taxTotal);
+	    dto.setNonTaxAmount(total.subtract(taxTotal));
+
+	    // 보험 할인
+	    Insurance_code insurance = visit.getInsurance_code();
+
+	    BigDecimal patientAmount = BigDecimal.ZERO;
+
+	    if (insurance != null) {
+	    	patientAmount = taxTotal.multiply(
+	        		BigDecimal.valueOf(insurance.getDiscount_rate())
+	        );
+	    }
+
+	    dto.setInsurerAmount(total.subtract(patientAmount));
+	    dto.setPatientAmount(patientAmount);
+	    dto.setDiscountRate(insurance.getDiscount_rate());
+	    dto.setInsuranceName(insurance.getName());
+
+	    model.addAttribute("guide", dto);
+
+	    return "pharm/medicationGuidePopup";
+	}
+	
+	// 약사->투약 팝업
+	@PostMapping("/pharm/dispense/complete/{prescriptionId}")
+	@Transactional
+	public ResponseEntity<String> completeDispense(@PathVariable("prescriptionId") Long prescriptionId) {
+
+	    // 1) dispense 조회
+	    Dispense dispense = dispenseRepository
+	            .findByPrescriptionId(prescriptionId)
+	            .orElseThrow(() -> new IllegalArgumentException("해당 처방에 대한 조제 정보가 없습니다."));
+
+	    // 2) 상태코드 변경
+	    dispense.setStatus_code("DIS_DONE");
+
+	    // 3) 저장 (변경 감지로 flush)
+	    dispenseRepository.save(dispense);  // @Transactional이면 굳이 필요 없음
+
+	    return ResponseEntity.ok("DIS_DONE 업데이트 완료");
+	}
+
 
 }

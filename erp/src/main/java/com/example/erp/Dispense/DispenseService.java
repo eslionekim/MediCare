@@ -96,7 +96,7 @@ public class DispenseService {
 	                    .orElseThrow(() -> new IllegalArgumentException("Item not found"));
 	
 	            Fee_item fee = fee_itemRepository.findById(item.getFee_item_code())
-	                    .orElseThrow(() -> new IllegalArgumentException("Fee item not found"));
+	                    .orElseThrow(() -> new IllegalArgumentException("해당 약품 수가항목이 존재하지 않습니다."));
 	
 	            // Stock_move_item insert
 	            Stock_move_item smi = new Stock_move_item();

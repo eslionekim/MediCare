@@ -281,7 +281,7 @@
 		       }
 	
 		   } else if (code === "DIS_READY") {
-		       alert("조제 완료 팝업 (다음 단계)");
+		       openGuidePopup(prescriptionId);
 		   } else {
 		       alert("이미 조제중입니다. 잠시 대기해주세요");
 		   }
@@ -294,6 +294,15 @@
 	        "width=1000,height=700"
 	    );
 	}
+	
+	function openGuidePopup(prescriptionId) {
+	    window.open(
+	        `/pharm/todayPrescription/guide/${prescriptionId}`,
+	        "guidePopup",
+	        "width=1100,height=800"
+	    );
+	}
+
 </script>
 </body>
 </html>

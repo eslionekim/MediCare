@@ -291,6 +291,13 @@
 		.then(message => {
 		    alert(message);                    // 서버에서 보내준 성공 메시지 출력
 		    // 필요하면 조제 완료 후 UI 업데이트 등 추가 가능
+			// 팝업 닫기
+		    window.close();
+
+		    // 부모창 새로고침
+		    if (window.opener) {
+		        window.opener.location.reload();
+		    }
 		})
 		.catch(err => {
 		    console.error(err);

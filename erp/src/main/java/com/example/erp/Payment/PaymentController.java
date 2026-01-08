@@ -42,15 +42,15 @@ public class PaymentController {
     }
 
     @PostMapping("/pay")
-    public String pay(@RequestParam Long visitId,
-            @RequestParam String paymentMethodCode) {
+    public String pay(@RequestParam("visitId") Long visitId,
+            @RequestParam("paymentMethodCode") String paymentMethodCode) {
 
         paymentService.pay(visitId, paymentMethodCode);
         return "redirect:/payments?visitId=" + visitId;
     }
 
     @PostMapping("/refund")
-    public String refund(@RequestParam Long visitId) {
+    public String refund(@RequestParam("visitId") Long visitId) {
         paymentService.refund(visitId);
         return "redirect:/payments?visitId=" + visitId;
     }
