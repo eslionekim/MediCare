@@ -46,6 +46,8 @@ import com.example.erp.Stock.StockRepository;
 import com.example.erp.Stock.StockService;
 import com.example.erp.Stock_move.Stock_move;
 import com.example.erp.Stock_move.Stock_moveRepository;
+import com.example.erp.Stock_move_item.Stock_move_item;
+import com.example.erp.Stock_move_item.Stock_move_itemRepository;
 import com.example.erp.Visit.TodayVisitDTO;
 import com.example.erp.Visit.VisitRepository;
 import com.example.erp.Visit.VisitService;
@@ -64,6 +66,7 @@ public class logisController {
     private final StockService stockService;
     private final StockRepository stockRepository;
     private final Stock_moveRepository stock_moveRepository;
+    private final Stock_move_itemRepository stock_move_itemRepository;
 	private final Issue_requestService issue_requestService;
 	private final Issue_request_itemRepository issue_request_itemRepository;
 	private final Issue_requestRepository issue_requestRepository;
@@ -142,6 +145,7 @@ public class logisController {
 	        	Long stockId = ((Number) lot.get("stockId")).longValue();
 	            BigDecimal qty = new BigDecimal(lot.get("qty").toString());
 	
+	            //재고 차감
 	            Stock stock = stockRepository.findById(stockId)
 	                    .orElseThrow(() -> new RuntimeException("Stock 없음: " + stockId));
 	
@@ -150,6 +154,7 @@ public class logisController {
 	
 	            totalQty = totalQty.add(qty);
 	
+	            //재고 이동
 	            Stock_move move = new Stock_move();
 	            move.setMove_type("transfer");
 	            move.setFrom_warehouse_code(stock.getWarehouse_code());
@@ -158,6 +163,27 @@ public class logisController {
 	            move.setMoved_at(LocalDateTime.now());
 	            //move.setQuantity("-" + qty); // 빠져나간 수량 기록
 	            stock_moveRepository.save(move);
+	            
+	            //item조회
+	            Item item = itemRepository.findById(stock.getItem_code())
+	                    .orElseThrow(() -> new RuntimeException("Item 없음: " + stock.getItem_code()));
+	            // unit_price(정가) × qty 계산
+	            BigDecimal pricePerUnit = item.getUnit_price();
+	            BigDecimal totalPrice = pricePerUnit.multiply(qty);
+	            // Integer로 변환 (소수점 없는 구조라고 가정)
+	            Integer finalUnitPrice = totalPrice.intValue();
+
+	            // ====== 5) Stock_move_item 생성 ======
+	            Stock_move_item smi = new Stock_move_item();
+	            smi.setStock_move_id(move.getStock_move_id());   // FK
+	            smi.setItem_code(stock.getItem_code());
+	            smi.setLot_code(stock.getLot_code());
+	            smi.setQuantity(qty);
+	            smi.setUnit_price(finalUnitPrice);
+	            smi.setExpiry_date(LocalDate.now());
+
+	            stock_move_itemRepository.save(smi);
+	            
 	        }
 	
 	        Issue_request_item iri = issue_request_itemRepository
@@ -352,12 +378,12 @@ public class logisController {
             @RequestParam(value = "outbound_deadline", required = false) LocalDate outbound_deadline,
             @RequestParam("created_at") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate created_at
     ) {
-
+    	//창고 찾기
     	Warehouse warehouse = warehouseRepository
     	        .findWarehouse("물류창고", location, zone)
     	        .orElseThrow(() -> new RuntimeException("창고 정보 없음"));
 
-
+    	//재고 추가
         Stock stock = new Stock();
         stock.setWarehouse_code(warehouse.getWarehouse_code());
         stock.setItem_code(item_code);
@@ -369,6 +395,32 @@ public class logisController {
 
         stockRepository.save(stock);
 
+        // 재고 이동 저장
+        Stock_move move = new Stock_move();
+        move.setMove_type("INBOUND");
+        move.setTo_warehouse_code(stock.getWarehouse_code());
+        move.setMoved_at(LocalDateTime.now());
+        move.setStatus_code("SM_IN");
+        stock_moveRepository.save(move);
+
+        // 단가 조회
+        Item item = itemRepository.findById(item_code)
+                .orElseThrow(() -> new RuntimeException("품목 정보 없음"));
+
+        // 재고 이동 항목 저장
+        Stock_move_item moveItem = new Stock_move_item();
+        moveItem.setStock_move_id(move.getStock_move_id());
+        moveItem.setItem_code(item_code);
+        moveItem.setLot_code(lot_code);
+        moveItem.setQuantity(BigDecimal.valueOf(quantity));
+
+        //총 금액
+        BigDecimal totalPrice = item.getUnit_price()
+                        .multiply(BigDecimal.valueOf(quantity));
+
+        moveItem.setUnit_price(totalPrice.intValue());
+        moveItem.setExpiry_date(LocalDate.now());
+        stock_move_itemRepository.save(moveItem);
         return ResponseEntity.ok("입고 완료");
     }
     
