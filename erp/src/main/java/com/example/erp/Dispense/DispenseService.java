@@ -79,7 +79,7 @@ public class DispenseService {
 
 	            // stock_id 1개당 Stock_move 1건 생성
 	            Stock_move move = new Stock_move();
-	            move.setMove_type("OUTBOUND");
+	            move.setMove_type("outbound");
 	            move.setFrom_warehouse_code(stock.getWarehouse_code());
 	            move.setDispense_id(dispense.getDispense_id());
 	            move.setClaim_id(prescriptionId);

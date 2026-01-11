@@ -114,6 +114,19 @@ public class StockService {
 	    move.setFrom_warehouse_code(stock.getWarehouse_code());
 	    move.setMoved_at(LocalDateTime.now());
 	    move.setStatus_code("sm_quantity");
+	    // reason이 있으면 note 설정
+	    if (reason != null && !reason.trim().isEmpty()) {
+
+	        // detail까지 있으면 → reason(detail)
+	        if (detail != null && !detail.trim().isEmpty()) {
+	            move.setNote(reason + "(" + detail + ")");
+	        } 
+	        // detail 없으면 → reason
+	        else {
+	            move.setNote(reason);
+	        }
+	    }
+
 	    stock_moveRepository.save(move);
 	    
 	    stockRepository.save(stock);
@@ -134,8 +147,13 @@ public class StockService {
 	    Integer totalPrice = unitPrice * movedQty;
 	    moveItem.setUnit_price(totalPrice);
 	    moveItem.setExpiry_date(LocalDate.now());
-
 	    stock_move_itemRepository.save(moveItem);
+	    
+	    //재고 변동
+	    BigDecimal newQty = stock.getQuantity().add(BigDecimal.valueOf(movedQty));
+	    stock.setQuantity(newQty);
+	    stockRepository.save(stock);
+
 	}
 
 

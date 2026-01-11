@@ -45,8 +45,10 @@ import com.example.erp.Stock.Stock;
 import com.example.erp.Stock.StockDTO;
 import com.example.erp.Stock.StockRepository;
 import com.example.erp.Stock.StockService;
+import com.example.erp.Stock_move.LogisOutboundDTO;
 import com.example.erp.Stock_move.Stock_move;
 import com.example.erp.Stock_move.Stock_moveRepository;
+import com.example.erp.Stock_move.Stock_moveService;
 import com.example.erp.Stock_move_item.Stock_move_item;
 import com.example.erp.Stock_move_item.Stock_move_itemRepository;
 import com.example.erp.Visit.TodayVisitDTO;
@@ -67,6 +69,7 @@ public class logisController {
     private final StockService stockService;
     private final StockRepository stockRepository;
     private final Stock_moveRepository stock_moveRepository;
+    private final Stock_moveService stock_moveService;
     private final Stock_move_itemRepository stock_move_itemRepository;
 	private final Issue_requestService issue_requestService;
 	private final Issue_request_itemRepository issue_request_itemRepository;
@@ -492,5 +495,12 @@ public class logisController {
         return "logis/logisRequest";
     }
 
+    //물류->출고리스트
+    @GetMapping("/logis/logisOutbound") 
+    public String logisOutbound(Model model) {
+    	 List<LogisOutboundDTO> list = stock_moveService.getLogisOutboundList();
+   	    model.addAttribute("outbounds", list);
+        return "logis/logisOutbound";
+    }
 
 }
