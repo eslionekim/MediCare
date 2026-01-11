@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>/* 전체 리셋 및 기본 배경 */
+	body {
+	    margin: 0;
+	    padding: 0;
+	    font-family: 'Inter', '맑은 고딕', sans-serif;
+	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	
+	}
+	
+	
+	/* 상단 헤더 배경 및 레이아웃 */
+	.top-bar {
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    padding: 5px 15px;
+	    background-color: #ffffff; /* 흰색 배경 */
+	    font-size: 14px;
+	}
+	
+	/* 상단 헤더 텍스트 스타일 */
+	.user-info {
+	    color: #555;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 배열 */
+	.action-buttons {
+	    display: flex;
+	    gap: 5px;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 출근 퇴근 공통스타일 */
+	.action-buttons button {
+	    padding: 4px 12px;
+	    border: none;
+	    border-radius: 4px;
+	    cursor: pointer;
+	    font-weight: 500;
+	    font-size: 13px;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 로그아웃 버튼 스타일 */
+	.btn-logout {
+		padding: 4px 12px;
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		font-weight: 500;
+		font-size: 13px;
+		color: white;
+	    background-color: #FF4B4B;
+		border: 1px solid #7B7B7B;
+	}
+	
+	/* 상단 헤더 -> 출근 버튼 스타일 */
+	.time-in {
+	    background-color: #879BD5;
+		color:#ffffff;
+	}
+	
+	/* 상단 헤더 -> 퇴근 버튼 스타일 */
+	.time-out {
+	    background-color: #D5DDED;
+	    color: #000;
+	}
+
+	/* 중앙 헤더 -> 카테고리 배치 */
+	.tab-list {
+	    list-style: none; /* 앞에 점 제거*/
+	    margin: 0;
+	    padding: 0;
+	    display: flex; /* 가로 나열*/
+	}
+	
+	/* 중앙 헤더 -> 카테고리 요소 스타일 */
+	.tab-item a {
+	    display: block;
+	    padding: 8px 15px;
+	    text-decoration: none; /* 카테고리 밑줄 제거*/
+	    color: #333; /* 글자 색*/
+	    background-color: transparent; /* 배경색 투명 (nav-tabs의 배경색 사용) */
+	    border: none; /* 경계선 제거 */
+	    font-size: 14px;
+	    font-weight: normal;
+	}
+	
+	/* 2. 중앙 헤더 공통 ⭐ */
+	.nav-tabs {
+		background-color: #D5DDED; /* 이미지의 균일한 하늘색 배경 */
+		padding: 0 10px;
+	}
+	
+	/* 중앙 헤더 -> 카테고리 호버 */
+	.tab-item:hover {
+	    background-color: rgba(255, 255, 255, 0.3); /* 마지막 숫자가 컬러 세기 정도*/
+	}
+	
+	/* 중앙 헤더 -> 선택된 카테고리 스타일 */
+	.tab-item.active a {
+	    color: #333; /* 텍스트 색상은 검은색 유지 (사진처럼) */
+	    font-weight: 550;
+	    /* 하단에 진한 파란색 선으로 강조 */
+	}
+	
+	
+	/* 3. 하단 헤더  */
+	.sub-menu {
+	    background-color: #BACCFF; /* 흰색 배경 */
+	    padding: 5px 15px; /* 패딩을 줄여서 메뉴와 붙은 느낌 */
+	    font-size: 14px;
+	    color: #555;
+		font-weight: 530;
+	    /* 이미지처럼 '금일 진료 리스트' 텍스트를 진하게 표현 */
+	}
+	
+	/* 컨텐츠 영역 (전체 배경색 확인용) */
+	.content-area {
+	    min-height: 500px; /* 임시 높이 */
+	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	}
+	
+	/* 금일 진료 리스트 */
+	#table{ /* div 영역 및 레이아웃 */
+		margin:5px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+	
+	table { 
+	    width: 90%; /* 너비 */
+	    border-collapse: collapse; /* 표 한줄로 합치기 */
+	    font-size: 14px;
+	    background-color: white;
+		
+	 }
+
+	 th, td {
+	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
+	     padding: 0;
+		 height: 25px; /* 원하는 셀 높이 */
+	     text-align: center; /* 텍스트 중앙 */
+	 }
+
+	 th {
+	     background-color: #879BD5; 
+		 font-weight: normal; /* 글씨 굵기 보통으로 */
+		 color: rgb(31, 31, 31);
+	 }
+
+	 tr:nth-child(even) {
+	     background-color: #ffffffff;
+	 }
+
+	 /* 접수 시작 */
+	 .first {
+		 display: flex;             /* flex로 변환 */
+		 justify-content: center;   /* 가로 중앙 */
+		 align-items: center;       /* 세로 중앙 */
+		 width: 100%;               /* 가로 꽉 */
+		 height: 100%;              /* 세로 꽉 */
+		 box-sizing: border-box;    /* 패딩 포함 계산 */
+		 border: none;
+		 background-color: #00FF08;
+		 color: black;
+		 cursor: pointer;
+		 font-size: 14px;
+		 font-weight: 300; /* 글씨 굵기 보통으로 */
+		 text-decoration: none;
+	  }
+
+	
+	</style>
+	
+	<script>
+				document.addEventListener('DOMContentLoaded', () => {
+
+				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+				        fetch('/work/time-in', { method: 'POST' })
+				            .then(res =>
+				                res.text().then(msg => {
+				                    if (!res.ok) throw msg;
+				                    alert(msg);
+				                })
+				            )
+				            .catch(msg => alert(msg));
+				    });
+
+					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+
+						fetch('/work/time-out/check')
+						        .then(res =>
+						            res.text().then(msg => {
+						                if (!res.ok) throw msg; // 퇴근 불가능
+
+						                if (!confirm('퇴근하시겠습니까?')) return;
+
+						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+						                    .then(res => res.text())
+						                    .then(msg => alert(msg))
+						                    .catch(() => alert('퇴근 처리 실패'));
+						            })
+						        )
+						        .catch(msg => alert(msg));
+					});
+				});
+	</script>
+</head>
+<body>
+    <header class="main-header">
+		<!-- 상단 헤더 -->
+        <div class="top-bar">
+            <div class="user-info">
+                <span>(아이콘)</span>
+                <span>MediCare |</span>
+				<span>사용자ID:
+				    <span id="user_id" th:text="${username}"></span>
+				</span>
+				
+            </div>
+            <div class="user-info">
+                <span>진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout">로그아웃</button>
+			</div>
+            <div class="action-buttons">
+                <button class="time-in">출근</button>
+                <button class="time-out">퇴근</button>
+            </div>
+        </div>
+		<!-- 상단 헤더 끝-->
+		
+		<!-- 중앙 헤더-->
+        <nav class="nav-tabs">
+            <ul class="tab-list">
+				<li class="tab-item"><a th:href="@{/logis/itemRequest}">불출 요청 리스트</a></li>
+				<li class="tab-item"><a th:href="@{/logis/item}">전체 재고 현황</a></li>
+				<li class="tab-item"><a>출고 리스트</a></li>
+				<li class="tab-item active"><a>요청 리스트</a></li>
+            </ul>
+        </nav>
+		<!-- 중앙 헤더 끝-->
+		
+		<!-- 하단 헤더-->
+        <div class="sub-menu">
+            <span>요청 리스트</span>
+        </div>
+		<!-- 하단 헤더 끝-->
+    </header>
+
+	<!-- 콘텐츠 영역 시작-->
+    <div class="content-area">
+		<!-- 상태 필터링 -->
+		<div id="searchForm" th:action="@{/logis/request}" method="get" style="width:90%; margin:10px auto; display:flex; gap:10px; flex-wrap:wrap;">
+
+		    <!-- 유형 -->
+		    <select name="type">
+		        <option value="">유형 전체</option>
+		        <option value="신규등록">신규등록</option>
+		        <option value="구매요청">구매요청</option>
+		    </select>
+
+		    <!-- 종류 -->
+		    <select name="itemType">
+		        <option value="">종류 전체</option>
+		        <option value="약품">약품</option>
+		        <option value="재료">재료</option>
+		        <option value="기타">기타</option>
+		    </select>
+
+		    <!-- 상태 -->
+		    <select name="statusName">
+		        <option value="">상태 전체</option>
+		        <option value="요청">요청</option>
+		        <option value="승인">승인</option>
+		        <option value="반려">반려</option>
+		    </select>
+
+		    <!-- 날짜(일시 검색) -->
+		    <input type="date" name="date">
+
+		    <!-- 품목명 like 검색 -->
+		    <input type="text" name="itemName" placeholder="품목명 검색">
+
+		    <!-- 검색버튼 -->
+		    <button type="button" id="searchBtn">검색</button>
+
+		</div>
+
+		<!-- 금일 진료 리스트 -->
+		<table id="table" border="1">
+			<thead>
+			    <tr>
+			        <th>유형</th>
+			        <th>종류</th>
+			        <th>품목명</th>
+					<th>수량</th>
+			        <th>가격</th>
+					<th>요청사유</th>
+			        <th>직원ID</th>
+			        <th>직원명</th>
+					<th>일시</th>
+			        <th>상태</th>
+			    </tr>
+			</thead>
+
+			<tbody id="requestTableBody">
+				<tr th:if="${requests.size() == 0}">
+			        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
+			    </tr>
+
+				
+				<tr th:each="r : ${requests}">
+				    <td class="type" th:text="${r.type}"></td>
+				    <td class="itemType" th:text="${r.itemType}"></td>
+				    <td class="itemName" th:text="${r.itemName}"></td>
+				    <td th:text="${r.qty != null ? r.qty : '-'}"></td>
+				    <td th:text="${r.price != null ? r.price : '-'}"></td>
+				    <td th:text="${r.note}"></td>
+				    <td th:text="${r.userId}"></td>
+				    <td th:text="${r.userName}"></td>
+				    <td class="requestedAt" th:text="${#temporals.format(r.requestedAt,'yyyy-MM-dd HH:mm')}"></td>
+				    <td class="statusName" th:text="${r.statusName}"></td>
+				</tr>
+				
+			    <tr th:if="${requests.size() >0 }" 
+			        th:each="i : ${#numbers.sequence(requests.size() + 1, 15)}">
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+					<td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		
+		
+    </div>
+	<!-- 콘텐츠 영역 끝-->
+	<script>
+	document.getElementById("searchBtn").addEventListener("click", function () {
+
+	    const box = document.getElementById("searchForm");
+
+	    const type       = box.querySelector('[name="type"]').value.trim();
+	    const itemType   = box.querySelector('[name="itemType"]').value.trim();
+	    const statusName = box.querySelector('[name="statusName"]').value.trim();
+	    const date       = box.querySelector('[name="date"]').value;
+	    const itemName   = box.querySelector('[name="itemName"]').value.trim().toLowerCase();
+
+	    const rows = document.querySelectorAll("#requestTableBody tr");
+
+	    rows.forEach(row => {
+			if (!row.querySelector(".type")) return; 
+	        const vType       = row.querySelector(".type").innerText.trim();
+	        const vItemType   = row.querySelector(".itemType").innerText.trim();
+	        const vStatusName = row.querySelector(".statusName").innerText.trim();
+	        const vItemName   = row.querySelector(".itemName").innerText.trim().toLowerCase();
+	        const vDateTime   = row.querySelector(".requestedAt").innerText.substring(0,10);
+
+	        let visible = true;
+
+	        if (type && type !== vType) visible = false;
+	        if (itemType && itemType !== vItemType) visible = false;
+	        if (statusName && statusName !== vStatusName) visible = false;
+	        if (itemName && !vItemName.includes(itemName)) visible = false;
+	        if (date && date !== vDateTime) visible = false;
+
+	        row.style.display = visible ? "" : "none";
+	    });
+	});
+
+	</script>
+
+</body>
+</html>

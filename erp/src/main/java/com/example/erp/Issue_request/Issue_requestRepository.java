@@ -1,5 +1,6 @@
 package com.example.erp.Issue_request;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -47,5 +48,10 @@ public interface Issue_requestRepository extends JpaRepository<Issue_request, Lo
 	    where ir.issue_request_id = :issueRequestId
 	""")
 	void updateStatus(@Param("issueRequestId") Long issueRequestId,@Param("statusCode") String statusCode);
+
+	//물류->요청리스트 by은서
+	@Query("select ir from Issue_request ir where ir.department_code = :dept")
+	List<Issue_request> findByDepartmentCode(@Param("dept") String departmentCode);
+
 
 }

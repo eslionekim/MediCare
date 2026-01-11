@@ -31,7 +31,6 @@ public class Issue_request_item {
     @Column(nullable = false)
     private String item_code; //물품코드
 
-    @Column(nullable = false)
     private BigDecimal requested_qty; //요청수량
 
     private BigDecimal approved_qty; //승인수량

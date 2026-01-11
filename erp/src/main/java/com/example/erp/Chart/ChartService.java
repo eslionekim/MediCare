@@ -159,6 +159,50 @@ public class ChartService {
 
             int totalAmount = 0;
 
+            //초진일경우
+            if ("초진".equals(visit.getVisit_type())) {
+
+                Fee_item feeItem = fee_itemRepository.findById("OUTCON")
+                        .orElseThrow(() -> new RuntimeException("OUTCON 수가항목 없음"));
+
+                int price = feeItem.getBase_price();
+                int qty = 1;
+                int total = price * qty;
+
+                Claim_item autoItem = new Claim_item();
+                autoItem.setClaim(normalClaim);
+                autoItem.setFee_item(feeItem);
+                autoItem.setUnit_price(price);
+                autoItem.setQuantity(qty);
+                autoItem.setDiscount(0);
+                autoItem.setTotal(total);
+
+                claim_itemRepository.save(autoItem);
+                totalAmount += total;
+            }
+            //재진일경우
+            else if ("재진".equals(visit.getVisit_type())) {
+
+                Fee_item feeItem = fee_itemRepository.findById("OUTFOL")
+                        .orElseThrow(() -> new RuntimeException("OUTFOL 수가항목 없음"));
+
+                int price = feeItem.getBase_price();
+                int qty = 1;
+                int total = price * qty;
+
+                Claim_item autoItem = new Claim_item();
+                autoItem.setClaim(normalClaim);
+                autoItem.setFee_item(feeItem);
+                autoItem.setUnit_price(price);
+                autoItem.setQuantity(qty);
+                autoItem.setDiscount(0);
+                autoItem.setTotal(total);
+
+                claim_itemRepository.save(autoItem);
+                totalAmount += total;
+            }
+
+            //나머지 처방항목
             for (int i = 0; i < normal_fee_item_code.size(); i++) {
 
                 if (normal_fee_item_code.get(i) == null) continue;

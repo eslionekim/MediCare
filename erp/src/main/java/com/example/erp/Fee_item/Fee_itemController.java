@@ -27,8 +27,11 @@ public class Fee_itemController {
         
         //약품 제외
         list = list.stream()
-                .filter(f -> !"약품".equals(f.getCategory()))
-                .toList();
+        	    .filter(f -> 
+        	        !"약품".equals(f.getCategory()) 
+        	        && !"기타(구매)".equals(f.getCategory())
+        	    ).toList();
+
 
         model.addAttribute("list", list);
         model.addAttribute("keyword", keyword);

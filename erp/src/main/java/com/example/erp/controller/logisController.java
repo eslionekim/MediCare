@@ -34,6 +34,7 @@ import com.example.erp.Issue_request.Issue_request;
 import com.example.erp.Issue_request.Issue_requestDTO;
 import com.example.erp.Issue_request.Issue_requestRepository;
 import com.example.erp.Issue_request.Issue_requestService;
+import com.example.erp.Issue_request.logisRequestDTO;
 import com.example.erp.Issue_request_item.Issue_request_item;
 import com.example.erp.Issue_request_item.Issue_request_itemRepository;
 import com.example.erp.Item.ItemRepository;
@@ -311,8 +312,17 @@ public class logisController {
     @ResponseBody
     public ResponseEntity<?> requestNewItem(@RequestParam Map<String, String> param) {
 
+    	String Code = param.get("code");      // 일반 물품 코드
+        String madeCode = param.get("madecode");     // 제조사 물품 코드
+
+        if (Code == null || Code.isBlank()) {
+            throw new RuntimeException("일반 물품 코드는 필수입니다.");
+        }
+        if (madeCode == null || madeCode.isBlank()) {
+            throw new RuntimeException("제조사 물품 코드는 필수입니다.");
+        }
         /* =======================
-         * 1. FeeItem 저장
+         * 1. FeeItem 저장 (여기 판매가로 들어가야하는데 어떡하지,그리고 기타는..?)
          * ======================= */
         Fee_item feeItem = new Fee_item();
         feeItem.setCategory(param.get("item_type"));
@@ -320,13 +330,7 @@ public class logisController {
         feeItem.setBase_price(Integer.parseInt(param.get("base_price")));
         feeItem.set_active(Boolean.parseBoolean(param.get("taxable"))); // 과세=true
         String feeItemCode = param.get("fee_item_code");
-        if (feeItemCode == null || feeItemCode.isBlank()) {
-            feeItemCode = param.get("item_code");
-        }
-        if (feeItemCode == null || feeItemCode.isBlank()) {
-            feeItemCode = "FEE-" + System.currentTimeMillis();
-        }
-        feeItem.setFee_item_code(feeItemCode);
+        feeItem.setFee_item_code(Code);
 
         fee_itemRepository.save(feeItem);
 
@@ -334,7 +338,7 @@ public class logisController {
          * 2. Item 저장
          * ======================= */
         Item item = new Item();
-        item.setItem_code(feeItemCode);
+        item.setItem_code(madeCode);
         item.setItem_type(param.get("item_type"));
         item.setName(param.get("name"));
         item.setBase_unit(param.get("base_unit"));
@@ -343,10 +347,33 @@ public class logisController {
         item.setSafety_stock(new BigDecimal(param.get("safety_stock")));
         item.setUnit_price(new BigDecimal(param.get("base_price")));
         item.setIs_active(false); // 관리자 승인 전
-        item.setFee_item_code(feeItemCode);
         item.setCreated_at(LocalDateTime.now());
-
+        item.setFee_item_code(Code);
         itemRepository.save(item);
+        
+        /* =======================
+         * 3. Issue_request 생성
+         * ======================= */
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        Issue_request issueRequest = new Issue_request();
+        issueRequest.setDepartment_code("logis");
+        issueRequest.setUser_id(userId);
+        issueRequest.setRequested_at(LocalDateTime.now());
+        issueRequest.setStatus_code("IR_REQUESTED");
+        issue_requestRepository.save(issueRequest);
+
+
+        /* =======================
+         * 4. Issue_request_item 생성
+         * ======================= */
+        Issue_request_item issueRequestItem = new Issue_request_item();
+        issueRequestItem.setIssue_request_id(issueRequest.getIssue_request_id()); // FK
+        issueRequestItem.setItem_code(madeCode);
+        issue_request_itemRepository.save(issueRequestItem);
+
         return ResponseEntity.ok("신규 등록 요청 완료");
     }
     
@@ -457,5 +484,13 @@ public class logisController {
         return ResponseEntity.ok("수량 조정 완료");
     }
 
-    
+    //물류->요청리스트
+    @GetMapping("/logis/logisRequest") 
+    public String logisRequest(Model model) {
+    	List<logisRequestDTO> list = issue_requestService.getLogisRequests();
+        model.addAttribute("requests", list);
+        return "logis/logisRequest";
+    }
+
+
 }
