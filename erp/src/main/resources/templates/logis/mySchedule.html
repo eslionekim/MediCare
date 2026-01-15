@@ -5,7 +5,8 @@
     <title>MediCare</title>
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>/* 전체 리셋 및 기본 배경 */
+    <style>
+		/* 전체 리셋 및 기본 배경 */
 		
 	html, body {
 		height: 100%;
@@ -512,43 +513,43 @@
 	<!-- FullCalendar JS -->
 	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 	<script>
-	document.addEventListener('DOMContentLoaded', () => {
+				document.addEventListener('DOMContentLoaded', () => {
 
-	    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
-	        fetch('/work/time-in', { method: 'POST' })
-	            .then(res =>
-	                res.text().then(msg => {
-	                    if (!res.ok) throw msg;
-	                    alert(msg);
-	                })
-	            )
-	            .catch(msg => alert(msg));
-	    });
+				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+				        fetch('/work/time-in', { method: 'POST' })
+				            .then(res =>
+				                res.text().then(msg => {
+				                    if (!res.ok) throw msg;
+				                    alert(msg);
+				                })
+				            )
+				            .catch(msg => alert(msg));
+				    });
 
-		document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
 
-			fetch('/work/time-out/check')
-			        .then(res =>
-			            res.text().then(msg => {
-			                if (!res.ok) throw msg; // 퇴근 불가능
+						fetch('/work/time-out/check')
+						        .then(res =>
+						            res.text().then(msg => {
+						                if (!res.ok) throw msg; // 퇴근 불가능
 
-			                if (!confirm('퇴근하시겠습니까?')) return;
+						                if (!confirm('퇴근하시겠습니까?')) return;
 
-			                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-			                    .then(res => res.text())
-			                    .then(msg => alert(msg))
-			                    .catch(() => alert('퇴근 처리 실패'));
-			            })
-			        )
-			        .catch(msg => alert(msg));
-		});
-	});
+						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+						                    .then(res => res.text())
+						                    .then(msg => alert(msg))
+						                    .catch(() => alert('퇴근 처리 실패'));
+						            })
+						        )
+						        .catch(msg => alert(msg));
+					});
+				});
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
-    <div th:replace="~{fragments/doctor-header :: header(title='스케줄 조회', activeTab='mySchedule')}"></div>
+	<div th:replace="~{fragments/logis-header :: header(title='스케줄 조회', activeTab='logisSchedule')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
 	<div class="content-area container">
@@ -558,7 +559,8 @@
 		</div>
 		
 		<!-- 2. 휴가 -->
-		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">			<!-- 상태 필터링 -->
+		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">
+			<!-- 상태 필터링 -->
 			<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
 				<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
 
@@ -594,6 +596,7 @@
 			</div>
 		</div>
 		
+		
 		<!-- 팝업 -->
 		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
 		    <h2>신규 신청</h2>
@@ -618,7 +621,7 @@
 	<!-- 콘텐츠 영역 끝-->
 	
 	<script>
-		document.addEventListener('DOMContentLoaded', function () {
+	document.addEventListener('DOMContentLoaded', function () {
 		
 		    /* =========================
 		       1. FullCalendar
@@ -639,7 +642,7 @@
 		            const year = currentDate.getFullYear();
 		            const month = currentDate.getMonth() + 1;
 		
-		            fetch(`/doctor/mySchedule/events?year=${year}&month=${month}`)
+		            fetch(`/logis/mySchedule/events?year=${year}&month=${month}`)
 		                .then(res => res.json())
 		                .then(data => {
 		                    calendar.removeAllEvents();
@@ -659,150 +662,150 @@
 		
 		});
 		
-		/* =========================
-		   분류 select
-		========================= */
-		function loadVacationTypes() {
-		    fetch('/doctor/mySchedule/vacation-types')
-		        .then(res => res.json())
-		        .then(data => {
-		            const select = document.getElementById('departmentSelect');
-		            select.innerHTML = '<option value="">분류</option>';
-		
-		            data.forEach(t => {
-		                const opt = document.createElement('option');
-		                opt.value = t.typeCode;
-		                opt.textContent = t.typeName;
-		                select.appendChild(opt);
-		            });
-		        });
-		}
-		
-		/* =========================
-		   승인여부 select
-		========================= */
-		function loadVacationStatus() {
-		    fetch('/doctor/mySchedule/vacation-status')
-		        .then(res => res.json())
-		        .then(data => {
-		            const select = document.getElementById('doctorSelect');
-		            select.innerHTML = '<option value="">승인여부</option>';
-		
-		            data.forEach(s => {
-		                const opt = document.createElement('option');
-		                opt.value = s.statusCode;
-		                opt.textContent = s.name;
-		                select.appendChild(opt);
-		            });
-		        });
-		}
-		
-		/* =========================
-		   전체 휴가 리스트
-		========================= */
-		function loadVacations() {
-		    fetch('/doctor/mySchedule/vacations')
-		        .then(res => res.json())
-		        .then(renderVacationTable);
-		}
-		
-		/* =========================
-		   검색
-		========================= */
-		function searchVisits() {
-		    const params = new URLSearchParams({
-		        typeCode: document.getElementById('departmentSelect').value,
-		        statusCode: document.getElementById('doctorSelect').value,
-		        date: document.getElementById('visitDate').value
-		    });
-		
-		    fetch(`/doctor/mySchedule/vacations/search?${params}`)
-		        .then(res => res.json())
-		        .then(renderVacationTable);
-		}
-		
-		/* =========================
-		   테이블 렌더링
-		========================= */
-		function renderVacationTable(data) {
-		    const tbody = document.getElementById('vacationBody');
-		    tbody.innerHTML = '';
-		
-		    if (!data || data.length === 0) {
-		        tbody.innerHTML = `<tr><td colspan="4">검색 결과 없음</td></tr>`;
-		        return;
-		    }
-		
-		    data.forEach(v => {
-		        const tr = document.createElement('tr');
-		        tr.innerHTML = `
-		            <td>${v.typeName}</td>
-		            <td>${v.startDate} ~ ${v.endDate}</td>
-		            <td>${v.statusName}</td>
-		            <td>
-		                ${v.statusCode === 'VAC_APPROVED'
-		                    ? `<button onclick="cancelVacation(${v.vacationId})">취소</button>`
-		                    : '-'}
-		            </td>
-		        `;
-		        tbody.appendChild(tr);
-		    });
-		}
-		
-		/* =========================
-		   취소
-		========================= */
-		function cancelVacation(vacationId) {
-		    if (!confirm('휴가 취소 요청하시겠습니까?')) return;
-		
-		    fetch(`/doctor/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
-		        .then(res => {
-		            if (!res.ok) throw new Error();
-		            alert('취소 요청되었습니다.');
-		            loadVacations();
-		        })
-		        .catch(() => alert('취소 요청 실패'));
-		}
-		
-		document.getElementById("openPopupBtn").onclick = function() {
-	        document.getElementById("vacationPopup").style.display = "block";
-	    };
+/* =========================
+   분류 select
+========================= */
+function loadVacationTypes() {
+    fetch('/logis/mySchedule/vacation-types')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('departmentSelect');
+            select.innerHTML = '<option value="">분류</option>';
 
-	    // 팝업 닫기
-	    document.getElementById("closePopup").onclick = function() {
-	        document.getElementById("vacationPopup").style.display = "none";
-	    };
+            data.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.typeCode;
+                opt.textContent = t.typeName;
+                select.appendChild(opt);
+            });
+        });
+}
 
-	    // 휴가 신청 제출
-	    document.getElementById("submitVacation").onclick = function() {
-	        const start_date = document.getElementById("start_date").value;
-	        const end_date = document.getElementById("end_date").value;
-	        const type_name = document.getElementById("vacation_type").value;
-	        const reason = document.getElementById("reason").value;
+/* =========================
+   승인여부 select
+========================= */
+function loadVacationStatus() {
+    fetch('/logis/mySchedule/vacation-status')
+        .then(res => res.json())
+        .then(data => {
+            const select = document.getElementById('doctorSelect');
+            select.innerHTML = '<option value="">승인여부</option>';
 
-			if (!start_date || !end_date || !type_name) {
-			    alert("기간과 분류는 반드시 입력해야 합니다.");
-			    return;
-			}
-			
-	        fetch('/doctor/applyVacation', {
-	            method: 'POST',
-	            headers: {
-	                'Content-Type': 'application/json',
-	                
-	            },
-	            body: JSON.stringify({ start_date, end_date, type_name, reason })
-	        }).then(res => res.json())
-	          .then(data => {
-	              if(data.success){
-	                  alert("휴가 신청 완료");
-	                  location.reload(); // 새로고침해서 테이블에 추가
-	              } else {
-	                  alert("실패: " + data.message);
-	              }
-	          });
-	    };
+            data.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.statusCode;
+                opt.textContent = s.name;
+                select.appendChild(opt);
+            });
+        });
+}
 
+/* =========================
+   전체 휴가 리스트
+========================= */
+function loadVacations() {
+    fetch('/logis/mySchedule/vacations')
+        .then(res => res.json())
+        .then(renderVacationTable);
+}
+
+/* =========================
+   검색
+========================= */
+function searchVisits() {
+    const params = new URLSearchParams({
+        typeCode: document.getElementById('departmentSelect').value,
+        statusCode: document.getElementById('doctorSelect').value,
+        date: document.getElementById('visitDate').value
+    });
+
+    fetch(`/logis/mySchedule/vacations/search?${params}`)
+        .then(res => res.json())
+        .then(renderVacationTable);
+}
+
+/* =========================
+   테이블 렌더링
+========================= */
+function renderVacationTable(data) {
+    const tbody = document.getElementById('vacationBody');
+    tbody.innerHTML = '';
+
+    if (!data || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4">검색 결과 없음</td></tr>`;
+        return;
+    }
+
+    data.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${v.typeName}</td>
+            <td>${v.startDate} ~ ${v.endDate}</td>
+            <td>${v.statusName}</td>
+            <td>
+                ${v.statusCode === 'VAC_APPROVED'
+                    ? `<button onclick="cancelVacation(${v.vacationId})">취소</button>`
+                    : '-'}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+/* =========================
+   취소
+========================= */
+function cancelVacation(vacationId) {
+    if (!confirm('휴가 취소 요청하시겠습니까?')) return;
+
+    fetch(`/logis/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
+        .then(res => {
+            if (!res.ok) throw new Error();
+            alert('취소 요청되었습니다.');
+            loadVacations();
+        })
+        .catch(() => alert('취소 요청 실패'));
+}
+
+
+document.getElementById("openPopupBtn").onclick = function() {
+    document.getElementById("vacationPopup").style.display = "block";
+};
+
+// 팝업 닫기
+document.getElementById("closePopup").onclick = function() {
+    document.getElementById("vacationPopup").style.display = "none";
+};
+
+// 휴가 신청 제출
+document.getElementById("submitVacation").onclick = function() {
+    const start_date = document.getElementById("start_date").value;
+    const end_date = document.getElementById("end_date").value;
+    const type_name = document.getElementById("vacation_type").value;
+    const reason = document.getElementById("reason").value;
+
+	if (!start_date || !end_date || !type_name) {
+	    alert("기간과 분류는 반드시 입력해야 합니다.");
+	    return;
+	}
+	
+    fetch('/logis/applyVacation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            
+        },
+        body: JSON.stringify({ start_date, end_date, type_name, reason })
+    }).then(res => res.json())
+      .then(data => {
+          if(data.success){
+              alert("휴가 신청 완료");
+              location.reload(); // 새로고침해서 테이블에 추가
+          } else {
+              alert("실패: " + data.message);
+          }
+      });
+};
 
 </script>
 <script src="/js/notify.js"></script>

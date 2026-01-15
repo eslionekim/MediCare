@@ -60,7 +60,7 @@ public class VisitController {
         private final ClaimRepository claimRepository;
         private final Claim_itemRepository claim_itemRepository;
         private final VisitRepository visitRepository; //
-        private final User_accountRepository userAccountRepository;
+        private final User_accountRepository user_accountRepository;
         private final DepartmentRepository departmentRepository;
         private final Insurance_codeRepository insuranceCodeRepository;
         private final Status_codeRepository statusCodeRepository;
@@ -75,7 +75,7 @@ public class VisitController {
         	String userId = auth.getName(); // 로그인 ID
 
         	// User_account 테이블에서 userId로 검색
-        	Optional<User_account> user = userAccountRepository.findByUser_id(userId);
+        	Optional<User_account> user = user_accountRepository.findByUser_id(userId);
         	String userName = (user != null) ? user.get().getName() : "알 수 없음";
 
         	model.addAttribute("userId", userId);
@@ -203,7 +203,13 @@ public class VisitController {
                         @RequestParam(value = "patientKeyword", required = false) String patientKeyword,
                         @RequestParam(value = "date", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
                         Model model) {
-
+	        	
+        		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+	        	String userId = auth.getName(); // 로그인 ID
+				// User_account 테이블에서 userId로 검색
+	        	Optional<User_account> user = user_accountRepository.findByUser_id(userId);
+	        	String userName = (user != null) ? user.get().getName() : "알 수 없음";
+        	
                 if (date == null) {
                         date = LocalDate.now();
                 }
@@ -220,6 +226,9 @@ public class VisitController {
                                                 && v.getStatus_code().getStatus_code() != null
                                                 && v.getStatus_code().getStatus_code().equalsIgnoreCase("WAIT"))
                                 .collect(Collectors.toList());
+                
+                model.addAttribute("userId", userId);
+            	model.addAttribute("userName", userName);
 
                 model.addAttribute("todayTotal", todays.size());
                 model.addAttribute("todayWaiting", waiting.size());
@@ -300,7 +309,7 @@ public class VisitController {
                 // 1) 연관 엔티티 조회
                 Patient patient = patientService.findById(patientId);
 
-                User_account doctor = userAccountRepository.findById(user_id)
+                User_account doctor = user_accountRepository.findById(user_id)
                                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 의사 ID입니다."));
 
                 Department department = departmentRepository.findById(departmentCode)

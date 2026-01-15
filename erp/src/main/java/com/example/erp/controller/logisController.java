@@ -3,6 +3,7 @@ package com.example.erp.controller;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,9 @@ import com.example.erp.Item.ItemRepository;
 import com.example.erp.Patient.PatientService;
 import com.example.erp.Reservation.ReservationRepository;
 import com.example.erp.Staff_profile.Staff_profileRepository;
+import com.example.erp.Status_code.Status_code;
+import com.example.erp.Status_code.Status_codeDTO;
+import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.Stock.Stock;
 import com.example.erp.Stock.StockDTO;
 import com.example.erp.Stock.StockRepository;
@@ -54,18 +59,30 @@ import com.example.erp.Stock_move.Stock_moveRepository;
 import com.example.erp.Stock_move.Stock_moveService;
 import com.example.erp.Stock_move_item.Stock_move_item;
 import com.example.erp.Stock_move_item.Stock_move_itemRepository;
+import com.example.erp.User_account.User_account;
+import com.example.erp.Vacation.Vacation;
+import com.example.erp.Vacation.VacationDTO;
+import com.example.erp.Vacation.VacationRepository;
+import com.example.erp.Vacation_type.Vacation_type;
+import com.example.erp.Vacation_type.Vacation_typeDTO;
+import com.example.erp.Vacation_type.Vacation_typeRepository;
 import com.example.erp.Visit.TodayVisitDTO;
 import com.example.erp.Visit.VisitRepository;
 import com.example.erp.Visit.VisitService;
 import com.example.erp.Item.Item;
 import com.example.erp.Warehouse.Warehouse;
 import com.example.erp.Warehouse.WarehouseRepository;
-
+import com.example.erp.Work_schedule.ScheduleCalendarDTO;
+import com.example.erp.Work_schedule.Work_scheduleRepository;
+import com.example.erp.Work_schedule.Work_scheduleService;
+import com.example.erp.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 
 @Controller
 @RequiredArgsConstructor
 public class logisController {
+
+    private final NotificationService notificationService;
 
     private final Fee_itemRepository fee_itemRepository;
 
@@ -80,7 +97,11 @@ public class logisController {
 	
 	private final ItemRepository itemRepository;
     private final WarehouseRepository warehouseRepository;
-	
+    private final VacationRepository vacationRepository;
+    private final Vacation_typeRepository vacation_typeRepository;
+    private final Work_scheduleService work_scheduleService;
+    private final Status_codeRepository status_codeRepository;
+
 	@GetMapping("/logis/itemRequest") //물류->불출요청리스트
     public String getTodayVisitList(Model model) {
 			List<Issue_requestDTO> list =issue_requestService.getItemRequestTable();
@@ -568,6 +589,199 @@ public class logisController {
         model.addAttribute("types", types);
 
         return "logis/logisOutbound";
+    }
+    
+    //스케줄 조회
+    
+    @GetMapping("/logis/mySchedule") // 물류 -> 스케줄 조회 by 은서
+    public String getMySchedulePage(Model model) {
+    	String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<Vacation> vacation = vacationRepository.findVacationByUserId(user_id);
+        List<Vacation_type> vacationTypes = vacation_typeRepository.findAll();
+        
+        model.addAttribute("vacation", vacation);
+        model.addAttribute("vacationTypes", vacationTypes);
+        model.addAttribute("username", user_id);
+        return "logis/mySchedule";
+    }
+    
+    @GetMapping("/logis/mySchedule/events") //물류 -> 스케줄 조회 -> 근무 스케줄 달력 by 은서
+    @ResponseBody
+    public List<Map<String, Object>> getMyScheduleEvents(
+            @RequestParam(value="year",required = false) int year,
+            @RequestParam(value="month",required = false) int month
+    ) {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        List<ScheduleCalendarDTO> list =
+                work_scheduleService.getStaffMonthlySchedule(userId, year, month);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        for (ScheduleCalendarDTO item : list) {
+            Map<String, Object> event = new HashMap<>();
+            
+            StringBuilder title = new StringBuilder();
+            title.append(item.getWorkName());
+
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            if (item.getStartTime() != null) {
+                title.append("\n출근 ")
+                     .append(item.getStartTime().format(timeFormatter));
+            }
+
+            if (item.getEndTime() != null) {
+                title.append("\n퇴근 ")
+                     .append(item.getEndTime().format(timeFormatter));
+            }
+
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
+            
+            event.put("title", title.toString());                 // ⭐ work_name
+            event.put("start", item.getWorkDate().toString());     // ⭐ yyyy-MM-dd
+            event.put("allDay", true);
+
+            events.add(event);
+        }
+
+        return events;
+    }
+    
+    @GetMapping("/logis/mySchedule/vacations") //물류 -> 스케줄 조회 -> 휴가 리스트 by 은서
+    @ResponseBody
+    public List<VacationDTO> getMyVacations() {
+    	String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return vacationRepository.findVacationByUserId(userId)
+            .stream()
+            .map(v -> new VacationDTO(
+                v.getVacation_id(),
+                v.getVacation_type().getType_name(),
+                v.getStart_date().toString(),
+                v.getEnd_date().toString(),
+                v.getStatus_code().getName(),
+                v.getStatus_code().getStatus_code()
+            ))
+            .collect(Collectors.toList());
+    }
+    
+    @GetMapping("/logis/mySchedule/vacation-types") //물류-> 스케줄 조회->휴가리스트 -> 검색창-> 분류 by 은서
+    @ResponseBody
+    public List<Vacation_typeDTO> getVacationTypes() {
+        return vacation_typeRepository.findByIsActiveTrue()
+            .stream()
+            .map(v -> new Vacation_typeDTO(
+                v.getVacation_type_code(),
+                v.getType_name()
+            ))
+            .toList();
+    }
+    
+    @GetMapping("/logis/mySchedule/vacation-status") //물류-> 스케줄 조회-> 휴가리스트-> 검색창-> 승인여부 by 은서
+    @ResponseBody
+    public List<Status_codeDTO> getVacationStatus() {
+        return status_codeRepository.findByCategoryAndIsActiveTrue("vacation")
+            .stream()
+            .map(s -> new Status_codeDTO(
+                s.getStatus_code(),
+                s.getName()
+            ))
+            .toList();
+    }
+
+    @GetMapping("/logis/mySchedule/vacations/search") //물류-> 스케줄 조회-> 휴가리스트-> 검색창 by 은서
+    @ResponseBody
+    public List<VacationDTO> searchVacations(
+        @RequestParam(value="typeCode",required = false) String typeCode,
+        @RequestParam(value="statusCode",required = false) String statusCode,
+        @RequestParam(value="date",required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        return vacationRepository.searchVacations(userId,
+                (typeCode == null || typeCode.isBlank()) ? null : typeCode,
+                (statusCode == null || statusCode.isBlank()) ? null : statusCode,
+                date)
+            .stream()
+            .map(v -> new VacationDTO(
+        		v.getVacation_id(),
+                v.getVacation_type().getType_name(),
+                v.getStart_date().toString(),
+                v.getEnd_date().toString(),
+                v.getStatus_code().getName(),
+                v.getStatus_code().getStatus_code()
+            ))
+            .collect(Collectors.toList());
+    }
+
+    @PostMapping("/logis/mySchedule/vacation/{vacationId}/cancel") //물류-> 스케줄 조회-> 휴가리스트 -> 휴가취소 by 은서
+    @ResponseBody
+    public void cancelVacation(@PathVariable("vacationId") Long vacationId) {
+    	Vacation vacation = vacationRepository.findById(vacationId)
+                .orElseThrow(() -> new RuntimeException("휴가 없음"));
+
+        Status_code cancelStatus = status_codeRepository.findByCode("VAC_CANCEL_REQUESTED")
+                .orElseThrow(() -> new RuntimeException("상태코드 없음"));
+
+        vacation.setStatus_code(cancelStatus);
+        vacationRepository.save(vacation);
+    }
+    
+ // 물류 -> 휴가 신청 by 은서
+    @GetMapping("/logis/applyVacation")
+    public String applyVacation(Model model) {
+        String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<Vacation> vacation = vacationRepository.findVacationByUserId(user_id);
+        List<Vacation_type> vacationTypes = vacation_typeRepository.findAll();
+        
+        model.addAttribute("vacation", vacation);
+        model.addAttribute("vacationTypes", vacationTypes);
+        model.addAttribute("username", user_id);
+        
+        return "logis/applyVacation";
+    }
+    
+    // 물류 -> 휴가 신청 -> 폼 제출 by 은서
+    @PostMapping("/logis/applyVacation")
+    @ResponseBody // 반환값을 JSON형태(키-값)로 전달
+    public Map<String,Object> applyVacation(@RequestBody Map<String,String> body) {
+        Map<String,Object> result = new HashMap<>(); // 키-값 
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            String user_id = auth.getName(); //로그인 한 사용자의 user_id
+
+            User_account user = new User_account(); 
+            user.setUser_id(user_id); //새로 생성한 객체에 user_id 설정
+
+            Vacation_type vt = vacation_typeRepository.findByTypeName(body.get("type_name")) //type_name으로 vacation_type 찾기
+                    .orElseThrow(() -> new RuntimeException("존재하지 않는 휴가분류"));
+
+            Status_code status_code = status_codeRepository.findByCode("VAC_APPROVED_REQUESTED") //코드로 status_code찾기
+                    .orElseThrow(() -> new RuntimeException("상태코드 없음"));
+
+            Vacation v = new Vacation();
+            v.setUser_account(user); 
+            v.setVacation_type(vt);
+            v.setStart_date(LocalDate.parse(body.get("start_date")));
+            v.setEnd_date(LocalDate.parse(body.get("end_date")));
+            v.setStatus_code(status_code);
+            v.setReason(body.get("reason"));
+
+            vacationRepository.save(v);
+            
+            result.put("success", true); // 저장 성공 시
+            // 직원이 휴가 신청했을 때 HR에게 알림
+            notificationService.notifyHR("휴가 신청", "직원 " + user_id + "님이 휴가를 신청했습니다.");
+        } catch(Exception e){
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+        return result;
     }
 
 }
