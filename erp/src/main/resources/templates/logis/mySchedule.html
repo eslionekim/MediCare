@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-
+    <meta charset="UTF-8">
     <title>MediCare</title>
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-		html, body {
+		/* 전체 리셋 및 기본 배경 */
+		
+	html, body {
 		height: 100%;
 		overflow: hidden;        /* 화면 전체 스크롤 막기 */
 	}
@@ -226,7 +228,6 @@
 	        white-space: pre-line;
 	  }
 	  
-	
 	  /*캘린더*/
 	  .card-body {
 	      padding: 10px;
@@ -505,52 +506,50 @@
 		  	      background-color: #ccc;
 		  	      color: #333;
 		  	  }
-    </style>
-<link rel="stylesheet" th:href="@{/css/common-base.css}">
+	</style>
 	<!-- FullCalendar CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
 
 	<!-- FullCalendar JS -->
 	<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
 	<script>
-		document.addEventListener('DOMContentLoaded', () => {
+				document.addEventListener('DOMContentLoaded', () => {
 
-	    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
-	        fetch('/work/time-in', { method: 'POST' })
-	            .then(res =>
-	                res.text().then(msg => {
-	                    if (!res.ok) throw msg;
-	                    alert(msg);
-	                })
-	            )
-	            .catch(msg => alert(msg));
-	    });
+				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+				        fetch('/work/time-in', { method: 'POST' })
+				            .then(res =>
+				                res.text().then(msg => {
+				                    if (!res.ok) throw msg;
+				                    alert(msg);
+				                })
+				            )
+				            .catch(msg => alert(msg));
+				    });
 
-		document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
 
-			fetch('/work/time-out/check')
-			        .then(res =>
-			            res.text().then(msg => {
-			                if (!res.ok) throw msg; // 퇴근 불가능
+						fetch('/work/time-out/check')
+						        .then(res =>
+						            res.text().then(msg => {
+						                if (!res.ok) throw msg; // 퇴근 불가능
 
-			                if (!confirm('퇴근하시겠습니까?')) return;
+						                if (!confirm('퇴근하시겠습니까?')) return;
 
-			                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-			                    .then(res => res.text())
-			                    .then(msg => alert(msg))
-			                    .catch(() => alert('퇴근 처리 실패'));
-			            })
-			        )
-			        .catch(msg => alert(msg));
-		});
-		});
+						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+						                    .then(res => res.text())
+						                    .then(msg => alert(msg))
+						                    .catch(() => alert('퇴근 처리 실패'));
+						            })
+						        )
+						        .catch(msg => alert(msg));
+					});
+				});
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
-	<div th:replace="~{fragments/pharm-header :: header(title='스케줄 조회', activeTab='pharmSchedule')}"></div>
-
+	<div th:replace="~{fragments/logis-header :: header(title='스케줄 조회', activeTab='logisSchedule')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
 	<div class="content-area container">
@@ -562,26 +561,26 @@
 		<!-- 2. 휴가 -->
 		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">
 			<!-- 상태 필터링 -->
-					<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
-						<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
+			<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+				<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
 
-						<div style="display:flex; gap:8px;">
-						<!-- 진료과 -->
-					    <select id="departmentSelect">
-					        <option value="">분류</option>
-					    </select>
+				<div style="display:flex; gap:8px;">
+				<!-- 진료과 -->
+			    <select id="departmentSelect">
+			        <option value="">분류</option>
+			    </select>
 
-					    <!-- 의사 -->
-					    <select id="doctorSelect">
-					        <option value="">승인여부</option>
-					    </select>
+			    <!-- 의사 -->
+			    <select id="doctorSelect">
+			        <option value="">승인여부</option>
+			    </select>
 
-					    <!-- 날짜 -->
-					    <input type="date" id="visitDate">
+			    <!-- 날짜 -->
+			    <input type="date" id="visitDate">
 
-					    <button onclick="searchVisits()">검색</button>
-						</div>    
-					</div>    
+			    <button onclick="searchVisits()">검색</button>
+				</div>    
+			</div>  
 			<div class="visit-table-box">
 			<table border="1" width="100%">
 			        <thead>
@@ -594,8 +593,10 @@
 			        </thead>
 			        <tbody id="vacationBody"></tbody>
 			    </table>
-				</div>
+			</div>
 		</div>
+		
+		
 		<!-- 팝업 -->
 		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
 		    <h2>신규 신청</h2>
@@ -620,52 +621,52 @@
 	<!-- 콘텐츠 영역 끝-->
 	
 	<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    /* =========================
-       1. FullCalendar
-    ========================= */
-    const calendarEl = document.getElementById('calendar');
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-		initialView: 'dayGridMonth',
-        locale: 'en',
-        height: 'auto',
-        headerToolbar: {
-			left: 'prev',
-		    center: 'title',
-		    right: 'next'
-        },
-        datesSet: function (info) {
-            const currentDate = info.view.currentStart;
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
-
-            fetch(`/pharm/mySchedule/events?year=${year}&month=${month}`)
-                .then(res => res.json())
-                .then(data => {
-                    calendar.removeAllEvents();
-                    calendar.addEventSource(data);
-                });
-        }
-    });
-
-    calendar.render();
-
-    /* =========================
-       2. 초기 데이터 로딩
-    ========================= */
-    loadVacationTypes();
-    loadVacationStatus();
-    loadVacations();
-
-});
-
+	document.addEventListener('DOMContentLoaded', function () {
+		
+		    /* =========================
+		       1. FullCalendar
+		    ========================= */
+		    const calendarEl = document.getElementById('calendar');
+		
+		    const calendar = new FullCalendar.Calendar(calendarEl, {
+		        initialView: 'dayGridMonth',
+		        locale: 'en',
+		        height: 'auto',
+		        headerToolbar: {
+					left: 'prev',
+				    center: 'title',
+				    right: 'next'
+		        },
+		        datesSet: function (info) {
+		            const currentDate = info.view.currentStart;
+		            const year = currentDate.getFullYear();
+		            const month = currentDate.getMonth() + 1;
+		
+		            fetch(`/logis/mySchedule/events?year=${year}&month=${month}`)
+		                .then(res => res.json())
+		                .then(data => {
+		                    calendar.removeAllEvents();
+		                    calendar.addEventSource(data);
+		                });
+		        }
+		    });
+		
+		    calendar.render();
+		
+		    /* =========================
+		       2. 초기 데이터 로딩
+		    ========================= */
+		    loadVacationTypes();
+		    loadVacationStatus();
+		    loadVacations();
+		
+		});
+		
 /* =========================
    분류 select
 ========================= */
 function loadVacationTypes() {
-    fetch('/pharm/mySchedule/vacation-types')
+    fetch('/logis/mySchedule/vacation-types')
         .then(res => res.json())
         .then(data => {
             const select = document.getElementById('departmentSelect');
@@ -684,7 +685,7 @@ function loadVacationTypes() {
    승인여부 select
 ========================= */
 function loadVacationStatus() {
-    fetch('/pharm/mySchedule/vacation-status')
+    fetch('/logis/mySchedule/vacation-status')
         .then(res => res.json())
         .then(data => {
             const select = document.getElementById('doctorSelect');
@@ -703,7 +704,7 @@ function loadVacationStatus() {
    전체 휴가 리스트
 ========================= */
 function loadVacations() {
-    fetch('/pharm/mySchedule/vacations')
+    fetch('/logis/mySchedule/vacations')
         .then(res => res.json())
         .then(renderVacationTable);
 }
@@ -718,7 +719,7 @@ function searchVisits() {
         date: document.getElementById('visitDate').value
     });
 
-    fetch(`/pharm/mySchedule/vacations/search?${params}`)
+    fetch(`/logis/mySchedule/vacations/search?${params}`)
         .then(res => res.json())
         .then(renderVacationTable);
 }
@@ -757,7 +758,7 @@ function renderVacationTable(data) {
 function cancelVacation(vacationId) {
     if (!confirm('휴가 취소 요청하시겠습니까?')) return;
 
-    fetch(`/pharm/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
+    fetch(`/logis/mySchedule/vacation/${vacationId}/cancel`, { method: 'POST' })
         .then(res => {
             if (!res.ok) throw new Error();
             alert('취소 요청되었습니다.');
@@ -767,7 +768,6 @@ function cancelVacation(vacationId) {
 }
 
 
-// 팝업 열기
 document.getElementById("openPopupBtn").onclick = function() {
     document.getElementById("vacationPopup").style.display = "block";
 };
@@ -789,7 +789,7 @@ document.getElementById("submitVacation").onclick = function() {
 	    return;
 	}
 	
-    fetch('/pharm/applyVacation', {
+    fetch('/logis/applyVacation', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -807,10 +807,8 @@ document.getElementById("submitVacation").onclick = function() {
       });
 };
 
-
 </script>
 <script src="/js/notify.js"></script>
-
 </body>
 </html>
 

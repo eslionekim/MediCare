@@ -373,12 +373,19 @@ public class staffContoller {
 	    }
 	    
 
-	    @GetMapping("/staff/mySchedule") // 약사 -> 스케줄 조회 by 은서
-	    public String getMySchedulePage() {
+	    @GetMapping("/staff/mySchedule") // 원무 -> 스케줄 조회 by 은서
+	    public String getMySchedulePage(Model model) {
+	    	String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
+	        List<Vacation> vacation = vacationRepository.findVacationByUserId(user_id);
+	        List<Vacation_type> vacationTypes = vacation_typeRepository.findAll();
+	        
+	        model.addAttribute("vacation", vacation);
+	        model.addAttribute("vacationTypes", vacationTypes);
+	        model.addAttribute("username", user_id);
 	        return "staff/mySchedule";
 	    }
 	    
-	    @GetMapping("/staff/mySchedule/events") //약사 -> 스케줄 조회 -> 근무 스케줄 달력 by 은서
+	    @GetMapping("/staff/mySchedule/events") //원무 -> 스케줄 조회 -> 근무 스케줄 달력 by 은서
 	    @ResponseBody
 	    public List<Map<String, Object>> getMyScheduleEvents(
 	            @RequestParam(value="year",required = false) int year,

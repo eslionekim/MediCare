@@ -561,26 +561,26 @@
 		
 		<!-- 2. 휴가 -->
 		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">			<!-- 상태 필터링 -->
-					<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
-						<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
+			<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+				<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
 
-						<div style="display:flex; gap:8px;">
-						<!-- 진료과 -->
-					    <select id="departmentSelect">
-					        <option value="">분류</option>
-					    </select>
+				<div style="display:flex; gap:8px;">
+				<!-- 진료과 -->
+			    <select id="departmentSelect">
+			        <option value="">분류</option>
+			    </select>
 
-					    <!-- 의사 -->
-					    <select id="doctorSelect">
-					        <option value="">승인여부</option>
-					    </select>
+			    <!-- 의사 -->
+			    <select id="doctorSelect">
+			        <option value="">승인여부</option>
+			    </select>
 
-					    <!-- 날짜 -->
-					    <input type="date" id="visitDate">
+			    <!-- 날짜 -->
+			    <input type="date" id="visitDate">
 
-					    <button onclick="searchVisits()">검색</button>
-						</div>    
-					</div>  
+			    <button onclick="searchVisits()">검색</button>
+				</div>    
+			</div>  
 			<div class="visit-table-box">
 			<table border="1" width="100%">
 			        <thead>

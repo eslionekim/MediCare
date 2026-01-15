@@ -1,6 +1,7 @@
 package com.example.erp.Patient;
 
 import com.example.erp.User_account.User_account;
+import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.Visit.OutHistoryDTO;
 import com.example.erp.Visit.Visit;
 import com.example.erp.Visit.VisitRepository;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Controller
@@ -34,6 +36,7 @@ public class PatientRegistrationAndInquiry {
 
     private final PatientRepository patientRepository;
     private final VisitRepository visitRepository;
+    private final User_accountRepository user_accountRepository;
 
     // 목록/조회 화면
     @GetMapping
@@ -42,13 +45,11 @@ public class PatientRegistrationAndInquiry {
             @RequestParam(value = "keyword", required = false) String keyword,
             Model model) {
     	// --- 로그인 사용자 정보 추가 ---
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            model.addAttribute("userId", auth.getName()); // 로그인 ID
-            if (auth.getPrincipal() instanceof User_account user) {
-                model.addAttribute("userName", user.getName()); // 실제 이름
-            }
-        }
+    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    	String userId = auth.getName(); // 로그인 ID
+    	//User_account 테이블에서 userId로 검색
+    	Optional<User_account> user = user_accountRepository.findByUser_id(userId);
+    	String userName = (user != null) ? user.get().getName() : "알 수 없음";
     	
     	
         addPatientList(keyword, model);
@@ -68,6 +69,8 @@ public class PatientRegistrationAndInquiry {
                     .collect(Collectors.toList());
         }
 
+        model.addAttribute("userId", userId);
+    	model.addAttribute("userName", userName);
         model.addAttribute("selected", selected);
         model.addAttribute("mode", "detail");
         model.addAttribute("outHistories", outHistories);

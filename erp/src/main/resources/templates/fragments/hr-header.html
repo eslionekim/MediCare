@@ -39,6 +39,9 @@
 			<li class="tab-item" th:classappend="${activeTab}=='employee' ? ' active'">
                 <a th:href="@{/hr/employee}">직원 리스트</a>
             </li>
+			<li class="tab-item" th:classappend="${activeTab}=='hrSchedule' ? ' active'">
+                <a th:href="@{/hr/mySchedule}">스케줄 조회</a>
+            </li>
         </ul>
     </nav>
 

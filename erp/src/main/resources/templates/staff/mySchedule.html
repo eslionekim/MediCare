@@ -5,7 +5,8 @@
     <title>MediCare</title>
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>/* 전체 리셋 및 기본 배경 */
+    <style>
+		/* 전체 리셋 및 기본 배경 */
 		
 	html, body {
 		height: 100%;
@@ -15,7 +16,7 @@
 	    margin: 0;
 	    padding: 0;
 	    font-family: 'Inter', '맑은 고딕', sans-serif;
-	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
+	    background-color: rgb(255, 255, 255); /* 이미지의 연한 푸른색 배경 */
 	
 	}
 	
@@ -128,9 +129,11 @@
 	
 	/* 컨텐츠 영역 (전체 배경색 확인용) */
 	.content-area {
-		height: calc(100vh - 130px);  /* 화면 높이에서 헤더 뺀 값 */
-		overflow: hidden;              /* 밖으로 넘치는 건 숨김 */
-	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
+	    background-color: #ffffff;   /* 흰색 */
+	    margin: 0 auto;              /* 중앙 정렬 */
+	    padding: 1px 0 30px 0;
+	    height: 100%; /* body 높이 꽉 채움 */
+	    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); /* 위쪽 살짝 그림자 */
 	}
 	
 	/* 금일 진료 리스트 */
@@ -147,19 +150,63 @@
 	    background-color: white;
 		margin:5px 0px;
 	 }
+ 	  
+ 	  .visit-table-box {
+ 	      background: #f7f9ff;
+ 	      border: 1px solid #b0b7c7;
+ 	      border-radius: 4px;
+ 	      height: 520px;
+ 	      overflow-y: auto;
+ 	      margin-top: 0px;
+ 	      padding: 10px;
+ 	  }
 
-	 th, td {
-	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
-	     padding: 0;
-		 height: 25px; /* 원하는 셀 높이 */
-	     text-align: center; /* 텍스트 중앙 */
-	 }
+ 	  .visit-table-box table {
+ 	      width: 100%;
+ 	      border-collapse: collapse;
+ 	      font-size: 13px;
+ 	  }
 
-	 th {
-	     background-color: #879BD5; 
-		 font-weight: normal; /* 글씨 굵기 보통으로 */
-		 color: rgb(31, 31, 31);
-	 }
+ 	  .visit-table-box th, .visit-table-box td {
+ 	      border: 1px solid #ccc;
+ 	      padding: 6px;
+ 	      text-align: center;
+ 	  }
+
+ 	  .visit-table-box th {
+ 	      background: #f3f6ff;
+ 	      font-weight: 600;
+ 	  }
+
+ 	  .visit-table-box a.first {
+ 	      display: inline-block;
+ 	      padding: 4px 8px;
+ 	      background: #879BD5;
+ 	      color: #fff;
+ 	      border-radius: 4px;
+ 	      text-decoration: none;
+ 	      font-size: 12px;
+ 	  }
+
+ 	  .visit-table-box span {
+ 	      font-size: 12px;
+ 	      color: #7B7B7B;
+ 	  }
+
+ 	  .visit-table-box .no-data {
+ 	      text-align: center;
+ 	      font-size: 13px;
+ 	      color: #7B7B7B;
+ 	      height: 500px;
+ 	      line-height: 500px;
+ 	  }
+ 	  .select-wrapper {
+ 	      display: flex;
+ 	      justify-content: flex-end;
+ 	      width: 90%;
+ 	      margin: 5px auto;
+ 	      position: relative; /* 커스텀 화살표 위치용 */
+ 	  }
 
 
 	  .container {
@@ -179,6 +226,287 @@
 	  }
 	  .fc-event-title {  /*캘린더 줄띄어쓰기*/
 	        white-space: pre-line;
+	  }
+	  
+	  /*캘린더*/
+	  .card-body {
+	      padding: 10px;
+	      background: #fff;
+	      border-radius: 6px;
+	      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+	  }
+
+	  .calendar-inner {
+	      padding: 10px;
+	  }
+
+	  .calendar-month-nav {
+	      display: flex;
+	      justify-content: space-between;
+	      align-items: center;
+	      margin-bottom: 8px;
+	      font-size: 16px;
+	      font-weight: 600;
+	  }
+
+	  .calendar-arrow {
+	      cursor: pointer;
+	      padding: 0 6px;
+	      user-select: none;
+	  }
+
+	  .calendar-grid {
+	      display: grid;
+	      grid-template-columns: repeat(7, 1fr);
+	      gap: 2px;
+	      font-size: 12px;
+	      text-align: center;
+	  }
+
+	  .calendar-day-header {
+	      padding: 4px 0;
+	      font-weight: 600;
+	      background: #E3E9FF;
+	      border-radius: 3px;
+	  }
+
+	  .calendar-date {
+	      padding: 4px 2px;
+	      cursor: pointer;
+	      border-radius: 3px;
+	      background: #fff;
+	      min-height: 60px;
+	      display: flex;
+	      flex-direction: column;
+	      justify-content: flex-start;
+	      align-items: center;
+	  }
+
+	  .calendar-date:hover {
+	      background: #E7EEFF;
+	  }
+
+	  .calendar-date.selected {
+	      background: #4D6CDB;
+	      color: #fff;
+	      font-weight: 600;
+	  }
+
+	  .calendar-date.other-month {
+	      color: #aaa;
+	      background: #eef1f7;
+	  }
+
+	  .calendar-date.other-month.selected {
+	      background: #b7c4e8;
+	      color: #fff;
+	  }
+
+	  /* 이벤트 한 줄씩 표시 */
+	  .calendar-event {
+	      width: 90%;
+	      margin: 1px 0;
+	      padding: 2px 4px;
+	      font-size: 11px;
+	      border-radius: 3px;
+	      background: #879BD5;
+	      color: #fff;
+	      overflow: hidden;
+	      text-overflow: ellipsis;
+	      white-space: nowrap;
+	  }
+
+	  /* 상태 필터링 영역 */
+	  .search-area {
+	      display: flex;
+	      justify-content: center; /* 가운데 정렬 */
+	      align-items: center;
+	      gap: 8px;              /* 요소 간 간격 */
+	      margin: 5px auto 0px auto; /* 위 10px, 아래 15px */
+	      flex-wrap: wrap;        /* 화면 좁아지면 자동 줄바꿈 */
+	  }
+
+	  /* 공통 select 스타일 (드롭다운) */
+	  .search-area select {
+	      padding: 5px 10px;
+	      font-size: 13px;
+	      border-radius: 4px;
+	      border: 1px solid #b0b7c7;
+	      background-color: #fff;
+	      cursor: pointer;
+	      appearance: none;
+	  }
+
+	  /* 공통 input[type="date"] 스타일 */
+	  .search-area input[type="date"] {
+	      padding: 5px 10px;
+	      font-size: 13px;
+	      border-radius: 4px;
+	      border: 1px solid #b0b7c7;
+	      background-color: #fff;
+	  }
+
+	  /* 검색 버튼 */
+	  .search-area button {
+	      padding: 5px 12px;
+	      font-size: 13px;
+	      border-radius: 4px;
+	      border: none;
+	      background-color: #879BD5;
+	      color: #fff;
+	      cursor: pointer;
+	  }
+
+	  .search-area button:hover {
+	      background-color: #6a83c7;
+	  }
+	  
+	  /*달ㄺ*/  
+	  
+
+	  /* ───────── 요일 헤더 (Sun Mon Tue ...) ───────── */
+	  .fc-col-header-cell {
+	      background:#C9D9FF;   /* 더 진한 파스텔 톤 */
+	      color:#333;
+	      font-weight:400;
+	      border:1px solid #D8D4CC;
+	  }
+	  /* < 2026년 1월 > 버튼 */
+	  .fc-toolbar-chunk:first-child button,
+	  .fc-toolbar-chunk:last-child button {
+	      background:#FFFFFF;
+	      border:1px solid #E2E2E2;
+	      border-radius:8px;
+	      font-size:16px;
+	      color:#555;
+	      padding:2px 8px;
+	      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+	  }
+
+	  .fc-toolbar-chunk:first-child button:hover,
+	  .fc-toolbar-chunk:last-child button:hover {
+	      background:#F3F2ED;
+	  }
+
+	  /* today 버튼 없어지면 여백 맞추기 */
+	  .fc-toolbar-chunk:nth-child(2){
+	      text-align:center;
+	      flex-grow:1;
+	  }
+
+	  /* 날짜 칸 : 카드 느낌 */
+	  .fc-daygrid-day {
+	      background:#FFFFFF;
+	      border-radius:12px;
+	      border:1px solid #F0EEE8;
+	      transition:0.15s;
+	  }
+
+	  /* ───────── 칸 높이 줄이기 (달력 압축) ───────── */
+	  .fc-daygrid-day-frame {
+	      min-height:3px;    /* 더 줄이고 싶으면 55~60 추천 */
+	  }
+	  
+	  /* 오늘 날짜 강조 */
+	  .fc-day-today {
+	      background:rgb(238, 242, 255) !important;
+	      border:1px solid #C9D9FF !important;
+		  border-radius:0
+	  }
+
+	  /* 날짜 숫자 */
+	  .fc-daygrid-day-number {
+	      color:#555;
+	      font-weight:600;
+	  }
+
+	  /* 이벤트 전체 박스 (파스텔 칩 느낌) */
+	  .fc-daygrid-event {
+	      border-radius:10px;
+	      background:#C9D9FF;  /* 파스텔 블루 */
+	      color:#2F2F2F;
+	      padding:3px 4px;
+	      white-space:pre-line;
+	      font-size:11px;
+	      line-height:1.25;
+	      border:1px solid #C9D9FF;
+		  border-radius:0
+	  }
+
+	  /* 이벤트 텍스트 줄바꿈 보장 */
+	  .fc-daygrid-event .fc-event-title {
+	      white-space:pre-line !important;
+	  }
+
+	  /* 드롭다운 옆 버튼 */
+	  	  .btn-submit {
+	  	      padding: 5px 12px;
+	  	      background-color: #879BD5;
+	  	      color: #fff;
+	  	      border: none;
+	  	      border-radius: 4px;
+	  	      font-size: 13px;
+	  	      cursor: pointer;
+	  	      font-weight: 500;
+	  	      transition: 0.2s;
+	  	  }
+		  #vacationPopup {
+		  	      display: none;
+		  	      position: fixed;
+		  	      top: 20%;
+		  	      left: 50%;
+		  	      width: 400px;
+		  	      background: #f7f9ff;
+		  	      border-radius: 8px;
+		  	      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		  	      padding: 20px;
+		  	      z-index: 1000;
+		  	      font-size: 14px;
+		  	  }
+
+		  	  #vacationPopup h2 {
+		  	      margin-top: 0;
+		  	      margin-bottom: 30px;
+		  	      font-size: 16px;
+		  	      color: #333;
+		  	  }
+
+		  	  #vacationPopup label {
+		  	      display: block;
+		  	      margin-top: 10px;
+		  	      margin-bottom: 5px;
+		  	      font-weight: 500;
+		  	  }
+
+		  	  #vacationPopup textarea, #vacationPopup select {
+		  	      width: 100%;
+		  	      padding: 5px 8px;
+		  	      font-size: 14px;
+		  	      border-radius: 4px;
+		  	      border: 1px solid #b0b7c7;
+		  	      margin-bottom: 5px;
+		  	      box-sizing: border-box;
+		  	  }
+
+		  	  #vacationPopup button {
+		  	      padding: 6px 12px;
+		  	      border: none;
+		  	      border-radius: 4px;
+		  	      cursor: pointer;
+		  	      font-weight: 500;
+		  	      margin-right: 10px;
+		  	  }
+
+		  	  #submitVacation {
+		  	      background-color: #879BD5;
+		  	      color: #fff;
+		  	  }
+
+		  	  #closePopup {
+		  	      background-color: #ccc;
+		  	      color: #333;
+		  	  }
+	</style>
 	   }
 	
 	
@@ -222,6 +550,8 @@
 					});
 				});
 	</script>
+	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
 	<div th:replace="~{fragments/staff-header :: header(title='스케줄 조회', activeTab='staffSchedule')}"></div>
@@ -236,23 +566,27 @@
 		<!-- 2. 휴가 -->
 		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">
 			<!-- 상태 필터링 -->
-					<div class="search-area" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
-						<!-- 진료과 -->
-					    <select id="departmentSelect">
-					        <option value="">분류</option>
-					    </select>
+			<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+				<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
 
-					    <!-- 의사 -->
-					    <select id="doctorSelect">
-					        <option value="">승인여부</option>
-					    </select>
+				<div style="display:flex; gap:8px;">
+				<!-- 진료과 -->
+			    <select id="departmentSelect">
+			        <option value="">분류</option>
+			    </select>
 
-					    <!-- 날짜 -->
-					    <input type="date" id="visitDate">
+			    <!-- 의사 -->
+			    <select id="doctorSelect">
+			        <option value="">승인여부</option>
+			    </select>
 
-					    <button onclick="searchVisits()">검색</button>
-					</div>    
-			
+			    <!-- 날짜 -->
+			    <input type="date" id="visitDate">
+
+			    <button onclick="searchVisits()">검색</button>
+				</div>    
+			</div>  
+			<div class="visit-table-box">
 			<table border="1" width="100%">
 			        <thead>
 			            <tr>
@@ -264,52 +598,75 @@
 			        </thead>
 			        <tbody id="vacationBody"></tbody>
 			    </table>
+			</div>
+		</div>
+		
+		
+		<!-- 팝업 -->
+		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
+		    <h2>신규 신청</h2>
+		    
+		    <label>기간</label>
+		    <input type="date" id="start_date" required>~<input type="date" id="end_date" required>
+		    
+		    <label>분류</label>
+		    <select id="vacation_type" required>
+		        <option th:each="t : ${vacationTypes}" th:value="${t.type_name}" th:text="${t.type_name}"></option>
+		    </select>
+		    <br><br>
+		    
+		    <label>사유</label>
+		    <textarea id="reason" rows="3" placeholder="사유를 입력하세요"></textarea>
+		    <br><br>
+		    
+		    <button id="submitVacation">신청</button>
+		    <button id="closePopup">이전</button>
 		</div>
 	</div>
 	<!-- 콘텐츠 영역 끝-->
 	
 	<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    /* =========================
-       1. FullCalendar
-    ========================= */
-    const calendarEl = document.getElementById('calendar');
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'ko',
-        height: 'auto',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: ''
-        },
-        datesSet: function (info) {
-            const currentDate = info.view.currentStart;
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth() + 1;
-
-            fetch(`/staff/mySchedule/events?year=${year}&month=${month}`)
-                .then(res => res.json())
-                .then(data => {
-                    calendar.removeAllEvents();
-                    calendar.addEventSource(data);
-                });
-        }
-    });
-
-    calendar.render();
-
-    /* =========================
-       2. 초기 데이터 로딩
-    ========================= */
-    loadVacationTypes();
-    loadVacationStatus();
-    loadVacations();
-
-});
-
+	document.addEventListener('DOMContentLoaded', function () {
+		
+		    /* =========================
+		       1. FullCalendar
+		    ========================= */
+		    const calendarEl = document.getElementById('calendar');
+		
+		    const calendar = new FullCalendar.Calendar(calendarEl, {
+		        initialView: 'dayGridMonth',
+		        locale: 'en',
+		        height: 'auto',
+		        headerToolbar: {
+					left: 'prev',
+				    center: 'title',
+				    right: 'next'
+		        },
+		        datesSet: function (info) {
+		            const currentDate = info.view.currentStart;
+		            const year = currentDate.getFullYear();
+		            const month = currentDate.getMonth() + 1;
+		
+		            fetch(`/staff/mySchedule/events?year=${year}&month=${month}`)
+		                .then(res => res.json())
+		                .then(data => {
+		                    calendar.removeAllEvents();
+		                    calendar.addEventSource(data);
+		                });
+		        }
+		    });
+		
+		    calendar.render();
+		
+		    /* =========================
+		       2. 초기 데이터 로딩
+		    ========================= */
+		    loadVacationTypes();
+		    loadVacationStatus();
+		    loadVacations();
+		
+		});
+		
 /* =========================
    분류 select
 ========================= */
@@ -414,11 +771,49 @@ function cancelVacation(vacationId) {
         })
         .catch(() => alert('취소 요청 실패'));
 }
+
+
+document.getElementById("openPopupBtn").onclick = function() {
+    document.getElementById("vacationPopup").style.display = "block";
+};
+
+// 팝업 닫기
+document.getElementById("closePopup").onclick = function() {
+    document.getElementById("vacationPopup").style.display = "none";
+};
+
+// 휴가 신청 제출
+document.getElementById("submitVacation").onclick = function() {
+    const start_date = document.getElementById("start_date").value;
+    const end_date = document.getElementById("end_date").value;
+    const type_name = document.getElementById("vacation_type").value;
+    const reason = document.getElementById("reason").value;
+
+	if (!start_date || !end_date || !type_name) {
+	    alert("기간과 분류는 반드시 입력해야 합니다.");
+	    return;
+	}
+	
+    fetch('/staff/applyVacation', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            
+        },
+        body: JSON.stringify({ start_date, end_date, type_name, reason })
+    }).then(res => res.json())
+      .then(data => {
+          if(data.success){
+              alert("휴가 신청 완료");
+              location.reload(); // 새로고침해서 테이블에 추가
+          } else {
+              alert("실패: " + data.message);
+          }
+      });
+};
+
 </script>
-
-
-
-
+<script src="/js/notify.js"></script>
 </body>
 </html>
 
