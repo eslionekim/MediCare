@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+
     <title>MediCare</title>
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -324,7 +324,9 @@
 	.patient_soap textarea {
 	    font-size: 13px;
 	}
-	</style>
+	
+    </style>
+<link rel="stylesheet" th:href="@{/css/common-base.css}">
 	<script>
 				document.addEventListener('DOMContentLoaded', () => {
 

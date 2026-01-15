@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
+
     <title>어드민 대시보드</title>
     <style>
         body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
@@ -49,7 +49,9 @@
         .dot-red { background:#e74c3c; }
         .small-btn { padding:2px 8px; font-size:11px; border-radius:10px; border:1px solid #b0b7c7; background:#f4f6fb; }
         .split-col { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    
     </style>
+<link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
 <body>
 <div class="admin-frame">

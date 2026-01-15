@@ -1,15 +1,15 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: "Inter", "맑은 고딕", sans-serif;
-  background: #d5dded;
+  font-family: "Inter", "Malgun Gothic", sans-serif;
+  background: var(--ui-bg);
 }
 
 .erp-page {
   width: calc(100%);
   max-width: 1920px;
   margin: 0 auto 24px;
-  background: #fff;
+  background: var(--ui-panel);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -19,7 +19,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 5px 15px;
-  background: #fff;
+  background: var(--ui-panel);
   font-size: 14px;
 }
 
@@ -43,22 +43,22 @@ body {
 }
 
 .btn-logout {
-  background: #ff4b4b;
+  background: var(--ui-danger);
   color: #fff;
 }
 
 .time-in {
-  background: #879bd5;
+  background: var(--ui-primary);
   color: #fff;
 }
 
 .time-out {
-  background: #d5dded;
+  background: var(--ui-tab);
 }
 
 /* 탭 네비게이션 */
 .nav-tabs {
-  background: #d5dded;
+  background: var(--ui-tab);
   padding: 0 10px;
 }
 
@@ -82,7 +82,7 @@ body {
 }
 
 .sub-menu {
-  background: #baccff;
+  background: var(--ui-submenu);
   padding: 5px 15px;
   font-size: 14px;
   color: #555;
