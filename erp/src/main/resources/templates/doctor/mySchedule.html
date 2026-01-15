@@ -437,6 +437,74 @@
 	      white-space:pre-line !important;
 	  }
 
+	  /* 드롭다운 옆 버튼 */
+	  	  .btn-submit {
+	  	      padding: 5px 12px;
+	  	      background-color: #879BD5;
+	  	      color: #fff;
+	  	      border: none;
+	  	      border-radius: 4px;
+	  	      font-size: 13px;
+	  	      cursor: pointer;
+	  	      font-weight: 500;
+	  	      transition: 0.2s;
+	  	  }
+		  #vacationPopup {
+		  	      display: none;
+		  	      position: fixed;
+		  	      top: 20%;
+		  	      left: 50%;
+		  	      width: 400px;
+		  	      background: #f7f9ff;
+		  	      border-radius: 8px;
+		  	      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		  	      padding: 20px;
+		  	      z-index: 1000;
+		  	      font-size: 14px;
+		  	  }
+
+		  	  #vacationPopup h2 {
+		  	      margin-top: 0;
+		  	      margin-bottom: 30px;
+		  	      font-size: 16px;
+		  	      color: #333;
+		  	  }
+
+		  	  #vacationPopup label {
+		  	      display: block;
+		  	      margin-top: 10px;
+		  	      margin-bottom: 5px;
+		  	      font-weight: 500;
+		  	  }
+
+		  	  #vacationPopup textarea, #vacationPopup select {
+		  	      width: 100%;
+		  	      padding: 5px 8px;
+		  	      font-size: 14px;
+		  	      border-radius: 4px;
+		  	      border: 1px solid #b0b7c7;
+		  	      margin-bottom: 5px;
+		  	      box-sizing: border-box;
+		  	  }
+
+		  	  #vacationPopup button {
+		  	      padding: 6px 12px;
+		  	      border: none;
+		  	      border-radius: 4px;
+		  	      cursor: pointer;
+		  	      font-weight: 500;
+		  	      margin-right: 10px;
+		  	  }
+
+		  	  #submitVacation {
+		  	      background-color: #879BD5;
+		  	      color: #fff;
+		  	  }
+
+		  	  #closePopup {
+		  	      background-color: #ccc;
+		  	      color: #333;
+		  	  }
 	</style>
 	<!-- FullCalendar CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
@@ -476,6 +544,8 @@
 		});
 	});
 	</script>
+	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
 <body>
     <div th:replace="~{fragments/doctor-header :: header(title='스케줄 조회', activeTab='mySchedule')}"></div>
@@ -488,9 +558,11 @@
 		</div>
 		
 		<!-- 2. 휴가 -->
-		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">
-			<!-- 상태 필터링 -->
+		<div class="vacation" style="height: 300px;  border: 1px solid #ccc; padding: 5px; border: none;">			<!-- 상태 필터링 -->
 					<div class="search-area select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+						<button id="openPopupBtn" class="btn-submit">휴가 신청</button>		
+
+						<div style="display:flex; gap:8px;">
 						<!-- 진료과 -->
 					    <select id="departmentSelect">
 					        <option value="">분류</option>
@@ -505,8 +577,8 @@
 					    <input type="date" id="visitDate">
 
 					    <button onclick="searchVisits()">검색</button>
-					</div>    
-			
+						</div>    
+					</div>  
 			<div class="visit-table-box">
 			<table border="1" width="100%">
 			        <thead>
@@ -520,6 +592,27 @@
 			        <tbody id="vacationBody"></tbody>
 			    </table>
 			</div>
+		</div>
+		
+		<!-- 팝업 -->
+		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
+		    <h2>신규 신청</h2>
+		    
+		    <label>기간</label>
+		    <input type="date" id="start_date" required>~<input type="date" id="end_date" required>
+		    
+		    <label>분류</label>
+		    <select id="vacation_type" required>
+		        <option th:each="t : ${vacationTypes}" th:value="${t.type_name}" th:text="${t.type_name}"></option>
+		    </select>
+		    <br><br>
+		    
+		    <label>사유</label>
+		    <textarea id="reason" rows="3" placeholder="사유를 입력하세요"></textarea>
+		    <br><br>
+		    
+		    <button id="submitVacation">신청</button>
+		    <button id="closePopup">이전</button>
 		</div>
 	</div>
 	<!-- 콘텐츠 영역 끝-->
@@ -670,11 +763,49 @@
 		        })
 		        .catch(() => alert('취소 요청 실패'));
 		}
+		
+		document.getElementById("openPopupBtn").onclick = function() {
+	        document.getElementById("vacationPopup").style.display = "block";
+	    };
+
+	    // 팝업 닫기
+	    document.getElementById("closePopup").onclick = function() {
+	        document.getElementById("vacationPopup").style.display = "none";
+	    };
+
+	    // 휴가 신청 제출
+	    document.getElementById("submitVacation").onclick = function() {
+	        const start_date = document.getElementById("start_date").value;
+	        const end_date = document.getElementById("end_date").value;
+	        const type_name = document.getElementById("vacation_type").value;
+	        const reason = document.getElementById("reason").value;
+
+			if (!start_date || !end_date || !type_name) {
+			    alert("기간과 분류는 반드시 입력해야 합니다.");
+			    return;
+			}
+			
+	        fetch('/doctor/applyVacation', {
+	            method: 'POST',
+	            headers: {
+	                'Content-Type': 'application/json',
+	                
+	            },
+	            body: JSON.stringify({ start_date, end_date, type_name, reason })
+	        }).then(res => res.json())
+	          .then(data => {
+	              if(data.success){
+	                  alert("휴가 신청 완료");
+	                  location.reload(); // 새로고침해서 테이블에 추가
+	              } else {
+	                  alert("실패: " + data.message);
+	              }
+	          });
+	    };
+
+
 </script>
-
-
-
-
+<script src="/js/notify.js"></script>
 </body>
 </html>
 

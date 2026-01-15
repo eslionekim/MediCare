@@ -13,17 +13,17 @@ import com.example.erp.Stock.Stock;
 public interface Stock_moveRepository extends JpaRepository<Stock_move, Long>{
 	//물류->출고리스트
 	@Query("""
-			select sm
-			from Stock_move sm
-			left join Warehouse w 
-			    on sm.from_warehouse_code = w.warehouse_code
-			where 
-			    sm.move_type = 'transfer'
-			    or (
-			        sm.move_type = 'outbound'
-			        and w.name = '물류창고'
-			    )
-			""")
+		    select sm
+		    from Stock_move sm
+		    where sm.move_type = 'outbound'
+		      and (
+		          sm.from_warehouse_code in (
+		              select w.warehouse_code
+		              from Warehouse w
+		              where w.name = '물류창고'
+		          )
+		      )
+		""")
 	List<Stock_move> findLogisOutboundMoves();
 	
 	//약사->출고리스트
@@ -38,14 +38,18 @@ public interface Stock_moveRepository extends JpaRepository<Stock_move, Long>{
 		List<Stock_move> findPharmOutboundMoves();
 		
 	//원무->출고리스트
-	@Query("""
-		    select sm
-		    from Stock_move sm
-		    left join Warehouse w 
-		        on sm.from_warehouse_code = w.warehouse_code
-		    where sm.move_type = 'outbound'
-		       and (w.name = '원무창고' or sm.dispense_id is not null)
-		""")
+		@Query("""
+			    select sm
+			    from Stock_move sm
+			    where sm.move_type = 'outbound'
+			      and (
+			          sm.from_warehouse_code in (
+			              select w.warehouse_code
+			              from Warehouse w
+			              where w.name = '원무창고'
+			          )
+			      )
+			""")
 		List<Stock_move> findExOutboundMoves();
 
 

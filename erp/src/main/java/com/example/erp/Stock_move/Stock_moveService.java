@@ -213,7 +213,10 @@ public class Stock_moveService {
 	}
 	
 	//원무->출고리스트
-	public List<LogisOutboundDTO> getExOutboundList() {
+	public List<LogisOutboundDTO> getExOutboundList(
+			String type,
+	        String keyword,
+	        LocalDate date) {
 
 	    List<Stock_move> moves = stock_moveRepository.findExOutboundMoves();
 
@@ -224,14 +227,10 @@ public class Stock_moveService {
 	    	Stock_move_item mi = stock_move_itemRepository.findByStockMoveId(sm.getStock_move_id());
 
 	    	if (mi == null) continue;
-
-
 	            LogisOutboundDTO dto = new LogisOutboundDTO();
 
 	            // 1) 유형 변환
-	            if (sm.getDispense_id() != null) {
-	                dto.setType("투약"); // dispense_id가 있으면 투약
-	            } else if (sm.getMove_type().equals("transfer")) {
+	            if (sm.getMove_type().equals("transfer")) {
 	                dto.setType("불출");
 	            } else if (sm.getMove_type().equals("outbound")) {
 
@@ -241,14 +240,18 @@ public class Stock_moveService {
 	                    dto.setType("수량조정");
 	                }
 	            }
-
+	            // 필터
+	            if (type != null && !type.isEmpty() && !type.equals(dto.getType())) {
+	                continue;
+	            }
+	            
 	            // 2) 품목명
 	            Item item = itemRepository.findById(mi.getItem_code()).orElse(null);
+	            dto.setItemCode(mi.getItem_code());
 	            dto.setItemName(item != null ? item.getName() : "-");
 
 	            // 3) 로트코드
-	            //Stock stock = stockRepository.findById(mi.getStock_id()).orElse(null);
-	            dto.setLotCode(null);
+	            dto.setLotCode(mi.getLot_code() != null ? mi.getLot_code() : "-");
 
 	            // 4) 변화수량
 	            dto.setQuantity(mi.getQuantity());
@@ -263,6 +266,34 @@ public class Stock_moveService {
 	            // 7) 일시
 	            dto.setMovedAt(sm.getMoved_at());
 
+	            //keyword 필터 (품목명 OR 로트코드)
+	            if (keyword != null && !keyword.isEmpty()) {
+	                String k = keyword.toLowerCase();
+
+	                boolean matchItemName =
+	                        dto.getItemName() != null &&
+	                        dto.getItemName().toLowerCase().contains(k);
+
+	                boolean matchLotCode =
+	                        dto.getLotCode() != null &&
+	                        dto.getLotCode().toLowerCase().contains(k);
+
+	                boolean matchItemCode =
+	                        dto.getItemCode() != null &&
+	                        dto.getItemCode().toLowerCase().contains(k);
+
+	                if (!(matchItemName || matchLotCode || matchItemCode)) {
+	                    continue;
+	                }
+	            }
+
+
+	            //날짜 필터
+	            if (date != null && dto.getMovedAt() != null) {
+	                if (!dto.getMovedAt().toLocalDate().equals(date)) {
+	                    continue;
+	                }
+	            }
 	            result.add(dto);
 	    }
 

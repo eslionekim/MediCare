@@ -6,8 +6,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -305,7 +308,7 @@ public class staffContoller {
 	    }
 
 	    
-	    @PostMapping("/staff/stock/{stockId}/discard") //약사->전체재고현황->폐기 by 은서
+	    @PostMapping("/staff/stock/{stockId}/discard") //원무->전체재고현황->폐기 by 은서
 	    public ResponseEntity<?> discardStock(
 	            @PathVariable("stockId") Long stockId,
 	            @RequestParam("reason") String reason,
@@ -346,9 +349,26 @@ public class staffContoller {
 	    
 	    //원무->출고리스트
 	    @GetMapping("/staff/staffOutbound") 
-	    public String staffOutbound(Model model) {
-	    	 List<LogisOutboundDTO> list = stock_moveService.getExOutboundList();
-	   	    model.addAttribute("outbounds", list);
+	    public String staffOutbound(
+	    		@RequestParam(name = "type",required = false) String type,
+	            @RequestParam(name = "keyword",required = false) String keyword,
+	            @RequestParam(name = "date",required = false)
+	            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+	            LocalDate date,
+	            Model model) {
+	    	 List<LogisOutboundDTO> allList = stock_moveService.getExOutboundList(null, null, null);
+	    	// 필터 적용 데이터
+	         List<LogisOutboundDTO> filteredList =
+	                 stock_moveService.getExOutboundList(type, keyword, date);
+
+	         // select 옵션은 전체 기준
+	         Set<String> types = allList.stream()
+	                 .map(LogisOutboundDTO::getType)
+	                 .filter(Objects::nonNull)
+	                 .collect(Collectors.toCollection(LinkedHashSet::new));
+
+	         model.addAttribute("outbounds", filteredList);
+	         model.addAttribute("types", types);
 	        return "staff/staffOutbound";
 	    }
 	    

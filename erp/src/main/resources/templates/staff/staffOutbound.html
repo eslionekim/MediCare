@@ -180,37 +180,37 @@
 	</style>
 	
 	<script>
-				document.addEventListener('DOMContentLoaded', () => {
+	document.addEventListener('DOMContentLoaded', () => {
 
-				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
-				        fetch('/work/time-in', { method: 'POST' })
-				            .then(res =>
-				                res.text().then(msg => {
-				                    if (!res.ok) throw msg;
-				                    alert(msg);
-				                })
-				            )
-				            .catch(msg => alert(msg));
-				    });
+	    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+	        fetch('/work/time-in', { method: 'POST' })
+	            .then(res =>
+	                res.text().then(msg => {
+	                    if (!res.ok) throw msg;
+	                    alert(msg);
+	                })
+	            )
+	            .catch(msg => alert(msg));
+	    });
 
-					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+		document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
 
-						fetch('/work/time-out/check')
-						        .then(res =>
-						            res.text().then(msg => {
-						                if (!res.ok) throw msg; // 퇴근 불가능
+			fetch('/work/time-out/check')
+			        .then(res =>
+			            res.text().then(msg => {
+			                if (!res.ok) throw msg; // 퇴근 불가능
 
-						                if (!confirm('퇴근하시겠습니까?')) return;
+			                if (!confirm('퇴근하시겠습니까?')) return;
 
-						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-						                    .then(res => res.text())
-						                    .then(msg => alert(msg))
-						                    .catch(() => alert('퇴근 처리 실패'));
-						            })
-						        )
-						        .catch(msg => alert(msg));
-					});
-				});
+			                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+			                    .then(res => res.text())
+			                    .then(msg => alert(msg))
+			                    .catch(() => alert('퇴근 처리 실패'));
+			            })
+			        )
+			        .catch(msg => alert(msg));
+		});
+	});
 	</script>
 </head>
 <body>
@@ -219,47 +219,34 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<!-- 상태 필터링 -->
-		<div id="searchForm" th:action="@{/logis/request}" method="get" style="width:90%; margin:10px auto; display:flex; gap:10px; flex-wrap:wrap;">
-
+		<form method="get" th:action="@{/staff/staffOutbound}">
 		    <!-- 유형 -->
 		    <select name="type">
-		        <option value="">유형 전체</option>
-		        <option value="신규등록">신규등록</option>
-		        <option value="구매요청">구매요청</option>
+		        <option value="">전체</option>
+		        <option th:each="t : ${types}"
+		                th:value="${t}"
+		                th:text="${t}"
+		                th:selected="${param.type == t}">
+		        </option>
 		    </select>
-
-		    <!-- 종류 -->
-		    <select name="itemType">
-		        <option value="">종류 전체</option>
-		        <option value="약품">약품</option>
-		        <option value="재료">재료</option>
-		        <option value="기타">기타</option>
-		    </select>
-
-		    <!-- 상태 -->
-		    <select name="statusName">
-		        <option value="">상태 전체</option>
-		        <option value="요청">요청</option>
-		        <option value="승인">승인</option>
-		        <option value="반려">반려</option>
-		    </select>
-
-		    <!-- 날짜(일시 검색) -->
-		    <input type="date" name="date">
-
-		    <!-- 품목명 like 검색 -->
-		    <input type="text" name="itemName" placeholder="품목명 검색">
-
-		    <!-- 검색버튼 -->
-		    <button type="button" id="searchBtn">검색</button>
-
-		</div>
+		
+		    <!-- 키워드 -->
+		    <input type="text" name="keyword"
+		           placeholder="품목ID/품목명/로트코드"
+		           th:value="${param.keyword}"/>
+		
+		    <!-- 날짜 -->
+		    <input type="date" name="date" th:value="${param.date}"/>
+		
+		    <button type="submit">검색</button>
+		</form>
 
 		<!-- 금일 진료 리스트 -->
 		<table id="table" border="1">
 			<thead>
 			    <tr>
 			        <th>유형</th>
+					<th>품목ID</th>
 			        <th>품목명</th>
 					<th>로트코드</th>
 					<th>변화수량</th>
@@ -278,6 +265,7 @@
 				
 				<tr th:each="o : ${outbounds}">
 					<td th:text="${o.type}"></td>
+					<td th:text="${o.itemCode != null ? o.itemCode : '-'}"></td>
 				    <td th:text="${o.itemName}"></td>
 				    <td th:text="${o.lotCode}"></td>
 				    <td th:text="${o.quantity}"></td>
@@ -297,6 +285,7 @@
 					<td>&nbsp;</td>
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
+					<td>&nbsp;</td>
 				</tr>
 			</tbody>
 		</table>

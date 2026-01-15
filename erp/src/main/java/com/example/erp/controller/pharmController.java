@@ -689,7 +689,7 @@ public class pharmController {
     	 List<LogisOutboundDTO> allList = stock_moveService.getPharmOutboundList(null, null, null);
     	// 필터 적용 데이터
          List<LogisOutboundDTO> filteredList =
-                 stock_moveService.getLogisOutboundList(type, keyword, date);
+                 stock_moveService.getPharmOutboundList(type, keyword, date);
 
          // select 옵션은 전체 기준
          Set<String> types = allList.stream()
@@ -705,7 +705,14 @@ public class pharmController {
     
     
     @GetMapping("/pharm/mySchedule") // 약사 -> 스케줄 조회 by 은서
-    public String getMySchedulePage() {
+    public String getMySchedulePage(Model model) {
+    	String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<Vacation> vacation = vacationRepository.findVacationByUserId(user_id);
+        List<Vacation_type> vacationTypes = vacation_typeRepository.findAll();
+        
+        model.addAttribute("vacation", vacation);
+        model.addAttribute("vacationTypes", vacationTypes);
+        model.addAttribute("username", user_id);
         return "pharm/mySchedule";
     }
     

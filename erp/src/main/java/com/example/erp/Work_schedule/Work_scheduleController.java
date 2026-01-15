@@ -37,6 +37,7 @@ import com.example.erp.User_role.User_roleRepository;
 import com.example.erp.Vacation.Vacation;
 import com.example.erp.Vacation.VacationDTO;
 import com.example.erp.Vacation.VacationRepository;
+import com.example.erp.Vacation_type.Vacation_type;
 import com.example.erp.Vacation_type.Vacation_typeDTO;
 import com.example.erp.Vacation_type.Vacation_typeRepository;
 import com.example.erp.Work_schedule.Work_scheduleDTO.ScheduleItem;
@@ -131,7 +132,14 @@ public class Work_scheduleController {
     
     
     @GetMapping("/doctor/mySchedule") // 의사 -> 스케줄 조회 by 은서
-    public String getMySchedulePage() {
+    public String getMySchedulePage(Model model) {
+    	String user_id = SecurityContextHolder.getContext().getAuthentication().getName();
+        List<Vacation> vacation = vacationRepository.findVacationByUserId(user_id);
+        List<Vacation_type> vacationTypes = vacation_typeRepository.findAll();
+        
+        model.addAttribute("vacation", vacation);
+        model.addAttribute("vacationTypes", vacationTypes);
+        model.addAttribute("username", user_id);
         return "doctor/mySchedule";
     }
     
