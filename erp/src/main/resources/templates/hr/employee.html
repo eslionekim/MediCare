@@ -368,10 +368,13 @@
 			    <!-- 근무과 -->
 			    <select name="department">
 			        <option value="">전체 근무과</option>
-			        <option th:each="d : ${departments}"
-			                th:value="${d}"
-			                th:text="${d}"
-			                th:selected="${d == selectedDepartment}">
+					<option th:each="d : ${departments}"
+					        th:value="${d}"
+					        th:text="${d}"
+					        th:selected="${d == selectedDepartment}">
+					</option>
+
+
 			        </option>
 			    </select>
 
@@ -406,13 +409,9 @@
 
 			<tbody>
 			    <tr th:each="sp : ${staffList}">
-			        <td th:text="${sp.user_account.user_id}"></td>
-
-			        <td th:text="${sp.user_account.name}"></td>
-
-			        <td th:text="${sp.department.name}"></td>
-
-			        <!-- 입사일 없으면 '-' -->
+					<td th:text="${sp.user_account != null ? sp.user_account.user_id : '-'}"></td>
+					<td th:text="${sp.user_account != null ? sp.user_account.name : '-'}"></td>
+					<td th:text="${sp.department != null ? sp.department.name : '-'}"></td>
 			        <td th:text="${sp.hire_date != null ? sp.hire_date : '-'}"></td>
 					<!--
 			        <td>
@@ -443,10 +442,11 @@
 			<label>진료과</label>
 			<select id="department" required>
 			    <option value="">선택하세요</option>
-			    <option th:each="d : ${departments}"
-			            th:value="${d.name}"
-			            th:text="${d.name}">
-			    </option>
+				<option th:each="d : ${departments}"
+				        th:value="${d}"
+				        th:text="${d}">
+				</option>
+
 			</select>
 		    <br><br>
 		    
