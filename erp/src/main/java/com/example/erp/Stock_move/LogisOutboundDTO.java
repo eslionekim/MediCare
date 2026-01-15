@@ -14,6 +14,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LogisOutboundDTO {
 	private String type;          // 불출 / 폐기 / 수량조정
+	private String itemCode;
     private String itemName;
     private String lotCode;
     private BigDecimal quantity;

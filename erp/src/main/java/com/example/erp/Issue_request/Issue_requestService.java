@@ -7,8 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.erp.Issue_request_item.Issue_request_item;
 import com.example.erp.Issue_request_item.Issue_request_itemRepository;
@@ -125,5 +129,80 @@ public class Issue_requestService {
         return result;
     }
     
+    //약사->불출요청
+    @Transactional
+    public void createIssueRequest(@RequestBody Issue_Request_psDTO dto) {
+
+        // 로그인 사용자
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        // 1) Issue_request 생성
+        Issue_request req = new Issue_request();
+        req.setDepartment_code("PHARM");
+        req.setUser_id(userId);
+        req.setRequested_at(LocalDateTime.now());
+        req.setStatus_code("IR_REQUESTED");
+
+        if (dto.getNote() != null && !dto.getNote().isBlank()) {
+            req.setNote(dto.getNote());
+        }
+
+        issue_requestRepository.save(req);
+
+        // 2) item 정보 조회 (pack_unit_qty 필요)
+        Item item = itemRepository.findById(dto.getItemCode())
+                .orElseThrow(() -> new RuntimeException("item not found"));
+
+        BigDecimal baseQty = dto.getQty().multiply(BigDecimal.valueOf(item.getPack_unit_qty()));
+
+
+        // 3) Issue_request_item 저장
+        Issue_request_item itemReq = new Issue_request_item();
+        itemReq.setIssue_request_id(req.getIssue_request_id());
+        itemReq.setItem_code(dto.getItemCode());
+        itemReq.setRequested_qty(baseQty);
+
+        issue_request_itemRepository.save(itemReq);
+    }
+    
+  //원무->불출요청
+    @Transactional
+    public void createIssueExRequest(@RequestBody Issue_Request_psDTO dto) {
+
+        // 로그인 사용자
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication()
+                .getName();
+
+        // 1) Issue_request 생성
+        Issue_request req = new Issue_request();
+        req.setDepartment_code("STAFF");
+        req.setUser_id(userId);
+        req.setRequested_at(LocalDateTime.now());
+        req.setStatus_code("IR_REQUESTED");
+
+        if (dto.getNote() != null && !dto.getNote().isBlank()) {
+            req.setNote(dto.getNote());
+        }
+
+        issue_requestRepository.save(req);
+
+        // 2) item 정보 조회 (pack_unit_qty 필요)
+        Item item = itemRepository.findById(dto.getItemCode())
+                .orElseThrow(() -> new RuntimeException("item not found"));
+
+        BigDecimal baseQty = dto.getQty().multiply(BigDecimal.valueOf(item.getPack_unit_qty()));
+
+
+        // 3) Issue_request_item 저장
+        Issue_request_item itemReq = new Issue_request_item();
+        itemReq.setIssue_request_id(req.getIssue_request_id());
+        itemReq.setItem_code(dto.getItemCode());
+        itemReq.setRequested_qty(baseQty);
+
+        issue_request_itemRepository.save(itemReq);
+    }
 
 }

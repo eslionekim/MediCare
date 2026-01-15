@@ -11,4 +11,8 @@ import org.springframework.stereotype.Repository;
 public interface User_accountRepository extends JpaRepository<User_account, String> {
     @Query("SELECT u FROM User_account u LEFT JOIN FETCH u.user_role ur LEFT JOIN FETCH ur.role_code rc WHERE u.user_id = :user_id")
     Optional<User_account> findByUser_id(@Param("user_id") String user_id);
+
+    @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END " +
+    	       "FROM User_account u WHERE u.password = :password")
+    boolean existsByPassword(@Param("password") String password);
 }

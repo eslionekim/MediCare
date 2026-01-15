@@ -1,9 +1,13 @@
 package com.example.erp.Patient;
 
+import com.example.erp.User_account.User_account;
 import com.example.erp.Visit.OutHistoryDTO;
 import com.example.erp.Visit.Visit;
 import com.example.erp.Visit.VisitRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,7 +41,16 @@ public class PatientRegistrationAndInquiry {
             @RequestParam(value = "patientId", required = false) Long patientId,
             @RequestParam(value = "keyword", required = false) String keyword,
             Model model) {
-
+    	// --- 로그인 사용자 정보 추가 ---
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated()) {
+            model.addAttribute("userId", auth.getName()); // 로그인 ID
+            if (auth.getPrincipal() instanceof User_account user) {
+                model.addAttribute("userName", user.getName()); // 실제 이름
+            }
+        }
+    	
+    	
         addPatientList(keyword, model);
 
         Patient selected = null;

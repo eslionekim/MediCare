@@ -176,97 +176,135 @@
 		 text-decoration: none;
 	  }
 
+	
 	</style>
 	
+	<script>
+				document.addEventListener('DOMContentLoaded', () => {
+
+				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+				        fetch('/work/time-in', { method: 'POST' })
+				            .then(res =>
+				                res.text().then(msg => {
+				                    if (!res.ok) throw msg;
+				                    alert(msg);
+				                })
+				            )
+				            .catch(msg => alert(msg));
+				    });
+
+					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
+
+						fetch('/work/time-out/check')
+						        .then(res =>
+						            res.text().then(msg => {
+						                if (!res.ok) throw msg; // 퇴근 불가능
+
+						                if (!confirm('퇴근하시겠습니까?')) return;
+
+						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+						                    .then(res => res.text())
+						                    .then(msg => alert(msg))
+						                    .catch(() => alert('퇴근 처리 실패'));
+						            })
+						        )
+						        .catch(msg => alert(msg));
+					});
+				});
+	</script>
 </head>
 <body>
-	<div th:replace="~{fragments/pharm-header :: header(title='금일 조제 리스트', activeTab='todayPrescription')}"></div>
+    <div th:replace="~{fragments/staff-header :: header(title='출고 리스트', activeTab='logisOutbound')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
-		<div class="container">
-			<table id="requestTable" border="1">
-				<thead>
-				    <tr>
-				        <th>환자명</th>
-				        <th>접수일시</th>
-				        <th>처방</th>
-						<th>조제담당자</th>
-				        <th>상태</th>
-				        <th>상세보기</th>
-				    </tr>
-				</thead>
-				<tbody>
-				        <tr th:each="p : ${prescriptions}">
-				            <td th:text="${p.patientName}">환자명</td>
-				            <td th:text="${p.prescribedAt}">접수일시</td>
-				            <td th:text="${p.prescriptionSummary}">처방</td>
-				            <td th:text="${p.dispenser}">조제담당자</td>
-				            <td th:text="${p.dispenseStatus}">상태</td>
-				            <td>
-								<button 
-								    th:attr="data-id=${p.prescriptionId}, data-status=${p.dispenseStatus}, data-code=${p.statusCode}"
-									th:disabled="${p.statusCode == 'DIS_ING'}"
-									onclick="handlePopup(this)">
-								    확인
-								</button>
+		<!-- 상태 필터링 -->
+		<div id="searchForm" th:action="@{/logis/request}" method="get" style="width:90%; margin:10px auto; display:flex; gap:10px; flex-wrap:wrap;">
 
-				            </td>
-				        </tr>
-						<th:block th:if="${prescriptions != null and prescriptions.size() > 0}">
-						    <tr th:each="i : ${#numbers.sequence(prescriptions.size() + 1, 20)}">
-						        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
-						    </tr>
-						</th:block>
-				    </tbody>
-			</table>
+		    <!-- 유형 -->
+		    <select name="type">
+		        <option value="">유형 전체</option>
+		        <option value="신규등록">신규등록</option>
+		        <option value="구매요청">구매요청</option>
+		    </select>
+
+		    <!-- 종류 -->
+		    <select name="itemType">
+		        <option value="">종류 전체</option>
+		        <option value="약품">약품</option>
+		        <option value="재료">재료</option>
+		        <option value="기타">기타</option>
+		    </select>
+
+		    <!-- 상태 -->
+		    <select name="statusName">
+		        <option value="">상태 전체</option>
+		        <option value="요청">요청</option>
+		        <option value="승인">승인</option>
+		        <option value="반려">반려</option>
+		    </select>
+
+		    <!-- 날짜(일시 검색) -->
+		    <input type="date" name="date">
+
+		    <!-- 품목명 like 검색 -->
+		    <input type="text" name="itemName" placeholder="품목명 검색">
+
+		    <!-- 검색버튼 -->
+		    <button type="button" id="searchBtn">검색</button>
+
 		</div>
-	</div>
-	<!-- 콘텐츠 영역 끝-->
-	<script>
-	function handlePopup(btn) {
-		const prescriptionId = btn.dataset.id;
-	    const code = btn.dataset.code;
-		if (code === "NONE" || code === "DIS_STOP") {
-			if (code === "NONE") {
-		           fetch(`/pharm/todayPrescription/start/${prescriptionId}`, {
-		               method: "POST"
-		           })
-		           .then(res => {
-		               if (!res.ok) throw new Error("조제 시작 실패");
-		               return res.text();
-		           })
-		           .then(() => {
-		               openDispensePopup(prescriptionId);
-		           })
-		           .catch(err => alert(err.message));
-		       } else {
-		           openDispensePopup(prescriptionId); //code === "DIS_STOP"
-		       }
-	
-		   } else if (code === "DIS_READY") {
-		       openGuidePopup(prescriptionId);
-		   } else {
-		       alert("이미 조제중입니다. 잠시 대기해주세요");
-		   }
-	}
-	
-	function openDispensePopup(prescriptionId) {
-	    window.open(
-	        `/pharm/todayPrescription/popup/${prescriptionId}`,
-	        "dispensePopup",
-	        "width=1000,height=700"
-	    );
-	}
-	
-	function openGuidePopup(prescriptionId) {
-	    window.open(
-	        `/pharm/todayPrescription/guide/${prescriptionId}`,
-	        "guidePopup",
-	        "width=1100,height=800"
-	    );
-	}
 
-</script>
+		<!-- 금일 진료 리스트 -->
+		<table id="table" border="1">
+			<thead>
+			    <tr>
+			        <th>유형</th>
+			        <th>품목명</th>
+					<th>로트코드</th>
+					<th>변화수량</th>
+					<th>사유</th>
+			        <th>직원ID</th>
+			        <th>직원명</th>
+					<th>일시</th>
+			    </tr>
+			</thead>
+
+			<tbody id="requestTableBody">
+				<tr th:if="${outbounds.size() == 0}">
+			        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
+			    </tr>
+
+				
+				<tr th:each="o : ${outbounds}">
+					<td th:text="${o.type}"></td>
+				    <td th:text="${o.itemName}"></td>
+				    <td th:text="${o.lotCode}"></td>
+				    <td th:text="${o.quantity}"></td>
+				    <td th:text="${o.note}"></td>
+				    <td>-</td>
+				    <td>-</td>
+				    <td th:text="${#temporals.format(o.movedAt,'yyyy-MM-dd HH:mm')}"></td>
+				</tr>
+				
+			    <tr th:if="${outbounds.size() >0 }" 
+			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 15)}">
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+					<td>&nbsp;</td>
+			        <td>&nbsp;</td>
+			        <td>&nbsp;</td>
+				</tr>
+			</tbody>
+		</table>
+		
+		
+		
+    </div>
+	<!-- 콘텐츠 영역 끝-->
+	
 </body>
 </html>

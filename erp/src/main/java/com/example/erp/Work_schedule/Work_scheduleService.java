@@ -13,9 +13,17 @@ import lombok.RequiredArgsConstructor;
 public class Work_scheduleService {
     private final Work_scheduleRepository work_scheduleRepository;
 
+    //스케줄조회 의사,약사,원무
 	public List<ScheduleCalendarDTO> getDoctorMonthlySchedule(String userId, int year, int month) {
-
 	    return work_scheduleRepository.findDoctorMonthlySchedule(userId, year, month);
+	}
+	
+	public List<ScheduleCalendarDTO> getPharmMonthlySchedule(String userId, int year, int month) {
+	    return work_scheduleRepository.findPharmMonthlySchedule(userId, year, month);
+	}
+	
+	public List<ScheduleCalendarDTO> getStaffMonthlySchedule(String userId, int year, int month) {
+	    return work_scheduleRepository.findStaffMonthlySchedule(userId, year, month);
 	}
 	
 	public boolean hasUnfinishedWork(String userId) { // 로그아웃->퇴근 찍었는지

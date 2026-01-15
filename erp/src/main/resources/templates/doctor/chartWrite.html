@@ -128,6 +128,7 @@
 	
 	/* 컨텐츠 영역 (전체 배경색 확인용) */
 	.content-area {
+		display: grid;
 		height: calc(100vh - 130px);  /* 화면 높이에서 헤더 뺀 값 */
 		overflow: hidden;              /* 밖으로 넘치는 건 숨김 */
 	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
@@ -244,7 +245,7 @@
 	/* 전체 레이아웃 */
 	.content-area {
 	    display: grid;
-	    grid-template-columns: 2fr 3fr; /* 2:3 비율 */
+	    grid-template-columns: 1fr 3fr; /* 2:3 비율 */
 	    gap: 1px;
 	    height: calc(100vh - 100px); /* 상단 여백 제외 화면 전체 높이 */
 	}
@@ -312,6 +313,17 @@
 	}
 
 
+	/* 차트 입력폼 제목 */
+	.patient_soap h3.title {
+	    margin: 0 0 5px 0;
+	    font-size: 16px;
+	    font-weight: bold;
+	}
+
+	/* 차트 입력폼 textarea */
+	.patient_soap textarea {
+	    font-size: 13px;
+	}
 	</style>
 	<script>
 				document.addEventListener('DOMContentLoaded', () => {
@@ -399,7 +411,7 @@
 		        <tr>
 		            <th>환자ID</th>
 		            <td><input type="text" th:value="${patient != null ? patient.patient_id : ''}" readonly></td>
-		            <th >초/재진</th>
+		            <th>초/재진</th>
 		            <td><input type="text" th:value="${visit != null ? visit.visit_type : ''}" readonly></td>
 		        </tr>
 		        <tr>
@@ -473,7 +485,7 @@
 		<form th:action="@{/doctor/chartSave}" method="post" onsubmit="return chartWriteForm()">
 	    <div class="box patient_soap">
 			
-	        <h3>차트 정보</h3>
+	        <h3 class="title">차트 정보</h3>
 				<input type="hidden" name="chart_id" th:value="${chart != null ? chart.chart_id : ''}">
 			    <input type="hidden" name="visit_id" th:value="${chart != null && chart.visit != null ? chart.visit.visit_id : ''}">
 				<input type="hidden" name="patient_id" th:value="${chart != null && chart.visit != null && chart.visit.patient != null ? chart.visit.patient.patient_id : ''}">
@@ -498,7 +510,7 @@
 		
 		<!-- 4. 상병코드 폼 -->
 		<div class="box diseases" style="max-height:100px; overflow-y:auto;">
-			<p>상병코드</p>
+			<p class="title">상병코드</p>
 			<button type="button" onclick="addDiseasesRow()">+</button>
 			<table id="diseases">
 				            <thead>
@@ -526,7 +538,7 @@
 		
 		<!-- 5. 처방 폼 -->
 		<div class="box fee" style="max-height:100px; overflow-y:auto;">
-			<p>처방</p>
+			<p class="title">처방</p class="title">
 			<button type="button" onclick="addFeeRow()">+</button>
 			<table id="fee">
 	            <thead>
@@ -555,7 +567,7 @@
 		</div>
 		<!-- 6. 약품 처방 폼 -->
 		<div class="box fee-drug" style="max-height:100px; overflow-y:auto;">
-		    <p>약품</p>
+		    <p class="title">약품</p>
 		    <button type="button" onclick="addDrugRow()">+</button>
 
 		    <table id="drugFee">

@@ -17,4 +17,13 @@ public interface ItemRepository extends JpaRepository<Item,String>{
 	//물류->전체재고현황->관리자가 승인한 물품만 보여주기 by 은서
 	@Query("SELECT i FROM Item i WHERE i.is_active = true")
     List<Item> findByIsActiveTrue();
+	
+	//약사->전체재고현황->관리자가 승인한 물품만 보여주기 by 은서
+	@Query("SELECT i FROM Item i WHERE i.item_type = '약품'")
+	List<Item> findActiveItemsInDrugWarehouse();
+	
+	//약사->전체재고현황->관리자가 승인한 물품만 보여주기 by 은서
+	@Query("SELECT i FROM Item i WHERE i.item_type != '약품'")
+	List<Item> findActiveItemsInExWarehouse();
+
 }

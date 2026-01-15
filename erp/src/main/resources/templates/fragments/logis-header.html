@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div th:fragment="header(title, activeTab)">
+    <div class="top-bar">
+        <div class="user-info">
+			<span>(이름) |</span>
+            <span>MediCare |</span>
+            <span th:text="${userId}">사용자ID: </span>
+        </div>
+        <div class="user-info">
+            <span th:text="${userName}">업무 상태</span>
+            <button type="button" class="btn-logout" onclick="logoutCheck()">로그아웃</button>
+        </div>
+        <div class="action-buttons">
+            <button class="time-in">출근</button>
+            <button class="time-out">퇴근</button>
+        </div>
+    </div>
+
+    <nav class="nav-tabs">
+        <ul class="tab-list">
+            <li class="tab-item" th:classappend="${activeTab}=='itemRequest' ? ' active'">
+                <a th:href="@{/logis/itemRequest}">불출 요청 리스트</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='item' ? ' active'">
+                <a th:href="@{/logis/item}">전체 재고 현황</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='logisOutbound' ? ' active'">
+                <a th:href="@{/logis/logisOutbound}">출고 리스트</a>
+            </li>
+            <li class="tab-item" th:classappend="${activeTab}=='logisRequest' ? ' active'">
+                <a th:href="@{/logis/logisRequest}">요청 리스트</a>
+            </li>
+        </ul>
+    </nav>
+
+    <div class="sub-menu" th:text="${title}">서브메뉴</div>
+</div>
+</body>
+</html>

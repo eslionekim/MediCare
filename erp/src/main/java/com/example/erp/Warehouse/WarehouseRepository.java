@@ -13,6 +13,15 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String>{
 	// 물류->전체재고->로트리스트->입고등록->위치 by 은서
 	@Query("SELECT DISTINCT w.location FROM Warehouse w WHERE w.name = '물류창고' ORDER BY w.location ")
 	List<String> findDistinctLocations();
+	
+	// 약사->전체재고->로트리스트->입고등록->위치 by 은서
+	@Query("SELECT DISTINCT w.location FROM Warehouse w WHERE w.name = '약제창고' ORDER BY w.location ")
+	List<String> findDistinctPharmLocations();
+	
+	// 약사->전체재고->로트리스트->입고등록->위치 by 은서
+	@Query("SELECT DISTINCT w.location FROM Warehouse w WHERE w.name = '원무창고' ORDER BY w.location ")
+	List<String> findDistinctExLocations();
+
 
 	// 물류->전체재고->로트리스트->입고등록->구간 by 은서
 	@Query("""
@@ -23,6 +32,26 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, String>{
 		    ORDER BY w.zone
 		""")
 	List<String> findDistinctZonesByLocation(@Param("location") String location);
+	
+	// 약사->전체재고->로트리스트->입고등록->구간 by 은서
+	@Query("""
+		    SELECT DISTINCT w.zone
+		    FROM Warehouse w
+		    WHERE w.name = '약제창고'
+		      AND w.location = :location
+		    ORDER BY w.zone
+		""")
+	List<String> findDistinctZonesByPharmLocation(@Param("location") String location);
+	
+	// 약사->전체재고->로트리스트->입고등록->구간 by 은서
+	@Query("""
+		    SELECT DISTINCT w.zone
+		    FROM Warehouse w
+		    WHERE w.name = '원무창고'
+		      AND w.location = :location
+		    ORDER BY w.zone
+		""")
+	List<String> findDistinctZonesByExLocation(@Param("location") String location);
 
 	// 물류->전체재고->로트리스트->입고등록->창고코드 찾기 by 은서
 	@Query("""

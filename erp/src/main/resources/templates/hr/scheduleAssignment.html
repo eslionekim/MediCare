@@ -209,44 +209,7 @@
 	
 </head>
 <body>
-    <header class="main-header">
-		<!-- 상단 헤더 -->
-        <div class="top-bar">
-            <div class="user-info">
-                <span>(아이콘)</span>
-                <span>MediCare |</span>
-				<span>사용자ID:<span>
-					<span id="user_id" th:text="${username}"></span>
-	
-            </div>
-            <div class="user-info">
-                <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
-			</div>
-            <div class="action-buttons">
-                <button class="time-in">출근</button>
-                <button class="time-out">퇴근</button>
-            </div>
-        </div>
-		<!-- 상단 헤더 끝-->
-		
-		<!-- 중앙 헤더-->
-        <nav class="nav-tabs">
-            <ul class="tab-list">
-				<li class="tab-item"><a th:href="@{/hr/allSchedule}">직원 스케줄 조회</a></li>
-	            <li class="tab-item"><a th:href="@{/hr/vacationList}">휴가 신청 리스트</a></li>
-	            <li class="tab-item active"><a th:href="@{/hr/scheduleAssignment}">스케줄 부여</a></li>
-	            <li class="tab-item"><a th:href="@{/hr/allWork}">근태 현황</a></li>
-            </ul>
-        </nav>
-		<!-- 중앙 헤더 끝-->
-		
-		<!-- 하단 헤더-->
-        <div class="sub-menu">
-            <span>휴가 신청 리스트</span>
-        </div>
-		<!-- 하단 헤더 끝-->
-    </header>
+    <div th:replace="~{fragments/hr-header :: header(title='스케줄 부여', activeTab='scheduleAssignment')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">

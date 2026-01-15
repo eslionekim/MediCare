@@ -13,6 +13,8 @@ import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 @Configuration // 스프링 설정 클래스로 인식하게 함
 @EnableWebSecurity // 웹 보안 활성화, 스프링 시큐리티 기능 사용 , 필터 체인과 로그인/권한 기능을 사용 가능
 @RequiredArgsConstructor
@@ -42,8 +44,12 @@ public class SecurityConfig {
                 .permitAll() // 모두 접근 허용
             )
             .logout(logout -> logout
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login")
+                .logoutUrl("/logout") // AJAX 호출 URL
+                .logoutSuccessHandler((request, response, authentication) -> {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    response.setContentType("text/plain;charset=UTF-8");
+                    response.getWriter().write("로그아웃 처리 완료"); // AJAX에서 그대로 alert 가능
+                })
                 .invalidateHttpSession(true)
                 .deleteCookies("JSESSIONID")
             );
@@ -66,6 +72,7 @@ public class SecurityConfig {
         // return new BCryptPasswordEncoder();
         return NoOpPasswordEncoder.getInstance();
     }
+    
     
 }
 

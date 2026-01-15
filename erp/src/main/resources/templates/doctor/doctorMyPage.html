@@ -290,104 +290,41 @@
 
 </head>
 <body>
-	<div th:replace="~{fragments/doctor-header :: header(title='금일 진료 리스트', activeTab='todayVisits')}"></div>
+	<div th:replace="~{fragments/doctor-header :: header(title='마이페이지', activeTab='doctorMyPage')}"></div>
 
-	<!-- 콘텐츠 영역 시작-->
-    <div class="content-area">
-		<!-- 상태 필터링 -->
-		<div class="select-wrapper" style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
-		    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
-		        <option value="">전체 보기</option>
-		        <option value="대기 중">대기 중</option>
-		        <option value="진료중">진료중</option>
-		        <option value="진료종료">진료종료</option>
-		        <option value="수납/청구완료">수납/청구완료</option>
-		    </select>
-		</div>
+	비밀번호 변경
+	<input type="password" id="password">
 
-		<!-- 금일 진료 리스트 -->
-		<div class="visit-table-box">
-		<table>
-			<thead>
-			    <tr>
-			        <th>접수시간</th>
-			        <th>환자ID</th>
-			        <th>환자명</th>
-			        <th>성별</th>
-			        <th>생년월일</th>
-			        <th>진료구분</th>
-					<th>최종내원일</th>
-					<th>선행 검사 상태</th>
-					<th>내원사유</th>
-			        <th>상태</th>
-			    </tr>
-			</thead>
+	면허번호
+	<input type="text" id="license" th:value="${profile.license_number}">
 
-			<tbody id="visitTableBody">
-				<tr th:if="${todayList.size() == 0}">
-				        <td colspan="10" class="no-data" style="height: 500px;">금일 진료가 없습니다.</td>
-				    </tr>
+	은행명
+	<input type="text" id="bank" th:value="${profile.bank_name}">
 
-				    <tr th:each="v : ${todayList}" class="visit-row">
-						<td th:text="${v.visit_time}"></td>
-				        <td th:text="${v.patient_id}"></td>
-				        <td th:text="${v.name}"></td>
-				        <td th:text="${v.gender}"></td>
-				        <td th:text="${v.birth_date}"></td>
-						<td th:text="${v.visit_type}"></td>
-				        <!-- 최종내원일 없으면 ‘초진’ -->
-				        <td th:text="${v.last_visit != null ? v.last_visit : '초진'}"></td>
-				        <td>없음</td>
-						<td th:text="${v.note}"></td>
-						<td>  
-							<a th:if="${v.first}" class="first" 
-							       th:href="@{/doctor/chartWrite(visit_id=${v.visit_id},patient_id=${v.patient_id})}">
-							       진료 시작</a>  <!--차트 작성 페이지 연결 ->visitId,patientId -->
-						    <span th:if="${!v.first}" th:text="${v.status_name}"></span>
-						</td>
-				    </tr>
-					
-					<!-- 빈 행을 채워 최소 10행으로 유지 -->
-					<tr th:if="${todayList.size() > 0 and todayList.size() < 13}" 
-					        th:each="i : ${#numbers.sequence(todayList.size() + 1, 13)}">
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					        <td>&nbsp;</td>
-					</tr>
-			</tbody>
-		</table>
+	계좌번호
+	<input type="text" id="account" th:value="${profile.bank_account}">
 
-    </div>
-	</div>
-	<!-- 콘텐츠 영역 끝-->
-	<script>
-	const statusFilter = document.getElementById('statusFilter'); //필터링 select
-	const tableBody = document.getElementById('visitTableBody'); //테이블
+	<button id="saveBtn">수정</button>
 
-	statusFilter.addEventListener('change', function() { //change : select 선택값 바꿨을 때
-	    const selectedStatus = this.value; // 선택된 값
+<script>
+	document.getElementById("saveBtn").addEventListener("click", function () {
 
-	    const rows = tableBody.querySelectorAll('.visit-row'); // 테이블에서 visit-row클래스 행 모두 가져오기
+	    const data = {
+	        password: document.getElementById("password").value,
+	        license: document.getElementById("license").value,
+	        bank: document.getElementById("bank").value,
+	        account: document.getElementById("account").value
+	    };
 
-	    rows.forEach(row => { // 행 순회
-	        const statusSpan = row.querySelector('td span'); // 행에서 td 내부 span요소 찾기
-	        const statusText = statusSpan ? statusSpan.textContent : ''; //존재하면 저장
-
-	        if (selectedStatus === '' || statusText === selectedStatus) { // 선택된 값과 순회하는 값이 같으면
-	            row.style.display = ''; // 보여주기
-	        } else {
-	            row.style.display = 'none'; // 숨기기
-	        }
-	    });
+	    fetch("/doctor/doctorMyPage", {
+	        method: "PUT",
+	        headers: {"Content-Type": "application/json"},
+	        body: JSON.stringify(data)
+	    })
+	    .then(res => res.text())
+	    .then(msg => alert(msg));
 	});
-	</script>
 
+</script>
 </body>
 </html>

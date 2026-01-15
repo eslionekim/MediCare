@@ -82,4 +82,22 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 			  where name='약제창고')
 	    """)
 	BigDecimal sumAvailableStock(@Param("itemCode") String itemCode);
+	
+	//약사->전체재고현황->약제창고인 것만 가져오기->by은서
+	@Query("SELECT s FROM Stock s " +
+		       "JOIN Warehouse w ON s.warehouse_code = w.warehouse_code " +
+		       "WHERE s.item_code = :itemCode " +
+		       "AND w.name = '약제창고'")
+		List<Stock> findDrugWarehouseStockByItemCode(@Param("itemCode") String itemCode);
+	
+	//원무->전체재고현황->약제창고인 것만 가져오기->by은서
+	@Query("SELECT s FROM Stock s " +
+		       "JOIN Warehouse w ON s.warehouse_code = w.warehouse_code " +
+		       "WHERE s.item_code = :itemCode " +
+		       "AND w.name = '원무창고'")
+		List<Stock> findExWarehouseStockByItemCode(@Param("itemCode") String itemCode);
+
+	//원무->출고리스트
+	@Query("SELECT s FROM Stock s WHERE s.warehouse_code = :warehouseCode")
+    Stock findByWarehouseCode(@Param("warehouseCode") String warehouseCode);
 }

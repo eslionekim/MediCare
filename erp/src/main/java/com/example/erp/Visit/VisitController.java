@@ -6,9 +6,11 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,17 +28,21 @@ import com.example.erp.Claim.ClaimRepository;
 import com.example.erp.Claim_item.Claim_item;
 import com.example.erp.Claim_item.Claim_itemRepository;
 import com.example.erp.Department.Department;
+import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Diseases_code.Diseases_code;
 import com.example.erp.Diseases_code.Diseases_codeRepository;
 import com.example.erp.Fee_item.Fee_item;
 import com.example.erp.Insurance_code.Insurance_code;
+import com.example.erp.Insurance_code.Insurance_codeRepository;
 import com.example.erp.Patient.Patient;
 import com.example.erp.Patient.PatientService;
 import com.example.erp.Patient.VisitHistoryDto;
 import com.example.erp.Reservation.Reservation;
 import com.example.erp.Reservation.ReservationRepository;
 import com.example.erp.Status_code.Status_code;
+import com.example.erp.Status_code.Status_codeRepository;
 import com.example.erp.User_account.User_account;
+import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.Visit.OutHistoryDTO;
 import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Staff_profile.Staff_profile;
@@ -54,10 +60,10 @@ public class VisitController {
         private final ClaimRepository claimRepository;
         private final Claim_itemRepository claim_itemRepository;
         private final VisitRepository visitRepository; //
-        private final com.example.erp.User_account.User_accountRepository userAccountRepository;
-        private final com.example.erp.Department.DepartmentRepository departmentRepository;
-        private final com.example.erp.Insurance_code.Insurance_codeRepository insuranceCodeRepository;
-        private final com.example.erp.Status_code.Status_codeRepository statusCodeRepository;
+        private final User_accountRepository userAccountRepository;
+        private final DepartmentRepository departmentRepository;
+        private final Insurance_codeRepository insuranceCodeRepository;
+        private final Status_codeRepository statusCodeRepository;
         private final Staff_profileRepository staffProfileRepository;
         private final ReservationRepository reservationRepository;
 
@@ -65,10 +71,19 @@ public class VisitController {
 
         @GetMapping("/doctor/todayVisits") // 의사 -> 금일 진료 리스트
         public String getTodayVisitList(Model model) {
-        		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-                List<TodayVisitDTO> todayList = visitService.getTodayVisitListByUser(userId);
-                model.addAttribute("todayList", todayList);
-                return "doctor/todayVisits"; // 타임리프 HTML 파일 경로
+        	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        	String userId = auth.getName(); // 로그인 ID
+
+        	// User_account 테이블에서 userId로 검색
+        	Optional<User_account> user = userAccountRepository.findByUser_id(userId);
+        	String userName = (user != null) ? user.get().getName() : "알 수 없음";
+
+        	model.addAttribute("userId", userId);
+        	model.addAttribute("userName", userName);
+
+            List<TodayVisitDTO> todayList = visitService.getTodayVisitListByUser(userId);
+            model.addAttribute("todayList", todayList);
+            return "doctor/todayVisits"; // 타임리프 HTML 파일 경로
         }
 
         @GetMapping("/doctor/allVisits") // 의사 -> 전체 진료 리스트

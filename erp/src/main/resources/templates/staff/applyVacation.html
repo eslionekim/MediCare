@@ -179,6 +179,9 @@
 	
 	</style>
 	
+	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+	
 	<script>
 				document.addEventListener('DOMContentLoaded', () => {
 
@@ -214,86 +217,125 @@
 	</script>
 </head>
 <body>
-	<div th:replace="~{fragments/logis-header :: header(title='출고 리스트', activeTab='logisOutbound')}"></div>
-
+	<div th:replace="~{fragments/staff-header :: header(title='휴가 신청', activeTab='staffVacation')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<!-- 상태 필터링 -->
-		<form method="get" th:action="@{/logis/logisOutbound}">
-		    <!-- 유형 -->
-		    <select name="type">
-		        <option value="">전체</option>
-		        <option th:each="t : ${types}"
-		                th:value="${t}"
-		                th:text="${t}"
-		                th:selected="${param.type == t}">
-		        </option>
+		<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+		    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
+		        <option value="">전체 보기</option>
+		        <option value="대기 중">대기 중</option>
+		        <option value="진료중">진료중</option>
+		        <option value="진료종료">진료종료</option>
+		        <option value="수납/청구완료">수납/청구완료</option>
 		    </select>
-		
-		    <!-- 키워드 -->
-		    <input type="text" name="keyword"
-		           placeholder="품목ID/품목명/로트코드"
-		           th:value="${param.keyword}"/>
-		
-		    <!-- 날짜 -->
-		    <input type="date" name="date" th:value="${param.date}"/>
-		
-		    <button type="submit">검색</button>
-		</form>
-
+		</div>
 
 		<!-- 금일 진료 리스트 -->
 		<table id="table" border="1">
 			<thead>
 			    <tr>
-			        <th>유형</th>
-					<th>품목ID</th>
-			        <th>품목명</th>
-					<th>로트코드</th>
-					<th>변화수량</th>
-					<th>사유</th>
-			        <th>직원ID</th>
-			        <th>직원명</th>
-					<th>일시</th>
+			        <th>휴가코드</th>
+			        <th>분류</th>
+			        <th>사용 기간</th>
+			        <th>승인 여부</th>
+			        <th>사유</th>
 			    </tr>
 			</thead>
 
-			<tbody id="requestTableBody">
-				<tr th:if="${outbounds.size() == 0}">
-			        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
-			    </tr>
-				
-				<tr th:each="o : ${outbounds}">
-				    <td th:text="${o.type != null ? o.type : '-'}"></td>
-					<td th:text="${o.itemCode != null ? o.itemCode : '-'}"></td>
-				    <td th:text="${o.itemName != null ? o.itemName : '-'}"></td>
-				    <td th:text="${o.lotCode != null ? o.lotCode : '-'}"></td>
-				    <td th:text="${o.quantity != null ? o.quantity : '-'}"></td>
-				    <td th:text="${o.note != null ? o.note : '-'}"></td>
-				    <td>-</td>
-				    <td>-</td>
+			<tbody>
+				<tr th:if="${vacation.size() == 0}">
+				        <td colspan="10" class="no-data" style="height: 500px;">내역이 없습니다.</td>
+				    </tr>
 
-				    <!-- ⭐ 가장 중요: movedAt null-safe -->
-				    <td th:text="${o.movedAt != null ? #temporals.format(o.movedAt,'yyyy-MM-dd HH:mm') : '-'}"></td>
-				</tr>
-
-				
-			    <tr th:if="${outbounds.size() >0 }" 
-			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 15)}">
-			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
-					<td>&nbsp;</td>
-			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
-					<td>&nbsp;</td>
-			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
-				</tr>
+				    <tr th:each="v : ${vacation}">
+						<td th:text="${v.vacation_id}"></td>
+						<td th:text="${v.vacation_type.type_name}"></td>
+						<td th:text="${#temporals.format(v.start_date, 'yyyy-MM-dd')} + ' ~ ' + ${#temporals.format(v.end_date, 'yyyy-MM-dd')}"></td>
+						<td th:text="${v.status_code.name}"></td>
+						<td th:text="${v.reason}"></td>
+				    </tr>
+					
+					<!-- 빈 행을 채워 최소 15행으로 유지 -->
+					    <tr th:if="${vacation.size() >0 }" 
+					        th:each="i : ${#numbers.sequence(vacation.size() + 1, 15)}">
+					        <td>&nbsp;</td>
+					        <td>&nbsp;</td>
+					        <td>&nbsp;</td>
+					        <td>&nbsp;</td>
+					        <td>&nbsp;</td>
+					</tr>
 			</tbody>
 		</table>
+		<button id="openPopupBtn">휴가 신청</button>
+		
+		<!-- 팝업 -->
+		<div id="vacationPopup" style="display:none; position:fixed; top:20%; left:30%; width:40%; background:#fff; border:1px solid #ccc; padding:20px; z-index:1000;">
+		    <h2>신규 신청</h2>
+		    
+		    <label>기간:</label>
+		    <input type="date" id="start_date" required>~<input type="date" id="end_date" required>
+		    
+		    <label>분류:</label>
+		    <select id="vacation_type" required>
+		        <option th:each="t : ${vacationTypes}" th:value="${t.type_name}" th:text="${t.type_name}"></option>
+		    </select>
+		    <br><br>
+		    
+		    <label>사유:</label>
+		    <input type="text" id="reason">
+		    <br><br>
+		    
+		    <button id="submitVacation">신청</button>
+		    <button id="closePopup">이전</button>
+		</div>
+		
+		
     </div>
 	<!-- 콘텐츠 영역 끝-->
+	
+	<script>
+		// 팝업 열기
+		    document.getElementById("openPopupBtn").onclick = function() {
+		        document.getElementById("vacationPopup").style.display = "block";
+		    };
+
+		    // 팝업 닫기
+		    document.getElementById("closePopup").onclick = function() {
+		        document.getElementById("vacationPopup").style.display = "none";
+		    };
+
+		    // 휴가 신청 제출
+		    document.getElementById("submitVacation").onclick = function() {
+		        const start_date = document.getElementById("start_date").value;
+		        const end_date = document.getElementById("end_date").value;
+		        const type_name = document.getElementById("vacation_type").value;
+		        const reason = document.getElementById("reason").value;
+
+				if (!start_date || !end_date || !type_name) {
+				    alert("기간과 분류는 반드시 입력해야 합니다.");
+				    return;
+				}
+				
+		        fetch('/staff/applyVacation', {
+		            method: 'POST',
+		            headers: {
+		                'Content-Type': 'application/json',
+		                
+		            },
+		            body: JSON.stringify({ start_date, end_date, type_name, reason })
+		        }).then(res => res.json())
+		          .then(data => {
+		              if(data.success){
+		                  alert("휴가 신청 완료");
+		                  location.reload(); // 새로고침해서 테이블에 추가
+		              } else {
+		                  alert("실패: " + data.message);
+		              }
+		          });
+		    };
+	</script>
+	<script src="/js/notify.js"></script>
 </body>
 </html>

@@ -6,13 +6,14 @@
 	<!-- 구글 폰트 링크 -->
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>/* 전체 리셋 및 기본 배경 */
-	body {
-	    margin: 0;
-	    padding: 0;
-	    font-family: 'Inter', '맑은 고딕', sans-serif;
-	    background-color: #D5DDED; /* 이미지의 연한 푸른색 배경 */
-	
-	}
+	html, body {
+		    margin: 0;
+		    padding: 0;
+		    height: 100%; /* 화면 전체 높이 */
+		    font-family: 'Inter', '맑은 고딕', sans-serif;
+		    background-color: #D5DDED;
+		    overflow: hidden; /* body 스크롤 제거 */
+		}
 	
 	
 	/* 상단 헤더 배경 및 레이아웃 */
@@ -123,57 +124,113 @@
 	
 	/* 컨텐츠 영역 (전체 배경색 확인용) */
 	.content-area {
-	    min-height: 500px; /* 임시 높이 */
-	    background-color: #D5DDED; /* 나머지 화면을 덮는 배경색 */
-	}
-	
-	/* 금일 진료 리스트 */
-	#table{ /* div 영역 및 레이아웃 */
-		margin:5px;
-		margin-left: auto;
-		margin-right: auto;
+		background-color: #ffffff;   /* 흰색 */
+	    margin: 0 auto;              /* 중앙 정렬 */
+	    padding: 1px 0 30px 0;
+	    height: 100%; /* body 높이 꽉 채움 */
+	    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05); /* 위쪽 살짝 그림자 */
 	}
 	
 	table { 
-	    width: 90%; /* 너비 */
+	    width: 99%; /* 너비 */
 	    border-collapse: collapse; /* 표 한줄로 합치기 */
 	    font-size: 14px;
 	    background-color: white;
 		
 	 }
 
-	 th, td {
-	     border: 1px solid #7B7B7B; /* 칸 당 테두리*/
-	     padding: 0;
-		 height: 25px; /* 원하는 셀 높이 */
-	     text-align: center; /* 텍스트 중앙 */
-	 }
-
-	 th {
-	     background-color: #879BD5; 
-		 font-weight: normal; /* 글씨 굵기 보통으로 */
-		 color: rgb(31, 31, 31);
-	 }
+	 
 
 	 tr:nth-child(even) {
 	     background-color: #ffffffff;
 	 }
 
-	 /* 접수 시작 */
-	 .first {
-		 display: flex;             /* flex로 변환 */
-		 justify-content: center;   /* 가로 중앙 */
-		 align-items: center;       /* 세로 중앙 */
-		 width: 100%;               /* 가로 꽉 */
-		 height: 100%;              /* 세로 꽉 */
-		 box-sizing: border-box;    /* 패딩 포함 계산 */
-		 border: none;
-		 background-color: #00FF08;
-		 color: black;
-		 cursor: pointer;
-		 font-size: 14px;
-		 font-weight: 300; /* 글씨 굵기 보통으로 */
-		 text-decoration: none;
+
+	  /* 테이블 드롭다운 고급 느낌 */
+	  .select-wrapper {
+	      position: relative;
+	      display: inline-block;
+	  }
+
+	  .select-wrapper::after {
+	      position: absolute;
+	      right: 6px;
+	      top: 50%;
+	      transform: translateY(-50%);
+	      pointer-events: none;
+	      font-size: 10px;
+	      color: #879BD5;
+	  }
+	  
+	  .visit-table-box {
+	      background: #f7f9ff;
+	      border: 1px solid #b0b7c7;
+	      border-radius: 4px;
+	      height: 520px;
+	      overflow-y: auto;
+	      margin-top: 10px;
+	      padding: 10px;
+	  }
+
+	  .visit-table-box table {
+	      width: 100%;
+	      border-collapse: collapse;
+	      font-size: 13px;
+	  }
+
+	  .visit-table-box th, .visit-table-box td {
+	      border: 1px solid #ccc;
+	      padding: 6px;
+	      text-align: center;
+	  }
+
+	  .visit-table-box th {
+	      background: #f3f6ff;
+	      font-weight: 600;
+	  }
+
+	  .visit-table-box button.first,
+	  .btn {
+	      display: inline-block;
+	      padding: 4px 8px;
+	      background: #879BD5;
+	      color: #fff;
+	      border-radius: 4px;
+	      text-decoration: none;
+	      font-size: 12px;
+		  border: none;        /* 테두리 제거 */
+	  }
+
+	  .visit-table-box span {
+	      font-size: 12px;
+	      color: #7B7B7B;
+	  }
+
+	  .visit-table-box .no-data {
+	      text-align: center;
+	      font-size: 13px;
+	      color: #7B7B7B;
+	      height: 500px;
+	      line-height: 500px;
+	  }
+	  .select-wrapper {
+	      display: flex;
+	      justify-content: flex-start;
+	      width: 90%;
+	      margin: 5px 0;
+	      position: relative; /* 커스텀 화살표 위치용 */
+	  }
+
+	  .select-wrapper select,textarea,input {
+	      width: 150px; /* 필요하면 조절 */
+	      padding: 5px 0px;
+	      font-size: 12px;
+	      border-radius: 2px; /* 동글동글 */
+	      border: 1px solid #b0b7c7; /* 연한 회색 테두리 */
+	      background-color: #fff; /* 흰색 배경 */
+	      cursor: pointer;
+	      appearance: none; /* 기본 브라우저 화살표 제거 */
+		  margin-right: 10px;   
 	  }
 
 	
@@ -213,47 +270,12 @@
 	</script>
 </head>
 <body>
-    <header class="main-header">
-		<!-- 상단 헤더 -->
-        <div class="top-bar">
-            <div class="user-info">
-                <span>(아이콘)</span>
-                <span>MediCare |</span>
-                <span>사용자ID: </span>
-            </div>
-            <div class="user-info">
-                <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
-			</div>
-            <div class="action-buttons">
-                <button class="time-in">출근</button>
-                <button class="time-out">퇴근</button>
-            </div>
-        </div>
-		<!-- 상단 헤더 끝-->
-		
-		<!-- 중앙 헤더-->
-        <nav class="nav-tabs">
-            <ul class="tab-list">
-				<li class="tab-item"><a th:href="@{/doctor/todayVisits}">금일 진료 리스트</a></li>
-				<li class="tab-item active"><a th:href="@{/doctor/allVisits}">전체 진료 리스트</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/applyVacation}">휴가 신청</a></li>
-                <li class="tab-item"><a th:href="@{/doctor/mySchedule}">스케줄 조회</a></li>
-            </ul>
-        </nav>
-		<!-- 중앙 헤더 끝-->
-		
-		<!-- 하단 헤더-->
-        <div class="sub-menu">
-            <span>전체 진료 리스트</span>
-        </div>
-		<!-- 하단 헤더 끝-->
-    </header>
+    <div th:replace="~{fragments/doctor-header :: header(title='전체 진료 리스트', activeTab='allVisits')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<!-- 상태 필터링 -->
-		<div class="search-area" style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
+		<div class="search-area select-wrapper" style="width:90%; margin: 5px 10px; display:flex; justify-content:center;">
 			<!-- 진료과 -->
 		    <select id="departmentSelect">
 		        <option value="">전체 진료과</option>
@@ -273,10 +295,11 @@
 		    <!-- 날짜 -->
 		    <input type="date" id="visitDate">
 
-		    <button onclick="searchVisits()">검색</button>
+		    <button class="btn" onclick="searchVisits()">검색</button>
 		</div>
 
 		<!-- 금일 진료 리스트 -->
+		<div class="visit-table-box">
 		<div id="table-area">
 		<table id="table" border="1" th:fragment="table">
 			<thead>
@@ -316,7 +339,7 @@
 						<td th:text="${visit.insurance_name}"></td>
 						<td th:text="${visit.doctor_name}"></td>
 						<td><a th:href="@{/doctor/chartView(visit_id=${visit.visit_id}, patient_id=${visit.patient_id})}">
-						<button type="button">차트 열람</button></a></td>
+						<button type="button" class="first">차트 열람</button></a></td>
 				    </tr>
 					
 					<!-- 빈 행을 채워 최소 10행으로 유지 -->
@@ -340,7 +363,8 @@
 		</table>
 		</div>
 
-    </div>
+     </div>
+	 </div>
 	<!-- 콘텐츠 영역 끝-->
 	<script>
 	document.getElementById('departmentSelect').addEventListener('change', function () {

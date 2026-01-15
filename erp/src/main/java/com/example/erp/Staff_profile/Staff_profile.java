@@ -1,5 +1,7 @@
 package com.example.erp.Staff_profile;
 
+import java.time.LocalDate;
+
 import com.example.erp.Department.Department;
 import com.example.erp.User_account.User_account;
 
@@ -30,4 +32,10 @@ public class Staff_profile { //의료진 프로필
 
     private String license_number; //면허번호 필드
     private String position; // 직함 필드
+ 
+    private LocalDate hire_date;
+    private String employment_type;
+
+    private String bank_name;
+    private String bank_account;
 }

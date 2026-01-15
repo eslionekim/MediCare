@@ -214,45 +214,7 @@
 	</script>
 </head>
 <body>
-    <header class="main-header">
-		<!-- 상단 헤더 -->
-        <div class="top-bar">
-            <div class="user-info">
-                <span>(아이콘)</span>
-                <span>MediCare |</span>
-				<span>사용자ID:
-				    <span id="user_id" th:text="${username}"></span>
-				</span>
-				
-            </div>
-            <div class="user-info">
-                <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
-			</div>
-            <div class="action-buttons">
-                <button class="time-in">출근</button>
-                <button class="time-out">퇴근</button>
-            </div>
-        </div>
-		<!-- 상단 헤더 끝-->
-		
-		<!-- 중앙 헤더-->
-        <nav class="nav-tabs">
-            <ul class="tab-list">
-				<li class="tab-item"><a th:href="@{/logis/itemRequest}">불출 요청 리스트</a></li>
-				<li class="tab-item"><a th:href="@{/logis/item}">전체 재고 현황</a></li>
-				<li class="tab-item"><a>출고 리스트</a></li>
-				<li class="tab-item active"><a>요청 리스트</a></li>
-            </ul>
-        </nav>
-		<!-- 중앙 헤더 끝-->
-		
-		<!-- 하단 헤더-->
-        <div class="sub-menu">
-            <span>요청 리스트</span>
-        </div>
-		<!-- 하단 헤더 끝-->
-    </header>
+	<div th:replace="~{fragments/logis-header :: header(title='요청 리스트', activeTab='logisRequest')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">

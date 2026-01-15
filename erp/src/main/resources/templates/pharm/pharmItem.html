@@ -217,10 +217,24 @@
 	.popup-form h3 {
 	    margin-top: 0;
 	}
+	
+	#requestModal {
+	    display: none;
+	    position: fixed;
+	    top: 50%;
+	    left: 50%;
+	    transform: translate(-50%, -50%);
+	    z-index: 9999;
+	    background-color: white;
+	    border: 1px solid #333;
+	    padding: 15px;
+	    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+	}
+
 	</style>
 	
 </head>
-        <div th:replace="~{fragments/logis-header :: header(title='전체 재고 현황', activeTab='item')}"></div>
+	<div th:replace="~{fragments/pharm-header :: header(title='전체 재고 현황', activeTab='pharmItem')}"></div>
 
 
 	<!-- 콘텐츠 영역 시작-->
@@ -229,17 +243,7 @@
 			<div class="item">
 			<!-- 상태 필터링 -->
 				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
-					<form method="get" th:action="@{/logis/item}" style="display:flex; gap:8px;">
-					    <!-- 종류 -->
-					    <select name="itemType">
-					        <option value="">전체 종류</option>
-					        <option th:each="t : ${itemTypeList}"
-					                th:value="${t}"
-					                th:text="${t}"
-					                th:selected="${t == selectedItemType}">
-					        </option>
-					    </select>
-
+					<form method="get" th:action="@{/pharm/pharmItem}" style="display:flex; gap:8px;">
 					    <!-- 상태 -->
 					    <select name="status">
 					        <option value="">전체 상태</option>
@@ -257,8 +261,6 @@
 
 					    <button type="submit">검색</button>
 					</form>
-
-					<button id="purchaseRequestBtn">신규등록요청</button>
 				</div>
 
 				<!-- 금일 진료 리스트 -->
@@ -313,7 +315,7 @@
 
 			<div class="lotList" style="display: none;">
 				
-				<button id="purchaseRequestBtn">구매요청</button>
+				<button id="purchaseRequestBtn" data-item-code="{{itemCode}}">불출요청</button>
 				<button id="stockInBtn">입고등록</button>
 				<table id="lotTable" border="1">
 					<thead>
@@ -322,7 +324,7 @@
 		                    <th>입고일</th>
 		                    <th>위치</th>
 		                    <th>유통기한</th>
-		                    <th>출고마감</th>
+		                    <!--<th>출고마감</th>-->
 		                    <th>수량</th>
 		                    <th>상태</th>
 		                    <th>폐기</th>
@@ -405,8 +407,8 @@
 		        <label>유통기한:</label>
 		        <input type="date" name="expiry_date"><br>
 
-		        <label>출고마감일:</label>
-		        <input type="date" name="outbound_deadline"><br>
+		        <!--<label>출고마감일:</label>
+		        <input type="date" name="outbound_deadline"><br>-->
 
 		        <label>수량:</label>
 		        <input type="number" name="quantity" min="1" required><br>
@@ -466,6 +468,25 @@
 		    <button type="button" class="closeBtn">취소</button>
 			</form>
 		</div>
+		
+		<!-- 모달 -->
+		<div id="requestModal" style="display:none; border:1px solid #333; padding:15px;">
+		    <h3>불출 요청</h3>
+
+		    <div>
+		        요청 수량
+		        <input type="number" id="reqQtyInput" min="1" value="1">
+		        <span id="packUnitName"></span>
+		    </div>
+
+		    <div>
+		        사유(선택)
+		        <input type="text" id="reqReasonInput" maxlength="255">
+		    </div>
+
+		    <button id="submitRequestBtn">불출요청 등록</button>
+		    <button onclick="document.getElementById('requestModal').style.display='none'">취소</button>
+		</div>
 	</div>
 	</div>
 	<script>
@@ -506,7 +527,7 @@
 
 
 		// location 불러오기
-	    fetch("/logis/warehouse/locations")
+	    fetch("/pharm/warehouse/locations")
 	        .then(res => res.json())
 	        .then(data => {
 	            const locationSelect = document.getElementById("locationSelect");
@@ -524,7 +545,7 @@
 
 	        if (!location) return;
 
-	        fetch(`/logis/warehouse/zones?location=${location}`)
+	        fetch(`/pharm/warehouse/zones?location=${location}`)
 	            .then(res => res.json())
 	            .then(data => {
 	                data.forEach(zone => {
@@ -535,8 +556,9 @@
 
 	    // 열기
 	    purchaseBtn.addEventListener("click", () => {
-	        purchaseForm.style.display = "block";
-	    });
+	        document.getElementById("requestModal").style.display = "block";
+			console.log("불출요청 itemCode:", selectedItemCode);
+		});
 
 	    stockBtn.addEventListener("click", () => {
 	        stockForm.style.display = "block";
@@ -545,16 +567,28 @@
 	    });
 		
 		// 이벤트 위임
-		lotTableBody.addEventListener("click", (e) => {
+		// lotList에서 이벤트 위임
+		lotListDiv.addEventListener("click", (e) => {
+		    // 폐기 버튼
 		    if (e.target.classList.contains("discardBtn")) {
-				selectedStockId = e.target.dataset.stockId;
+		        selectedStockId = e.target.dataset.stockId;
 		        discardForm.style.display = "block";
 		    }
+
+		    // 수량조정 버튼
 		    if (e.target.classList.contains("adjustBtn")) {
-				selectedStockId = e.target.dataset.stockId;
+		        selectedStockId = e.target.dataset.stockId;
 		        adjustForm.style.display = "block";
 		    }
+
+		    // 불출요청 버튼
+		    if (e.target.id === "purchaseRequestBtn") {
+		        selectedItemCode = e.target.dataset.itemCode; // 선택된 itemCode
+		        document.getElementById("requestModal").style.display = "block";
+		        console.log("불출요청 버튼 클릭됨"); // 확인용
+		    }
 		});
+
 
 
 	    // 닫기 버튼
@@ -570,7 +604,7 @@
 	
 	        const formData = new FormData(newItemForm);
 	
-	        fetch("/logis/item/new", {
+	        fetch("/pharm/item/new", {
 	            method: "POST",
 	            body: formData
 	        })
@@ -594,9 +628,10 @@
 	        btn.addEventListener("click", () => {
 	            const itemCode = btn.dataset.itemCode;
 				selectedItemCode = itemCode;
+				document.getElementById("purchaseRequestBtn").dataset.itemCode = itemCode;
 				document.getElementById("stockInItemCode").value = itemCode;
 				
-				fetch(`/logis/item/${itemCode}/price`) //입고등록->단가 조회
+				fetch(`/pharm/item/${itemCode}/price`) //입고등록->단가 조회
 				    .then(res => res.json())
 				    .then(price => {
 						console.log(price);
@@ -608,7 +643,7 @@
 					        unitPrice = 0;
 				});
 
-	            fetch(`/logis/item/${itemCode}/lots`)
+	            fetch(`/pharm/item/${itemCode}/lots`)
 	                .then(res => res.json())
 	                .then(data => {
 	                    // LOT 테이블 초기화
@@ -628,7 +663,6 @@
 	                            <td>${lot.created_at ? lot.created_at : "-"}</td>
 	                            <td>${lot.location}</td>
 	                            <td>${lot.expiry_date ? lot.expiry_date : "-"}</td>
-	                            <td>${lot.outbound_deadline ? lot.outbound_deadline : "-"}</td>
 	                            <td>${lot.quantity}</td>
 	                            <td>${lot.status}</td>
 	                            <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
@@ -654,7 +688,7 @@
 		    const data = new FormData(form);
 
 
-		    fetch("/logis/stock/in", {
+		    fetch("/pharm/stock/in", {
 		        method: "POST",
 		        body: data
 		    })
@@ -680,7 +714,7 @@
 
 		
 		function loadLotList(itemCode) { // 입고 시 새로고침?
-		    fetch(`/logis/item/${itemCode}/lots`)
+		    fetch(`/pharm/item/${itemCode}/lots`)
 		        .then(res => res.json())
 		        .then(data => {
 		            lotTableBody.innerHTML = "";
@@ -738,7 +772,7 @@
 		    params.append("reason", reason);
 		    if (detail) params.append("detail", detail);
 
-		    fetch(`/logis/stock/${selectedStockId}/discard`, {
+		    fetch(`/pharm/stock/${selectedStockId}/discard`, {
 		        method: "POST",
 		        body: params
 		    })
@@ -774,7 +808,7 @@
 		    if (reason) params.append("reason", reason);
 		    if (detail) params.append("detail", detail);
 		
-		    fetch(`/logis/stock/${selectedStockId}/adjust`, {
+		    fetch(`/pharm/stock/${selectedStockId}/adjust`, {
 		        method: "POST",
 		        body: params
 		    })
@@ -788,6 +822,41 @@
 		        loadLotList(selectedItemCode);
 		    })
 		    .catch(() => alert("수량 조정 중 오류 발생"));
+		});
+
+		
+		document.getElementById("submitRequestBtn").addEventListener("click", () => {
+		    const qty = Number(document.getElementById("reqQtyInput").value);
+		    const note = document.getElementById("reqReasonInput").value;
+
+		    if (qty <= 0) {
+		        alert("수량을 입력하세요.");
+		        return;
+		    }
+
+		    const dto = {
+		        itemCode: selectedItemCode,  // 상세보기에서 선택된 itemCode
+		        qty: qty,
+		        note: note
+		    };
+
+		    fetch("/pharm/issue-request", {
+		        method: "POST",
+		        headers: { "Content-Type": "application/json" },
+		        body: JSON.stringify(dto)
+		    })
+		    .then(res => {
+		        if (!res.ok) throw new Error("요청 실패");
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert("불출 요청이 등록되었습니다!");
+		        document.getElementById("requestModal").style.display = "none";
+		    })
+		    .catch(err => {
+		        console.error(err);
+		        alert("오류 발생");
+		    });
 		});
 
 

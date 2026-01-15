@@ -5,8 +5,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.format.annotation.DateTimeFormat;
@@ -219,7 +222,11 @@ public class logisController {
 
 	//물류-> 전체 재고 현황 by 은서
 	@GetMapping("/logis/item")
-	public String Item(Model model) {
+	public String Item(
+			@RequestParam(name = "itemType",required = false) String itemType,
+	        @RequestParam(name = "status",required = false) String filterStatus,
+	        @RequestParam(name = "keyword",required = false) String keyword,
+	        Model model) {
 		List<Item> items = itemRepository.findByIsActiveTrue();
 
         LocalDate today = LocalDate.now();
@@ -260,8 +267,47 @@ public class logisController {
 
             itemList.add(map);
         }
+     // 3. 필터용 select 옵션 (중복 제거)
+        List<String> itemTypeList = itemList.stream()
+                .map(m -> (String) m.get("item_type"))
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
 
-        model.addAttribute("itemList", itemList);
+        List<String> statusList = itemList.stream()
+                .map(m -> (String) m.get("status"))
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        // 4. 검색 조건 적용 (AND 조건)
+        List<Map<String, Object>> filteredList = itemList.stream()
+                // 종류
+                .filter(m -> itemType == null || itemType.isBlank()
+                        || itemType.equals(m.get("item_type")))
+                // 상태
+                .filter(m -> filterStatus == null || filterStatus.isBlank()
+                        || filterStatus.equals(m.get("status")))
+                // 키워드 (품목코드 OR 품목명)
+                .filter(m -> {
+                    if (keyword == null || keyword.isBlank()) return true;
+                    String kw = keyword.toLowerCase();
+                    return m.get("item_code").toString().toLowerCase().contains(kw)
+                        || m.get("name").toString().toLowerCase().contains(kw);
+                })
+                .collect(Collectors.toList());
+
+        // 5. Model 전달
+        model.addAttribute("filteredList", filteredList);
+        model.addAttribute("itemTypeList", itemTypeList);
+        model.addAttribute("statusList", statusList);
+
+        // 검색값 유지
+        model.addAttribute("selectedItemType", itemType);
+        model.addAttribute("selectedStatus", filterStatus);
+        model.addAttribute("keyword", keyword);
+
+        model.addAttribute("itemList", filteredList);
         return "logis/item";
     }
 
@@ -497,9 +543,30 @@ public class logisController {
 
     //물류->출고리스트
     @GetMapping("/logis/logisOutbound") 
-    public String logisOutbound(Model model) {
-    	 List<LogisOutboundDTO> list = stock_moveService.getLogisOutboundList();
-   	    model.addAttribute("outbounds", list);
+    public String logisOutbound(
+    		@RequestParam(name = "type",required = false) String type,
+            @RequestParam(name = "keyword",required = false) String keyword,
+            @RequestParam(name = "date",required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate date,
+            Model model) {
+    	// 전체 데이터 (필터 X)
+        List<LogisOutboundDTO> allList =
+                stock_moveService.getLogisOutboundList(null, null, null);
+
+        // 필터 적용 데이터
+        List<LogisOutboundDTO> filteredList =
+                stock_moveService.getLogisOutboundList(type, keyword, date);
+
+        // select 옵션은 전체 기준
+        Set<String> types = allList.stream()
+                .map(LogisOutboundDTO::getType)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        model.addAttribute("outbounds", filteredList);
+        model.addAttribute("types", types);
+
         return "logis/logisOutbound";
     }
 
