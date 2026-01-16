@@ -521,7 +521,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 </head>
-<body>
+<body th:attr="data-user-id=${username}">
 	<div th:replace="~{fragments/staff-header :: header(title='스케줄 조회', activeTab='staffSchedule')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
@@ -595,7 +595,10 @@
 	
 	<script>
 	document.addEventListener('DOMContentLoaded', function () {
-		
+			const user_id =document.body.dataset.userId ||
+				        document.getElementById("user_id")?.innerText?.trim();
+
+				    if (!user_id) return;
 		    /* =========================
 		       1. FullCalendar
 		    ========================= */

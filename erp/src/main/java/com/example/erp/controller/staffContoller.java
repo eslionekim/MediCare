@@ -534,8 +534,9 @@ public class staffContoller {
 	            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	            String user_id = auth.getName(); //로그인 한 사용자의 user_id
 
-	            User_account user = new User_account(); 
-	            user.setUser_id(user_id); //새로 생성한 객체에 user_id 설정
+	            User_account user = user_accountRepository.findByUser_id(user_id)
+	                    .orElseThrow(() -> new RuntimeException("사용자 없음"));
+
 
 	            Vacation_type vt = vacation_typeRepository.findByTypeName(body.get("type_name")) //type_name으로 vacation_type 찾기
 	                    .orElseThrow(() -> new RuntimeException("존재하지 않는 휴가분류"));
@@ -555,7 +556,7 @@ public class staffContoller {
 	            
 	            result.put("success", true); // 저장 성공 시
 	            // 직원이 휴가 신청했을 때 HR에게 알림
-	            notificationService.notifyHR("휴가 신청", "직원 " + user_id + "님이 휴가를 신청했습니다.");
+	            notificationService.notifyHR("휴가 신청", "휴가 신청이 있습니다.");
 	        } catch(Exception e){
 	            result.put("success", false);
 	            result.put("message", e.getMessage());
