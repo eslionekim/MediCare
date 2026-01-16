@@ -18,7 +18,7 @@
         .calendar-date { padding:4px 0; cursor:pointer; border-radius:3px; background:#fff; }
         .calendar-date:hover { background:#E7EEFF; }
         .calendar-date.selected { background:#4D6CDB; color:#fff; font-weight:600; }
-        .calendar-date.other-month { color:#aaa; background:#eef1f7; }
+        .calendar-date.other-month { color:#9aa3b2; background:#e2e4e8; }
         .calendar-date.other-month.selected { background:#b7c4e8; color:#fff; }
         .search-panel { margin-top:6px; padding:8px 10px; background:#EFF3FF; border-top:1px solid #cbd2e1; }
         .search-row { margin-bottom:6px; font-size:13px; }
@@ -75,7 +75,7 @@
 
                         <div th:each="d : ${dates}"
                              th:text="${d.day}"
-                             th:class="'calendar-date ' + (d.selected ? 'selected ' : '') + (d.otherMonth ? 'other-month' : '')"
+                             th:class="${'calendar-date' + (d.selected ? ' selected' : '') + ((d.fullDate != null and calendarTitle != null and not #strings.startsWith(d.fullDate, calendarTitle)) ? ' other-month' : '')}"
                              th:onclick="|location.href='@{/reservations(date=${d.fullDate}, patientId=${selectedPatient != null ? selectedPatient.patient_id : 0}, departmentCode=${selectedDepartmentCode}, userId=${selectedUserId})}'|">1</div>
                     </div>
                 </div>

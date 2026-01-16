@@ -174,6 +174,127 @@ tbody tr:nth-child(even) {
   font-weight: 530;
 }
 
+/* Calendar theme aligned with reservation calendar */
+.calendar-inner {
+  padding: 10px;
+}
+
+.calendar-month-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.calendar-arrow {
+  cursor: pointer;
+  padding: 0 6px;
+  user-select: none;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.calendar-day-header {
+  padding: 4px 0;
+  font-weight: 600;
+  background: #e3e9ff;
+  border-radius: 3px;
+}
+
+.calendar-date {
+  padding: 4px 0;
+  cursor: pointer;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.calendar-date:hover {
+  background: #e7eeff;
+}
+
+.calendar-date.selected {
+  background: #4d6cdb;
+  color: #fff;
+  font-weight: 600;
+}
+
+.calendar-date.other-month {
+  color: #9aa3b2;
+  background: #e2e4e8;
+}
+
+.calendar-date.other-month.selected {
+  background: #b7c4e8;
+  color: #fff;
+}
+
+/* FullCalendar theme */
+.fc {
+  --fc-border-color: var(--ui-border);
+  --fc-page-bg-color: #fff;
+  --fc-neutral-bg-color: #f7f9ff;
+  --fc-today-bg-color: #e7eeff;
+  --fc-event-bg-color: #879bd5;
+  --fc-event-border-color: #6f86c9;
+  --fc-event-text-color: #fff;
+  --fc-button-bg-color: #879bd5;
+  --fc-button-border-color: #7b7b7b;
+  --fc-button-text-color: #fff;
+  --fc-button-active-bg-color: #6f86c9;
+  --fc-button-active-border-color: #7b7b7b;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.fc .fc-button {
+  border-radius: 4px;
+  font-size: 13px;
+  padding: 4px 10px;
+}
+
+.fc .fc-col-header-cell-cushion {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ui-text);
+}
+
+.fc .fc-daygrid-day-top {
+  justify-content: center;
+  font-size: 12px;
+}
+
+.fc .fc-daygrid-day-number {
+  padding: 2px 4px;
+}
+
+.fc .fc-daygrid-day.fc-day-other {
+  background: #e2e4e8 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-frame {
+  background: #e2e4e8 !important;
+}
+
+.fc .fc-daygrid-day.fc-day-other .fc-daygrid-day-number {
+  color: #9aa3b2 !important;
+}
+
+.fc .fc-daygrid-day-frame {
+  background: #fff;
+}
+
 /* 상단 바 */
 .top-bar {
   display: flex;
