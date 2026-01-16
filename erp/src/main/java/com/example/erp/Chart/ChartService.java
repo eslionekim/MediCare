@@ -274,6 +274,11 @@ public class ChartService {
             // 처방전
             Prescription prescription = new Prescription();
             prescription.setVisit_id(visit.getVisit_id());
+            String userId = visit.getUser_account() != null ? visit.getUser_account().getUser_id() : null;
+            if (userId == null || userId.isBlank()) {
+                throw new RuntimeException("Missing user_id");
+            }
+            prescription.setUser_id(userId);
             prescription.setStatus_code("VIS_COMPLETED");
             prescription.setPrescribed_at(LocalDateTime.now());
             prescriptionRepository.save(prescription);

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>보험구분별 매출</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .filter-row .date { width:120px; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .chart-box { border:1px dashed #c9cfde; background:#f8f9fd; height:180px; display:flex; align-items:center; justify-content:center; color:#7a86a8; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='보험구분별 매출', activeTab='ad-021')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <input class="date" type="date" name="startDate" th:value="${selectedStartDate}">
+            <span>-</span>
+            <input class="date" type="date" name="endDate" th:value="${selectedEndDate}">
+            <select name="departmentCode">
+                <option value="" th:selected="${selectedDepartmentCode == null or selectedDepartmentCode == ''}">진료과</option>
+                <option th:each="d : ${departmentOptions}"
+                        th:value="${d.code}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartmentCode != null and selectedDepartmentCode == d.code}">
+                </option>
+            </select>
+            <select name="doctorId">
+                <option value="" th:selected="${selectedDoctorId == null or selectedDoctorId == ''}">의사</option>
+                <option th:each="doc : ${doctorOptions}"
+                        th:value="${doc.userId}"
+                        th:text="${doc.departmentName != '' ? doc.name + ' (' + doc.departmentName + ')' : doc.name}"
+                        th:selected="${selectedDoctorId != null and selectedDoctorId == doc.userId}">
+                </option>
+            </select>
+            <select name="insuranceCode">
+                <option value="" th:selected="${selectedInsuranceCode == null or selectedInsuranceCode == ''}">보험구분</option>
+                <option th:each="ic : ${insuranceOptions}"
+                        th:value="${ic.code}"
+                        th:text="${ic.name}"
+                        th:selected="${selectedInsuranceCode != null and selectedInsuranceCode == ic.code}">
+                </option>
+            </select>
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="panel">
+            <div class="panel-title">보험구분별 매출</div>
+            <div class="panel-body">
+                <div class="chart-box">차트 영역</div>
+                <table style="margin-top:8px;">
+                    <thead>
+                    <tr>
+                        <th>보험구분</th>
+                        <th>매출</th>
+                        <th>비율</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td th:text="${row.insuranceName}">-</td>
+                        <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
+                        <td th:text="${row.percent + '%'}">-</td>
+                    </tr>
+                    <tr th:if="${rows == null or #lists.isEmpty(rows)}">
+                        <td colspan="3">검색 결과 없음</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

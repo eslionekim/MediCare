@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>보험 코드</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='보험 코드', activeTab='ad-051')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <input type="text" name="keyword" placeholder="코드/명칭 검색" th:value="${selectedKeyword}">
+            <select name="active">
+                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">활성여부</option>
+                <option value="1" th:selected="${selectedActive == '1'}">활성</option>
+                <option value="0" th:selected="${selectedActive == '0'}">비활성</option>
+            </select>
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="panel">
+            <div class="panel-title">보험 코드 리스트</div>
+            <div class="panel-body">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>code</th>
+                        <th>name</th>
+                        <th>discount_rate</th>
+                        <th>is_active</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td th:text="${row.code}">-</td>
+                        <td th:text="${row.name}">-</td>
+                        <td th:text="${row.discountRate}">-</td>
+                        <td th:text="${row.active}">-</td>
+                    </tr>
+                    <tr th:if="${rows == null or #lists.isEmpty(rows)}">
+                        <td colspan="4">검색 결과 없음</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

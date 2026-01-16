@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>재고/입출고 모니터링</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .filter-row .date { width:120px; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .monitor-grid { display:grid; grid-template-columns:1.1fr 1.4fr; gap:12px; margin-top:12px; }
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .split { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .pill { display:inline-block; padding:2px 6px; border-radius:10px; background:#f2f4fb; border:1px solid #c9cfde; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='재고/입출고 모니터링', activeTab='ad-011')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <select name="itemType">
+                <option value="" th:selected="${selectedItemType == null or selectedItemType == ''}">품목 타입</option>
+                <option value="DRUG" th:selected="${selectedItemType == 'DRUG'}">약품</option>
+                <option value="SUPPLY" th:selected="${selectedItemType == 'SUPPLY'}">자재</option>
+            </select>
+            <select name="warehouse">
+                <option value="" th:selected="${selectedWarehouse == null or selectedWarehouse == ''}">창고/위치</option>
+                <option th:each="w : ${warehouseOptions}"
+                        th:value="${w.code}"
+                        th:text="${w.name}"
+                        th:selected="${selectedWarehouse != null and selectedWarehouse == w.code}">
+                </option>
+            </select>
+            <select name="status">
+                <option value="" th:selected="${selectedStatus == null or selectedStatus == ''}">상태</option>
+                <option value="NORMAL" th:selected="${selectedStatus == 'NORMAL'}">정상</option>
+                <option value="LOW" th:selected="${selectedStatus == 'LOW'}">부족</option>
+            </select>
+            <input class="date" type="date" name="startDate" th:value="${selectedStartDate}">
+            <span>-</span>
+            <input class="date" type="date" name="endDate" th:value="${selectedEndDate}">
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="monitor-grid">
+            <div class="panel">
+                <div class="panel-title">재고 리스트</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>품목명</th>
+                            <th>현재고</th>
+                            <th>최소수량</th>
+                            <th>위치</th>
+                            <th>상태</th>
+                            <th>최근 입출고일</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${inventoryRows}">
+                            <td th:text="${row.itemName}">-</td>
+                            <td th:text="${row.quantity}">-</td>
+                            <td th:text="${row.safetyStock}">-</td>
+                            <td th:text="${row.warehouseName}">-</td>
+                            <td><span class="pill" th:text="${row.status}">정상</span></td>
+                            <td th:text="${row.lastMove}">-</td>
+                        </tr>
+                        <tr th:if="${inventoryRows == null or #lists.isEmpty(inventoryRows)}">
+                            <td colspan="6">검색 결과 없음</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">품목 상세 / 락인</div>
+                <div class="panel-body">
+                    <div class="split">
+                        <div>
+                            <strong>Lot/유통기한별 수량</strong>
+                            <table style="margin-top:6px;">
+                                <thead>
+                                <tr>
+                                    <th>Lot</th>
+                                    <th>유통기한</th>
+                                    <th>수량</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="row : ${lotRows}">
+                                    <td th:text="${row.lotCode}">-</td>
+                                    <td th:text="${row.expiryDate}">-</td>
+                                    <td th:text="${row.quantity}">-</td>
+                                </tr>
+                                <tr th:if="${lotRows == null or #lists.isEmpty(lotRows)}">
+                                    <td colspan="3">선택된 품목 없음</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <strong>입출고 내역</strong>
+                            <table style="margin-top:6px;">
+                                <thead>
+                                <tr>
+                                    <th>일자</th>
+                                    <th>수량</th>
+                                    <th>유형</th>
+                                    <th>상태</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="row : ${moveRows}">
+                                    <td th:text="${row.movedAt}">-</td>
+                                    <td th:text="${row.quantity}">-</td>
+                                    <td th:text="${row.requestDept}">-</td>
+                                    <td th:text="${row.status}">-</td>
+                                </tr>
+                                <tr th:if="${moveRows == null or #lists.isEmpty(moveRows)}">
+                                    <td colspan="4">선택된 품목 없음</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="panel" style="margin-top:10px;">
+                        <div class="panel-title">락인(확정) 대기</div>
+                        <div class="panel-body">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>전표번호</th>
+                                    <th>유형</th>
+                                    <th>상태</th>
+                                    <th>일자</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="row : ${lockinRows}">
+                                    <td th:text="${row.moveId}">-</td>
+                                    <td th:text="${row.moveType}">-</td>
+                                    <td th:text="${row.status}">-</td>
+                                    <td th:text="${row.movedAt}">-</td>
+                                </tr>
+                                <tr th:if="${lockinRows == null or #lists.isEmpty(lockinRows)}">
+                                    <td colspan="4">대기 항목 없음</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                            <div style="margin-top:8px;">
+                                <button class="btn" type="button">락인(확정)</button>
+                                <button class="btn" type="button">락인 해제 요청 처리</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

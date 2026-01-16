@@ -7,6 +7,9 @@ import com.example.erp.Visit.Visit;
 import com.example.erp.Visit.VisitRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
@@ -27,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.IntStream;
 import java.util.stream.Collectors;
 
 @Controller
@@ -43,6 +47,8 @@ public class PatientRegistrationAndInquiry {
     public String patientList(
             @RequestParam(value = "patientId", required = false) Long patientId,
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
             Model model) {
     	// --- 로그인 사용자 정보 추가 ---
     	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -52,7 +58,7 @@ public class PatientRegistrationAndInquiry {
     	String userName = (user != null) ? user.get().getName() : "알 수 없음";
     	
     	
-        addPatientList(keyword, model);
+        addPatientList(keyword, page, size, model);
 
         Patient selected = null;
         List<OutHistoryDTO> outHistories = Collections.emptyList();
@@ -83,9 +89,11 @@ public class PatientRegistrationAndInquiry {
     @GetMapping("/register")
     public String patientRegister(
             @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "size", required = false, defaultValue = "10") int size,
             Model model) {
 
-        addPatientList(keyword, model);
+        addPatientList(keyword, page, size, model);
         model.addAttribute("selected", null);
         model.addAttribute("mode", "register");
         model.addAttribute("outHistories", Collections.emptyList());
@@ -146,14 +154,16 @@ public class PatientRegistrationAndInquiry {
         }
     }
 
-    private void addPatientList(String keyword, Model model) {
-        List<Patient> patients;
+    private void addPatientList(String keyword, int page, int size, Model model) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size);
+        Page<Patient> patientsPage;
         if (keyword != null && !keyword.isBlank()) {
-            patients = patientRepository.findByNameContainingIgnoreCaseOrPhoneContainingOrRrnContaining(
-                    keyword, keyword, keyword);
+            patientsPage = patientRepository.findByNameContainingIgnoreCaseOrPhoneContainingOrRrnContaining(
+                    keyword, keyword, keyword, pageable);
         } else {
-            patients = patientRepository.findAll();
+            patientsPage = patientRepository.findAll(pageable);
         }
+        List<Patient> patients = patientsPage.getContent();
         Map<Long, LocalDate> lastVisitMap = new HashMap<>();
         for (Patient p : patients) {
             LocalDate lastDate = visitRepository.findByPatientIdOrderByVisitDatetimeDesc(p.getPatient_id()).stream()
@@ -165,6 +175,11 @@ public class PatientRegistrationAndInquiry {
             lastVisitMap.put(p.getPatient_id(), lastDate);
         }
         model.addAttribute("patients", patients);
+        model.addAttribute("patientsPage", patientsPage);
+        model.addAttribute("currentPage", patientsPage.getNumber());
+        model.addAttribute("totalPages", patientsPage.getTotalPages());
+        model.addAttribute("pageNumbers", IntStream.range(0, patientsPage.getTotalPages()).boxed().collect(Collectors.toList()));
+        model.addAttribute("pageSize", size);
         model.addAttribute("keyword", keyword);
         model.addAttribute("lastVisitMap", lastVisitMap);
     }

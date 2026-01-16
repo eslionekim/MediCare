@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>매출 리포트</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .filter-row .date { width:120px; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:12px 0; }
+        .kpi { border:1px solid #b0b7c7; background:#fff; border-radius:4px; padding:10px; font-size:12px; }
+        .kpi strong { display:block; font-size:12px; color:#5b6b99; margin-bottom:6px; }
+
+        .report-grid { display:grid; grid-template-columns:1.4fr 1fr; gap:12px; }
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .chart-box { border:1px dashed #c9cfde; background:#f8f9fd; height:160px; display:flex; align-items:center; justify-content:center; color:#7a86a8; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='매출 리포트', activeTab='ad-020')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <input class="date" type="date" name="startDate" th:value="${selectedStartDate}">
+            <span>-</span>
+            <input class="date" type="date" name="endDate" th:value="${selectedEndDate}">
+            <select name="departmentCode">
+                <option value="" th:selected="${selectedDepartmentCode == null or selectedDepartmentCode == ''}">진료과</option>
+                <option th:each="d : ${departmentOptions}"
+                        th:value="${d.code}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartmentCode != null and selectedDepartmentCode == d.code}">
+                </option>
+            </select>
+            <select name="doctorId">
+                <option value="" th:selected="${selectedDoctorId == null or selectedDoctorId == ''}">의사</option>
+                <option th:each="doc : ${doctorOptions}"
+                        th:value="${doc.userId}"
+                        th:text="${doc.departmentName != '' ? doc.name + ' (' + doc.departmentName + ')' : doc.name}"
+                        th:selected="${selectedDoctorId != null and selectedDoctorId == doc.userId}">
+                </option>
+            </select>
+            <select name="insuranceCode">
+                <option value="" th:selected="${selectedInsuranceCode == null or selectedInsuranceCode == ''}">보험구분</option>
+                <option th:each="ic : ${insuranceOptions}"
+                        th:value="${ic.code}"
+                        th:text="${ic.name}"
+                        th:selected="${selectedInsuranceCode != null and selectedInsuranceCode == ic.code}">
+                </option>
+            </select>
+            <select name="paymentMethod">
+                <option value="" th:selected="${selectedPaymentMethod == null or selectedPaymentMethod == ''}">결제수단</option>
+                <option th:each="pm : ${paymentMethodOptions}"
+                        th:value="${pm.code}"
+                        th:text="${pm.name}"
+                        th:selected="${selectedPaymentMethod != null and selectedPaymentMethod == pm.code}">
+                </option>
+            </select>
+            <select name="visitType">
+                <option value="" th:selected="${selectedVisitType == null or selectedVisitType == ''}">외래/입원</option>
+                <option value="OUT" th:selected="${selectedVisitType == 'OUT'}">외래</option>
+                <option value="IN" th:selected="${selectedVisitType == 'IN'}">입원</option>
+            </select>
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="kpi-grid">
+            <div class="kpi">
+                <strong>총매출</strong>
+                <span th:text="${#numbers.formatInteger(summary.totalAmount, 0, 'COMMA')}">0</span>
+            </div>
+            <div class="kpi">
+                <strong>급여/비급여</strong>
+                <span>
+                    급여 <span th:text="${#numbers.formatInteger(summary.coveredAmount, 0, 'COMMA')}">0</span>
+                    / 비급여 <span th:text="${#numbers.formatInteger(summary.noncoveredAmount, 0, 'COMMA')}">0</span>
+                </span>
+            </div>
+            <div class="kpi">
+                <strong>환불액</strong>
+                <span th:text="${#numbers.formatInteger(summary.refundAmount, 0, 'COMMA')}">0</span>
+            </div>
+            <div class="kpi">
+                <strong>순매출</strong>
+                <span th:text="${#numbers.formatInteger(summary.netAmount, 0, 'COMMA')}">0</span>
+            </div>
+        </div>
+
+        <div class="report-grid">
+            <div class="panel">
+                <div class="panel-title">일자별 매출 추이</div>
+                <div class="panel-body">
+                    <div class="chart-box">차트 영역</div>
+                    <table style="margin-top:8px;">
+                        <thead>
+                        <tr>
+                            <th>일자</th>
+                            <th>매출</th>
+                            <th>급여</th>
+                            <th>비급여</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${dailyRows}">
+                            <td th:text="${row.day}">-</td>
+                            <td th:text="${#numbers.formatInteger(row.totalAmount, 0, 'COMMA')}">-</td>
+                            <td th:text="${#numbers.formatInteger(row.coveredAmount, 0, 'COMMA')}">-</td>
+                            <td th:text="${#numbers.formatInteger(row.noncoveredAmount, 0, 'COMMA')}">-</td>
+                        </tr>
+                        <tr th:if="${dailyRows == null or #lists.isEmpty(dailyRows)}">
+                            <td colspan="4">검색 결과 없음</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">결제수단/랭킹</div>
+                <div class="panel-body">
+                    <strong>결제수단별 집계</strong>
+                    <table style="margin-top:6px;">
+                        <thead>
+                        <tr>
+                            <th>결제수단</th>
+                            <th>금액</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${paymentRows}">
+                            <td th:text="${row.paymentMethodName}">-</td>
+                            <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
+                        </tr>
+                        <tr th:if="${paymentRows == null or #lists.isEmpty(paymentRows)}">
+                            <td colspan="2">검색 결과 없음</td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <strong style="display:block; margin-top:10px;">상위 진료과/의사</strong>
+                    <table style="margin-top:6px;">
+                        <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>명칭</th>
+                            <th>매출</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${rankRows}">
+                            <td th:text="${row.type}">-</td>
+                            <td th:text="${row.name}">-</td>
+                            <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
+                        </tr>
+                        <tr th:if="${rankRows == null or #lists.isEmpty(rankRows)}">
+                            <td colspan="3">검색 결과 없음</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
