@@ -3,6 +3,8 @@
 
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 
+    
+
 </head>
 <body>
 <div th:fragment="header(title, activeTab)">
@@ -14,11 +16,11 @@
         </div>
         <div class="user-info">
             <span th:text="${userName}">업무 상태</span>
-            <button type="button" class="btn-logout" onclick="logoutCheck()">로그아웃</button>
+            <button type="button" class="btn-logout" data-action="logout">로그아웃</button>
         </div>
         <div class="action-buttons">
-            <button class="time-in">출근</button>
-            <button class="time-out">퇴근</button>
+            <button class="time-in" data-action="time-in">출근</button>
+            <button class="time-out" data-action="time-out">퇴근</button>
         </div>
     </div>
 
@@ -46,6 +48,7 @@
     </nav>
 
     <div class="sub-menu" th:text="${title}">서브메뉴</div>
+    <script th:src="@{/js/header-actions.js}" defer></script>
 </div>
 </body>
 </html>

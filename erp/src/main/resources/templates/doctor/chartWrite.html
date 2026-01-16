@@ -360,39 +360,9 @@
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
-	<script>
-				document.addEventListener('DOMContentLoaded', () => {
 
-				    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
-				        fetch('/work/time-in', { method: 'POST' })
-				            .then(res =>
-				                res.text().then(msg => {
-				                    if (!res.ok) throw msg;
-				                    alert(msg);
-				                })
-				            )
-				            .catch(msg => alert(msg));
-				    });
-
-					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
-
-						fetch('/work/time-out/check')
-					        .then(res =>
-					            res.text().then(msg => {
-					                if (!res.ok) throw msg; // 퇴근 불가능
-
-					                if (!confirm('퇴근하시겠습니까?')) return;
-
-					                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-					                    .then(res => res.text())
-					                    .then(msg => alert(msg))
-					                    .catch(() => alert('퇴근 처리 실패'));
-					            })
-					        )
-					        .catch(msg => alert(msg));
-					});
-				});
-	</script>
+    <script th:src="@{/js/header-actions.js}" defer></script>
+	
 </head>
 <body>
     <header class="main-header">
@@ -402,14 +372,15 @@
                 <span>(아이콘)</span>
                 <span>MediCare |</span>
                 <span>사용자ID: </span>
+                <span th:text="${userId}"></span>
             </div>
             <div class="user-info">
-                <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
+                <span th:text="${userName}">진료과 ㅇㅇㅇ</span>
+				<button class="btn-logout" data-action="logout">로그아웃</button>
 			</div>
             <div class="action-buttons">
-                <button class="time-in">출근</button>
-                <button class="time-out">퇴근</button>
+                <button class="time-in" data-action="time-in">출근</button>
+                <button class="time-out" data-action="time-out">퇴근</button>
             </div>
         </div>
 		<!-- 상단 헤더 끝-->

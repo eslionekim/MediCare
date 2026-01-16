@@ -161,6 +161,8 @@
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
+
+    <script th:src="@{/js/header-actions.js}" defer></script>
 </head>
 <body>
     <header class="main-header">
@@ -173,11 +175,11 @@
             </div>
             <div class="user-info">
                 <span>진료과 ㅇㅇㅇ</span>
-				<button class="btn-logout">로그아웃</button>
+				<button class="btn-logout" data-action="logout">로그아웃</button>
 			</div>
             <div class="action-buttons">
-                <button class="time-in">출근</button>
-                <button class="time-out">퇴근</button>
+                <button class="time-in" data-action="time-in">출근</button>
+                <button class="time-out" data-action="time-out">퇴근</button>
             </div>
         </div>
 		<!-- 상단 헤더 끝-->

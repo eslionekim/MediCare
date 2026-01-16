@@ -32,45 +32,7 @@
     
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
-	<script>
-	document.addEventListener('DOMContentLoaded', () => {
-
-		    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
-		        fetch('/work/time-in', { method: 'POST' })
-		            .then(res =>
-		                res.text().then(msg => {
-		                    if (!res.ok) throw msg;
-		                    alert(msg);
-		                })
-		            )
-		            .catch(msg => alert(msg));
-		    });
-
-			document.querySelector('.time-out').addEventListener('click', () => { // 퇴근
-
-			        if (!confirm('퇴근하시겠습니까?')) return;
-
-			        fetch('/work/time-out', { method: 'POST' })
-			            .then(res => res.text())
-			            .then(msg => alert(msg))
-			            .catch(() => alert('퇴근 처리 실패'));
-			    });
-		});
-
-		
-		function logoutCheck() {
-		    if (!confirm("정말 로그아웃 하시겠습니까?")) return;
-
-		    fetch('/logout', { method: 'POST' })
-		        .then(res => res.text())
-		        .then(msg => {
-		            alert(msg);
-		            // 로그아웃 성공하면 페이지 이동 (로그인 페이지 등)
-		            window.location.href = '/login'; // 로그인 페이지 URL
-		        })
-		        .catch(() => alert('로그아웃 처리 실패'));
-		}
-	</script>
+	
 </head>
 <body>
 <div class="erp-page">
