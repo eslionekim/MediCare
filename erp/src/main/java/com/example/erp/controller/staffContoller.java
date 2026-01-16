@@ -46,6 +46,7 @@ import com.example.erp.Stock.Stock;
 import com.example.erp.Stock.StockRepository;
 import com.example.erp.Stock.StockService;
 import com.example.erp.Stock_move.LogisOutboundDTO;
+import com.example.erp.Stock_move.StockInRequestDTO;
 import com.example.erp.Stock_move.Stock_move;
 import com.example.erp.Stock_move.Stock_moveRepository;
 import com.example.erp.Stock_move.Stock_moveService;
@@ -244,6 +245,7 @@ public class staffContoller {
 	    @ResponseBody
 	    @Transactional
 	    public ResponseEntity<?> stockIn(
+	    		@RequestParam("stock_move_id")  Long stock_move_id,
 	    		@RequestParam("item_code") String item_code,
 	            @RequestParam("location") String location,
 	            @RequestParam("zone") String zone,
@@ -270,33 +272,22 @@ public class staffContoller {
 
 	        stockRepository.save(stock);
 
-	        // 재고 이동 저장
-	        Stock_move move = new Stock_move();
-	        move.setMove_type("INBOUND");
-	        move.setTo_warehouse_code(stock.getWarehouse_code());
-	        move.setMoved_at(LocalDateTime.now());
+	        Stock_move move = stock_moveRepository.findById(stock_move_id)
+	                .orElseThrow(() -> new RuntimeException("입고요청 없음"));
+
+
+	        // 기존 요청을 실제 입고로 확정
+	        move.setTo_warehouse_code(warehouse.getWarehouse_code());
 	        move.setStatus_code("SM_IN");
-	        stock_moveRepository.save(move);
-
-	        // 단가 조회
-	        Item item = itemRepository.findById(item_code)
-	                .orElseThrow(() -> new RuntimeException("품목 정보 없음"));
-
-	        // 재고 이동 항목 저장
-	        Stock_move_item moveItem = new Stock_move_item();
-	        moveItem.setStock_move_id(move.getStock_move_id());
-	        moveItem.setItem_code(item_code);
-	        moveItem.setLot_code(lot_code);
-	        moveItem.setQuantity(BigDecimal.valueOf(quantity));
-
-	        //총 금액
-	        BigDecimal totalPrice = item.getUnit_price()
-	                        .multiply(BigDecimal.valueOf(quantity));
-
-	        moveItem.setUnit_price(totalPrice.intValue());
-	        moveItem.setExpiry_date(LocalDate.now());
-	        stock_move_itemRepository.save(moveItem);
+	        
 	        return ResponseEntity.ok("입고 완료");
+	    }
+	    
+	    //약사->불출리스트
+	    @GetMapping("/staff/stock/in/requests")
+	    @ResponseBody
+	    public List<StockInRequestDTO> getStockInRequests(@RequestParam("itemCode") String itemCode) {
+	    	return stock_move_itemRepository.findPendingExStockInList(itemCode);
 	    }
 	    
 	    @GetMapping("/staff/item/{itemCode}/price") // 입고등록->단가조회

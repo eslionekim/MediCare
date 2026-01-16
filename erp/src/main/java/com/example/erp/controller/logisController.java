@@ -147,9 +147,9 @@ public class logisController {
 
 	    // 3️⃣ Map으로 만들어서 반환
 	    Map<String, Object> result = new HashMap<>();
-	    result.put("totalAvailableQty", stockData.getTotalAvailableQty());
-	    result.put("lotList", stockData.getLotList());
-	    result.put("baseUnit", stockData.getBaseUnit());
+	    result.put("totalAvailableQty", stockData.getTotalAvailableQty()); //총 가용재고
+	    result.put("lotList", stockData.getLotList()); //stockId,lotCode,outboundDeadline,availableQty
+	    result.put("baseUnit", stockData.getBaseUnit()); //기본 단위
 
 	    result.put("convertedRequestQty", stockData.getConvertedRequestQty()); // 요청 환산 수량
 	    result.put("approvedQty", iri.getApproved_qty());          // 승인 수량
@@ -187,7 +187,7 @@ public class logisController {
 	            move.setMove_type("transfer");
 	            move.setFrom_warehouse_code(stock.getWarehouse_code());
 	            move.setIssue_request_id(issueRequestId);
-	            move.setStatus_code(isPartial ? "SM_DRAFT" : "SM_request");
+	            move.setStatus_code("SM_request");
 	            move.setMoved_at(LocalDateTime.now());
 	            //move.setQuantity("-" + qty); // 빠져나간 수량 기록
 	            stock_moveRepository.save(move);
@@ -218,22 +218,15 @@ public class logisController {
 	                .findByIssueRequestId(issueRequestId)
 	                .orElseThrow(() -> new RuntimeException("Issue_request_item 없음"));
 	        
-	        if (isPartial) {
-	        	
-	            // 부분출고: 이전 approved_qty + 이번 출고량
-	            iri.setApproved_qty(iri.getApproved_qty().add(totalQty));
-	        } else {
-	            // 전체출고: 요청 환산 수량 전체로 설정
-	            iri.setApproved_qty(iri.getRequested_qty());
-	        }
+	        iri.setApproved_qty(iri.getRequested_qty());
 	        issue_request_itemRepository.save(iri);
 	
 	        Issue_request issue = issue_requestRepository.findById(issueRequestId)
 	                .orElseThrow(() -> new RuntimeException("Issue_request 없음"));
-	        issue.setStatus_code(isPartial ? "IR_PICKING" : "IR_DONE");
+	        issue.setStatus_code("IR_DONE");
 	        issue_requestRepository.save(issue);
 	
-	        return ResponseEntity.ok(isPartial ? "부분출고 처리 완료" : "전체출고 완료");
+	        return ResponseEntity.ok("출고 완료");
 	
 	    } catch (Exception e) {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

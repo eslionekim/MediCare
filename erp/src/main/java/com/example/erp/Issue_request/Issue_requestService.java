@@ -151,18 +151,11 @@ public class Issue_requestService {
 
         issue_requestRepository.save(req);
 
-        // 2) item 정보 조회 (pack_unit_qty 필요)
-        Item item = itemRepository.findById(dto.getItemCode())
-                .orElseThrow(() -> new RuntimeException("item not found"));
-
-        BigDecimal baseQty = dto.getQty().multiply(BigDecimal.valueOf(item.getPack_unit_qty()));
-
-
-        // 3) Issue_request_item 저장
+        // 2) Issue_request_item 저장
         Issue_request_item itemReq = new Issue_request_item();
         itemReq.setIssue_request_id(req.getIssue_request_id());
         itemReq.setItem_code(dto.getItemCode());
-        itemReq.setRequested_qty(baseQty);
+        itemReq.setRequested_qty(dto.getQty());
 
         issue_request_itemRepository.save(itemReq);
     }
@@ -189,18 +182,11 @@ public class Issue_requestService {
 
         issue_requestRepository.save(req);
 
-        // 2) item 정보 조회 (pack_unit_qty 필요)
-        Item item = itemRepository.findById(dto.getItemCode())
-                .orElseThrow(() -> new RuntimeException("item not found"));
-
-        BigDecimal baseQty = dto.getQty().multiply(BigDecimal.valueOf(item.getPack_unit_qty()));
-
-
         // 3) Issue_request_item 저장
         Issue_request_item itemReq = new Issue_request_item();
         itemReq.setIssue_request_id(req.getIssue_request_id());
         itemReq.setItem_code(dto.getItemCode());
-        itemReq.setRequested_qty(baseQty);
+        itemReq.setRequested_qty(dto.getQty());
 
         issue_request_itemRepository.save(itemReq);
     }
