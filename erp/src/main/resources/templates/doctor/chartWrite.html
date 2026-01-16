@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 
@@ -215,7 +215,7 @@
 			margin: 0px; 
 			display:inline-block;
 			padding:2px 20px;
-		 	font-size: 13px;
+	 		font-size: 13px;
 	}
 	
 	/* 환자 정보 -> 라벨 */
@@ -324,6 +324,39 @@
 	.patient_soap textarea {
 	    font-size: 13px;
 	}
+
+	/* 차트 입력 폼 레이아웃 정리 */
+	.patient_soap .soap-grid {
+	    display: grid;
+	    grid-template-columns: repeat(3, minmax(0, 1fr));
+	    gap: 10px 12px;
+	    align-items: start;
+	}
+
+	.patient_soap .soap-field {
+	    display: flex;
+	    flex-direction: column;
+	    gap: 6px;
+	}
+
+	.patient_soap .soap-field label {
+	    font-size: 13px;
+	    color: #333;
+	}
+
+	.patient_soap .soap-field textarea {
+	    width: 100%;
+	    box-sizing: border-box;
+	    border: 1px solid #7B7B7B;
+	    background-color: #ffffff;
+	    padding: 6px 8px;
+	    border-radius: 6px;
+	    resize: vertical;
+	}
+
+	.patient_soap .soap-field.wide {
+	    grid-column: span 2;
+	}
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
@@ -344,19 +377,19 @@
 					document.querySelector('.time-out').addEventListener('click', () => { //퇴근 처리
 
 						fetch('/work/time-out/check')
-						        .then(res =>
-						            res.text().then(msg => {
-						                if (!res.ok) throw msg; // 퇴근 불가능
+					        .then(res =>
+					            res.text().then(msg => {
+					                if (!res.ok) throw msg; // 퇴근 불가능
 
-						                if (!confirm('퇴근하시겠습니까?')) return;
+					                if (!confirm('퇴근하시겠습니까?')) return;
 
-						                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
-						                    .then(res => res.text())
-						                    .then(msg => alert(msg))
-						                    .catch(() => alert('퇴근 처리 실패'));
-						            })
-						        )
-						        .catch(msg => alert(msg));
+					                fetch('/work/time-out', { method: 'POST' }) // 예를 눌러야 실행
+					                    .then(res => res.text())
+					                    .then(msg => alert(msg))
+					                    .catch(() => alert('퇴근 처리 실패'));
+					            })
+					        )
+					        .catch(msg => alert(msg));
 					});
 				});
 	</script>
@@ -491,20 +524,32 @@
 				<input type="hidden" name="chart_id" th:value="${chart != null ? chart.chart_id : ''}">
 			    <input type="hidden" name="visit_id" th:value="${chart != null && chart.visit != null ? chart.visit.visit_id : ''}">
 				<input type="hidden" name="patient_id" th:value="${chart != null && chart.visit != null && chart.visit.patient != null ? chart.visit.patient.patient_id : ''}">
-	            <label for="subjective">주증상 (Subjective)</label>
-	            <textarea id="subjective" name="subjective" rows="3" th:text="${chart.subjective}"></textarea>
+			<div class="soap-grid">
+				<div class="soap-field">
+		            <label for="subjective">주증상 (Subjective)</label>
+		            <textarea id="subjective" name="subjective" rows="3" th:text="${chart.subjective}"></textarea>
+				</div>
 
-	            <label for="objective">객관적 검사 (Objective)</label>
-	            <textarea id="objective" name="objective" rows="3" th:text="${chart.objective}" required></textarea>
+				<div class="soap-field">
+		            <label for="objective">객관적 검사 (Objective)</label>
+		            <textarea id="objective" name="objective" rows="3" th:text="${chart.objective}" required></textarea>
+				</div>
 
-	            <label for="assessment">평가 및 진단 (Assessment)</label>
-	            <textarea id="assessment" name="assessment" rows="3" th:text="${chart.assessment}" required></textarea>
+				<div class="soap-field">
+		            <label for="assessment">평가 및 진단 (Assessment)</label>
+		            <textarea id="assessment" name="assessment" rows="3" th:text="${chart.assessment}" required></textarea>
+				</div>
 
-	            <label for="plan">계획 및 치료 (Plan)</label>
-	            <textarea id="plan" name="plan" rows="3" th:text="${chart.plan}" required></textarea>
+				<div class="soap-field wide">
+		            <label for="plan">계획 및 치료 (Plan)</label>
+		            <textarea id="plan" name="plan" rows="3" th:text="${chart.plan}" required></textarea>
+				</div>
 
-	            <label for="note">진료 메모 (Note)</label>
-	            <textarea id="note" name="note" rows="3" th:text="${chart.note}" required></textarea>
+				<div class="soap-field">
+		            <label for="note">진료 메모 (Note)</label>
+		            <textarea id="note" name="note" rows="3" th:text="${chart.note}" required></textarea>
+				</div>
+			</div>
 
 	            
 	        
@@ -515,32 +560,32 @@
 			<p class="title">상병코드</p>
 			<button type="button" onclick="addDiseasesRow()">+</button>
 			<table id="diseases">
-				            <thead>
-				                <tr>
-				                    <th>검색</th>
-									<th>코드</th>
-				                    <th>증상명</th>
-				                    <th>영문명</th>
-				                    <th>진료과</th>
-									<th>삭제</th>
-				                </tr>
-				            </thead>
-				            <tbody>
-				                <tr th:each="disease : ${diseases_code}">
-				                    <td><button type="button" onclick="openDiseasesPopup(this)">검색</button></td>
-									<td><input name="diseases_code[]"  th:value="${disease.diseases_code}" readonly  required></td>
-									<td><input name="name_kor[]" th:value="${disease.name_kor}" readonly></td>
-									<td><input name="name_eng[]" th:value="${disease.name_eng}" readonly></td>
-									<td><input name="department[]" th:value="${disease.department}" readonly></td>
-									<td><button type="button" onclick="removeRow(this)">삭제</button></td>
-				                </tr>
-				            </tbody>
-				        </table>
+			            <thead>
+			                <tr>
+			                    <th>검색</th>
+								<th>코드</th>
+			                    <th>증상명</th>
+			                    <th>영문명</th>
+			                    <th>진료과</th>
+								<th>삭제</th>
+			                </tr>
+			            </thead>
+			            <tbody>
+			                <tr th:each="disease : ${diseases_code}">
+			                    <td><button type="button" onclick="openDiseasesPopup(this)">검색</button></td>
+								<td><input name="diseases_code[]"  th:value="${disease.diseases_code}" readonly  required></td>
+								<td><input name="name_kor[]" th:value="${disease.name_kor}" readonly></td>
+								<td><input name="name_eng[]" th:value="${disease.name_eng}" readonly></td>
+								<td><input name="department[]" th:value="${disease.department}" readonly></td>
+								<td><button type="button" onclick="removeRow(this)">삭제</button></td>
+			                </tr>
+			            </tbody>
+			        </table>
 		</div>
 		
 		<!-- 5. 처방 폼 -->
 		<div class="box fee" style="max-height:100px; overflow-y:auto;">
-			<p class="title">처방</p class="title">
+			<p class="title">처방</p>
 			<button type="button" onclick="addFeeRow()">+</button>
 			<table id="fee">
 	            <thead>
@@ -847,4 +892,3 @@
 	</script>
 </body>
 </html>
-

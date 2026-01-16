@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
 
@@ -285,6 +285,39 @@
 	    overflow-y: auto;
 	}
 
+	/* 차트 입력 폼 레이아웃 정리 */
+	.patient_soap .soap-grid {
+	    display: grid;
+	    grid-template-columns: repeat(3, minmax(0, 1fr));
+	    gap: 10px 12px;
+	    align-items: start;
+	}
+
+	.patient_soap .soap-field {
+	    display: flex;
+	    flex-direction: column;
+	    gap: 6px;
+	}
+
+	.patient_soap .soap-field label {
+	    font-size: 13px;
+	    color: #333;
+	}
+
+	.patient_soap .soap-field textarea {
+	    width: 100%;
+	    box-sizing: border-box;
+	    border: 1px solid #7B7B7B;
+	    background-color: #ffffff;
+	    padding: 6px 8px;
+	    border-radius: 6px;
+	    resize: vertical;
+	}
+
+	.patient_soap .soap-field.wide {
+	    grid-column: span 2;
+	}
+
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
@@ -450,20 +483,32 @@
 				<input type="hidden" name="chart_id" th:value="${chart.chart_id}">
 			    <input type="hidden" name="visit_id" th:value="${chart.visit.visit_id}">
 				<input type="hidden" name="patient_id" th:value="${chart.visit.patient.patient_id}">
-	            <label for="subjective">주증상 (Subjective)</label>
-	            <textarea id="subjective" name="subjective" rows="3" th:text="${chart.subjective}" readonly></textarea>
+			<div class="soap-grid">
+				<div class="soap-field">
+					<label for="subjective">주증상 (Subjective)</label>
+					<textarea id="subjective" name="subjective" rows="3" th:text="${chart.subjective}" readonly></textarea>
+				</div>
 
-	            <label for="objective">객관적 검사 (Objective)</label>
-	            <textarea id="objective" name="objective" rows="3" th:text="${chart.objective}" readonly></textarea>
+				<div class="soap-field">
+					<label for="objective">객관적 검사 (Objective)</label>
+					<textarea id="objective" name="objective" rows="3" th:text="${chart.objective}" readonly></textarea>
+				</div>
 
-	            <label for="assessment">평가 및 진단 (Assessment)</label>
-	            <textarea id="assessment" name="assessment" rows="3" th:text="${chart.assessment}" readonly></textarea>
+				<div class="soap-field">
+					<label for="assessment">평가 및 진단 (Assessment)</label>
+					<textarea id="assessment" name="assessment" rows="3" th:text="${chart.assessment}" readonly></textarea>
+				</div>
 
-	            <label for="plan">계획 및 치료 (Plan)</label>
-	            <textarea id="plan" name="plan" rows="3" th:text="${chart.plan}" readonly></textarea>
+				<div class="soap-field wide">
+					<label for="plan">계획 및 치료 (Plan)</label>
+					<textarea id="plan" name="plan" rows="3" th:text="${chart.plan}" readonly></textarea>
+				</div>
 
-	            <label for="note">진료 메모 (Note)</label>
-	            <textarea id="note" name="note" rows="3" th:text="${chart.note}" readonly></textarea>
+				<div class="soap-field">
+					<label for="note">진료 메모 (Note)</label>
+					<textarea id="note" name="note" rows="3" th:text="${chart.note}" readonly></textarea>
+				</div>
+			</div>
 
 	            
 	        
@@ -472,28 +517,28 @@
 		<!-- 5. 상병코드 폼 -->
 		<div class="box diseases">
 			<table id="diseases">
-				            <thead>
-				                <tr>
-				                    <th>검색</th>
+			            <thead>
+			                <tr>
+			                    <th>검색</th>
 									<th>코드</th>
-				                    <th>증상명</th>
-				                    <th>영문명</th>
-				                    <th>진료과</th>
-				                </tr>
-				            </thead>
-				            <tbody>
-				                <tr th:each="disease : ${diseases_code}">
-				                    <td><button type="button" onclick="openDiseasesPopup(this)">검색</button></td>
+			                    <th>증상명</th>
+			                    <th>영문명</th>
+			                    <th>진료과</th>
+			                </tr>
+			            </thead>
+			            <tbody>
+			                <tr th:each="disease : ${diseases_code}">
+			                    <td><button type="button" onclick="openDiseasesPopup(this)">검색</button></td>
 									<td><input name="diseases_code[]"  th:value="${disease.diseases_code}" readonly></td>
 									<td><input name="name_kor[]" th:value="${disease.name_kor}" readonly></td>
 									<td><input name="name_eng[]" th:value="${disease.name_eng}" readonly></td>
 									<td><input name="department[]" th:value="${disease.department}" readonly></td>
-				                </tr>
-				            </tbody>
-				        </table>
+			                </tr>
+			            </tbody>
+		        	</table>
 		</div>
 		<button type="button"
-				        th:onclick="'window.location.href=\'/doctor/chartWrite?visit_id=' + ${visit.visit_id} + '&patient_id=' + ${patient.patient_id} + '\';'">
+					        th:onclick="'window.location.href=\'/doctor/chartWrite?visit_id=' + ${visit.visit_id} + '&patient_id=' + ${patient.patient_id} + '\';'">
 				    수정
 				</button>
 		<!-- 6. 처방 폼 -->
@@ -561,4 +606,3 @@
 	
 </body>
 </html>
-
