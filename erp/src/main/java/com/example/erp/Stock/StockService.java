@@ -57,7 +57,7 @@ public class StockService {
 
 	    //재고 이동 생성
 	    Stock_move move = new Stock_move();
-	    move.setMove_type("outbound");
+	    move.setMove_type("OUTBOUND");
 	    move.setFrom_warehouse_code(stock.getWarehouse_code());
 	    move.setMoved_at(LocalDateTime.now());
 	    move.setStatus_code("sm_discard");
@@ -110,7 +110,7 @@ public class StockService {
 
 	    //재고 이동 
 	    Stock_move move = new Stock_move();
-	    move.setMove_type("outbound");
+	    move.setMove_type("OUTBOUND");
 	    move.setFrom_warehouse_code(stock.getWarehouse_code());
 	    move.setMoved_at(LocalDateTime.now());
 	    move.setStatus_code("sm_quantity");
