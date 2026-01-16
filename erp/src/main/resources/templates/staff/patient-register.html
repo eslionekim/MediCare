@@ -76,7 +76,7 @@
                             <td>
                                 <span>당일 방문</span>
                                 <button class="btn-xs"
-                                        th:onclick="|location.href='@{/patients(patientId=${p.patient_id})}'|">
+                                        th:onclick="|location.href='@{/patients(patientId=${p.patient_id}, page=${currentPage}, keyword=${keyword})}'|">
                                     상세보기
                                 </button>
                             </td>
@@ -86,6 +86,27 @@
                         </tr>
                         </tbody>
                     </table>
+                </div>
+                <div style="display:flex; gap:6px; justify-content:center; align-items:center; padding:6px 0;">
+                    <a class="btn-xs"
+                       th:href="@{/patients(page=0, size=${pageSize}, keyword=${keyword})}"
+                       th:if="${totalPages != null and totalPages > 1}">&laquo;</a>
+                    <a class="btn-xs"
+                       th:href="@{/patients(page=${currentPage - 1}, size=${pageSize}, keyword=${keyword})}"
+                       th:if="${currentPage != null and currentPage > 0}">&lt;</a>
+                    <span th:each="p : ${pageNumbers}">
+                        <a class="btn-xs"
+                           th:href="@{/patients(page=${p}, size=${pageSize}, keyword=${keyword})}"
+                           th:text="${p + 1}"
+                           th:style="${p == currentPage} ? 'background:#879BD5;color:#fff;' : ''">
+                        </a>
+                    </span>
+                    <a class="btn-xs"
+                       th:href="@{/patients(page=${currentPage + 1}, size=${pageSize}, keyword=${keyword})}"
+                       th:if="${totalPages != null and currentPage != null and currentPage + 1 < totalPages}">&gt;</a>
+                    <a class="btn-xs"
+                       th:href="@{/patients(page=${totalPages - 1}, size=${pageSize}, keyword=${keyword})}"
+                       th:if="${totalPages != null and totalPages > 1}">&raquo;</a>
                 </div>
             </section>
 

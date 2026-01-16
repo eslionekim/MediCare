@@ -182,10 +182,36 @@
   	      gap: 5px;
   	      height: calc(100vh - 130px); /* 상단+중앙+하단 헤더 제외 */
   	      padding: 5px;
-  	      box-sizing: border-box;
-  	  }
-  	
-  	.item{
+   	      box-sizing: border-box;
+    	  }
+
+	  .item-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
+
+	  .item-scroll table {
+	      width: 100%;
+	  }
+
+	  .lot-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
+
+	  .lot-scroll table {
+	      width: 100%;
+	  }
+
+    	.item{
   		grid-column:1/2 ;
   	}
 	
@@ -266,6 +292,7 @@
 				</div>
 
 				<!-- 금일 진료 리스트 -->
+				<div class="item-scroll">
 				<table id="requestTable" border="1">
 					<thead>
 					    <tr>
@@ -311,6 +338,7 @@
 						</tr>
 					</tbody>
 				</table>
+				</div>
 		</div>
 		<div class="lot">
 			<!-- itemCode 보관용 -->
@@ -320,6 +348,7 @@
 				
 				<button id="purchaseRequestBtn" data-item-code="{{itemCode}}">불출요청</button>
 				<button id="stockInBtn">입고등록</button>
+				<div class="lot-scroll">
 				<table id="lotTable" border="1">
 					<thead>
 		                <tr>
@@ -336,6 +365,7 @@
 		            </thead>
 		            <tbody id="lotTableBody"></tbody>
 				</table>
+				</div>
 			</div>
 			
 		</div>
