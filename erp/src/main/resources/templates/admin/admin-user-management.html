@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>사용자 관리</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .box { border:1px solid #c9cfde; border-radius:4px; background:#f8f9fd; padding:8px; min-height:120px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='사용자 관리', activeTab='ad-040')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <input type="text" name="keyword" placeholder="이름/ID 검색" th:value="${selectedKeyword}">
+            <select name="department">
+                <option value="" th:selected="${selectedDepartment == null or selectedDepartment == ''}">부서</option>
+                <option th:each="d : ${departmentOptions}"
+                        th:value="${d.code}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartment != null and selectedDepartment == d.code}">
+                </option>
+            </select>
+            <select name="role">
+                <option value="" th:selected="${selectedRole == null or selectedRole == ''}">권한(Role)</option>
+                <option th:each="r : ${roleOptions}"
+                        th:value="${r.code}"
+                        th:text="${r.name}"
+                        th:selected="${selectedRole != null and selectedRole == r.code}">
+                </option>
+            </select>
+            <select name="status">
+                <option value="" th:selected="${selectedStatus == null or selectedStatus == ''}">상태</option>
+                <option value="ACTIVE" th:selected="${selectedStatus == 'ACTIVE'}">활성</option>
+                <option value="INACTIVE" th:selected="${selectedStatus == 'INACTIVE'}">비활성</option>
+            </select>
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="panel">
+            <div class="panel-title">사용자 리스트</div>
+            <div class="panel-body">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>이름</th>
+                        <th>부서</th>
+                        <th>직무</th>
+                        <th>상태</th>
+                        <th>최근 로그인</th>
+                        <th>권한(Role)</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td th:text="${row.name}">-</td>
+                        <td th:text="${row.departmentName}">-</td>
+                        <td th:text="${row.position}">-</td>
+                        <td th:text="${row.status}">-</td>
+                        <td th:text="${row.lastLogin}">-</td>
+                        <td th:text="${row.roles}">-</td>
+                    </tr>
+                    <tr th:if="${rows == null or #lists.isEmpty(rows)}">
+                        <td colspan="6">검색 결과 없음</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">상세</div>
+            <div class="panel-body">
+                <div class="detail-grid">
+                    <div class="box">
+                        <strong>기본정보</strong>
+                        <div>사번 / 연락처</div>
+                    </div>
+                    <div class="box">
+                        <strong>부서·직무·권한</strong>
+                        <div>부서 / 직무 / Role</div>
+                        <div style="margin-top:8px;">
+                            <button class="btn" type="button">계정 활성/비활성</button>
+                            <button class="btn" type="button">비밀번호 초기화</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

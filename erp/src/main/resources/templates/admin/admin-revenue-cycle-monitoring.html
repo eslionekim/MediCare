@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>원무 흐름 모니터링</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+
+        .filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .monitoring-grid { display:grid; grid-template-columns:1fr 1.4fr; gap:12px; margin-top:12px; }
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        .kanban { display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+        .kanban-col { border:1px solid #c9cfde; border-radius:4px; background:#f8f9fd; overflow:hidden; }
+        .kanban-head { background:#e9edf7; padding:6px; font-weight:600; display:flex; justify-content:space-between; align-items:center; }
+        .kanban-count { background:#6b80bf; color:#fff; border-radius:10px; padding:0 6px; font-size:11px; }
+        .kanban-items { padding:6px; display:flex; flex-direction:column; gap:6px; }
+        .kanban-item { background:#fff; border:1px solid #d6dbe8; border-radius:4px; padding:6px; }
+        .kanban-item strong { display:block; font-size:12px; margin-bottom:2px; }
+        .kanban-item span { display:block; color:#6b7280; font-size:11px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .detail-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:6px; font-size:12px; }
+        .detail-item { border:1px solid #c9cfde; border-radius:4px; padding:6px; background:#f8f9fd; }
+        .detail-item strong { display:block; color:#5b6b99; margin-bottom:2px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='원무 흐름 모니터링', activeTab='ad-010')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <select name="range">
+                <option value="today" th:selected="${selectedRange == 'today'}">오늘</option>
+                <option value="week" th:selected="${selectedRange == 'week'}">주간</option>
+                <option value="month" th:selected="${selectedRange == 'month'}">월간</option>
+            </select>
+            <select name="departmentCode">
+                <option value="" th:selected="${selectedDepartmentCode == null or selectedDepartmentCode == ''}">진료과</option>
+                <option th:each="d : ${departmentOptions}"
+                        th:value="${d.code}"
+                        th:text="${d.name}"
+                        th:selected="${selectedDepartmentCode != null and selectedDepartmentCode == d.code}">
+                </option>
+            </select>
+            <select name="doctorId">
+                <option value="" th:selected="${selectedDoctorId == null or selectedDoctorId == ''}">의사</option>
+                <option th:each="doc : ${doctorOptions}"
+                        th:value="${doc.userId}"
+                        th:text="${doc.departmentName != '' ? doc.name + ' (' + doc.departmentName + ')' : doc.name}"
+                        th:selected="${selectedDoctorId != null and selectedDoctorId == doc.userId}">
+                </option>
+            </select>
+            <select name="insuranceCode">
+                <option value="" th:selected="${selectedInsuranceCode == null or selectedInsuranceCode == ''}">보험구분</option>
+                <option th:each="ic : ${insuranceOptions}"
+                        th:value="${ic.code}"
+                        th:text="${ic.name}"
+                        th:selected="${selectedInsuranceCode != null and selectedInsuranceCode == ic.code}">
+                </option>
+            </select>
+            <select name="status">
+                <option value="" th:selected="${selectedStatus == null or selectedStatus == ''}">상태</option>
+                <option value="RECEPTION_WAIT" th:selected="${selectedStatus == 'RECEPTION_WAIT'}">접수대기</option>
+                <option value="IN_TREATMENT" th:selected="${selectedStatus == 'IN_TREATMENT'}">진료중</option>
+                <option value="TREATMENT_DONE" th:selected="${selectedStatus == 'TREATMENT_DONE'}">진료완료</option>
+                <option value="PAY_WAIT" th:selected="${selectedStatus == 'PAY_WAIT'}">수납대기</option>
+                <option value="PAY_DONE" th:selected="${selectedStatus == 'PAY_DONE'}">수납완료</option>
+                <option value="CLAIM_WAIT" th:selected="${selectedStatus == 'CLAIM_WAIT'}">청구대기</option>
+                <option value="CLAIM_DONE" th:selected="${selectedStatus == 'CLAIM_DONE'}">청구완료</option>
+            </select>
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="panel" style="margin-top:12px;">
+            <div class="panel-title">원무 흐름 파이프라인</div>
+            <div class="panel-body">
+                <div class="kanban">
+                    <div class="kanban-col" th:each="col : ${kanbanColumns}">
+                        <div class="kanban-head">
+                            <span th:text="${col.title}">접수대기</span>
+                            <span class="kanban-count" th:text="${col.count}">0</span>
+                        </div>
+                        <div class="kanban-items">
+                            <div class="kanban-item" th:each="item : ${col.items}">
+                                <strong th:text="${item.patientName}">환자명</strong>
+                                <span th:text="${item.departmentName}">진료과</span>
+                                <span th:text="${item.visitTime}">접수시간</span>
+                            </div>
+                            <div class="kanban-item" th:if="${col.items == null or #lists.isEmpty(col.items)}">
+                                <span>표시 항목 없음</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="monitoring-grid">
+            <div class="panel">
+                <div class="panel-title">상세 리스트</div>
+                <div class="panel-body">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>방문번호</th>
+                            <th>환자명</th>
+                            <th>진료과</th>
+                            <th>의사</th>
+                            <th>보험구분</th>
+                            <th>현재상태</th>
+                            <th>접수시간</th>
+                            <th>수납</th>
+                            <th>청구</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${visitRows}">
+                            <td th:text="${row.visitId}">-</td>
+                            <td th:text="${row.patientName}">-</td>
+                            <td th:text="${row.departmentName}">-</td>
+                            <td th:text="${row.doctorName}">-</td>
+                            <td th:text="${row.insuranceName}">-</td>
+                            <td th:text="${row.statusName}">-</td>
+                            <td th:text="${row.receptionTime}">-</td>
+                            <td th:text="${row.paymentStatus}">-</td>
+                            <td th:text="${row.claimStatus}">-</td>
+                        </tr>
+                        <tr th:if="${visitRows == null or #lists.isEmpty(visitRows)}">
+                            <td colspan="9">검색 결과 없음</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">상세 패널</div>
+                <div class="panel-body">
+                    <div class="detail-grid" th:if="${selectedVisit != null}">
+                        <div class="detail-item">
+                            <strong>방문번호</strong>
+                            <span th:text="${selectedVisit.visitId}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>환자명</strong>
+                            <span th:text="${selectedVisit.patientName}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>진료과</strong>
+                            <span th:text="${selectedVisit.departmentName}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>의사</strong>
+                            <span th:text="${selectedVisit.doctorName}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>보험구분</strong>
+                            <span th:text="${selectedVisit.insuranceName}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>현재상태</strong>
+                            <span th:text="${selectedVisit.statusName}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>접수시간</strong>
+                            <span th:text="${selectedVisit.receptionTime}">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <strong>수납/청구</strong>
+                            <span th:text="${selectedVisit.paymentStatus + ' / ' + selectedVisit.claimStatus}">-</span>
+                        </div>
+                    </div>
+                    <div th:if="${selectedVisit == null}">
+                        표시할 상세 정보가 없습니다.
+                    </div>
+                    <div style="margin-top:10px;">
+                        <button class="btn" type="button">상태 정정 요청</button>
+                        <button class="btn" type="button">결제/청구 정정</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

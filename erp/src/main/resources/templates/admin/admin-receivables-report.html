@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>미수금/후불 리포트</title>
+    <style>
+        body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
+        .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
+        .content { padding:14px; }
+        .filter-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#f4f6fb; padding:8px; border-radius:6px; border:1px solid #cbd2e1; }
+        .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
+        .filter-row .date { width:120px; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
+
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
+        .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
+        .panel-body { padding:8px; font-size:12px; }
+
+        table { width:100%; border-collapse:collapse; font-size:12px; }
+        th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
+        th { background:#e9edf7; }
+        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+        .box { border:1px solid #c9cfde; border-radius:4px; background:#f8f9fd; padding:8px; min-height:120px; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div class="admin-frame">
+    <div th:replace="~{fragments/admin-header :: header(title='미수금/후불 리포트', activeTab='ad-022')}"></div>
+
+    <div class="content">
+        <form class="filter-row" method="get">
+            <input class="date" type="date" name="startDate" th:value="${selectedStartDate}">
+            <span>-</span>
+            <input class="date" type="date" name="endDate" th:value="${selectedEndDate}">
+            <select name="receivableStatus">
+                <option value="" th:selected="${selectedReceivableStatus == null or selectedReceivableStatus == ''}">미수 상태</option>
+                <option value="OPEN" th:selected="${selectedReceivableStatus == 'OPEN'}">미수</option>
+                <option value="PARTIAL" th:selected="${selectedReceivableStatus == 'PARTIAL'}">부분수납</option>
+                <option value="PAID" th:selected="${selectedReceivableStatus == 'PAID'}">완납</option>
+            </select>
+            <select name="insuranceCode">
+                <option value="" th:selected="${selectedInsuranceCode == null or selectedInsuranceCode == ''}">보험구분</option>
+                <option th:each="ic : ${insuranceOptions}"
+                        th:value="${ic.code}"
+                        th:text="${ic.name}"
+                        th:selected="${selectedInsuranceCode != null and selectedInsuranceCode == ic.code}">
+                </option>
+            </select>
+            <input type="text" name="keyword" placeholder="환자 검색" th:value="${selectedKeyword}">
+            <button class="btn btn-blue" type="submit">검색</button>
+        </form>
+
+        <div class="panel">
+            <div class="panel-title">미수금 리스트</div>
+            <div class="panel-body">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>환자명</th>
+                        <th>방문번호</th>
+                        <th>발생일</th>
+                        <th>발생금액</th>
+                        <th>수납금액</th>
+                        <th>잔액</th>
+                        <th>상태</th>
+                        <th>담당자</th>
+                        <th>메모</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${rows}">
+                        <td th:text="${row.patientName}">-</td>
+                        <td th:text="${row.visitId}">-</td>
+                        <td th:text="${row.occurredAt}">-</td>
+                        <td th:text="${#numbers.formatInteger(row.totalAmount, 0, 'COMMA')}">-</td>
+                        <td th:text="${#numbers.formatInteger(row.paidAmount, 0, 'COMMA')}">-</td>
+                        <td th:text="${#numbers.formatInteger(row.balance, 0, 'COMMA')}">-</td>
+                        <td th:text="${row.status}">-</td>
+                        <td th:text="${row.manager}">-</td>
+                        <td th:text="${row.memo}">-</td>
+                    </tr>
+                    <tr th:if="${rows == null or #lists.isEmpty(rows)}">
+                        <td colspan="9">검색 결과 없음</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">상세 패널</div>
+            <div class="panel-body">
+                <div class="detail-grid">
+                    <div class="box">
+                        <strong>금액 구성</strong>
+                        <div th:if="${selected != null}">
+                            발생금액
+                            <span th:text="${#numbers.formatInteger(selected.totalAmount, 0, 'COMMA')}">0</span>
+                            / 수납
+                            <span th:text="${#numbers.formatInteger(selected.paidAmount, 0, 'COMMA')}">0</span>
+                        </div>
+                        <div th:if="${selected == null}">선택된 항목 없음</div>
+                    </div>
+                    <div class="box">
+                        <strong>수납 이력</strong>
+                        <div>결제수단/시간</div>
+                    </div>
+                    <div class="box">
+                        <strong>관리자 처리</strong>
+                        <div>
+                            <button class="btn" type="button">후불 처리 등록/해제</button>
+                            <button class="btn" type="button">회수 완료 처리</button>
+                        </div>
+                    </div>
+                    <div class="box">
+                        <strong>메모</strong>
+                        <div>메모 입력 영역</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

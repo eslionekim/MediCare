@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" th:href="@{/css/common-base.css}">
+</head>
+<body>
+<div th:fragment="header(title, activeTab)" data-admin-header th:attr="data-active-tab=${activeTab}">
+    <style>
+        .top-bar { display:flex; justify-content:space-between; align-items:center; padding:6px 12px; background:#eef1f8; font-size:13px; }
+        .top-left { display:flex; gap:10px; align-items:center; }
+        .top-center { font-weight:600; }
+        .top-right { display:flex; gap:6px; align-items:center; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-red { background:#ff5d5d; color:#fff; border-color:#ff5d5d; }
+        .btn-blue { background:#879bd5; color:#fff; }
+        .tabs { display:flex; gap:18px; padding:6px 12px; background:#dde2f0; font-size:13px; }
+        .tabs span { cursor:pointer; }
+        .tabs span.active { font-weight:600; }
+        .sub-bar { padding:6px 12px; background:#baccff; font-size:13px; font-weight:600; }
+        .admin-sub-tabs { display:none; }
+        .admin-sub-tabs.is-active { display:flex; }
+    </style>
+    <div class="top-bar">
+        <div class="top-left">
+            <span>(아이콘)</span>
+            <span>시스템명 | 사용자ID: </span>
+            <span th:text="${userId}"></span>
+        </div>
+        <div class="top-center">
+            <span th:text="${userName}">관리자</span>
+        </div>
+        <div class="top-right">
+            <button class="btn btn-red" data-action="logout">로그아웃</button>
+            <button class="btn btn-blue" data-action="time-in">출근</button>
+            <button class="btn" data-action="time-out">퇴근</button>
+        </div>
+    </div>
+
+    <style>
+        .admin-sub-tabs { display: none; }
+        .admin-sub-tabs.is-active { display: flex; }
+    </style>
+
+    <div class="tabs">
+        <span data-group-tab="dashboard"
+              th:classappend="${activeTab}=='dashboard' or ${activeTab}=='ad-001' ? ' active'"
+              th:onclick="|location.href='@{/admin/dashboard}'|">대시보드</span>
+        <span data-group-tab="monitoring"
+              th:classappend="${activeTab}=='monitoring' or ${activeTab}=='ad-010' or ${activeTab}=='ad-011' ? ' active'"
+              th:onclick="|location.href='@{/admin/revenue-cycle-monitoring}'|">모니터링</span>
+        <span data-group-tab="report"
+              th:classappend="${activeTab}=='report' or ${activeTab}=='ad-020' or ${activeTab}=='ad-021' or ${activeTab}=='ad-022' ? ' active'"
+              th:onclick="|location.href='@{/admin/sales-report}'|">리포트</span>
+        <span data-group-tab="approval"
+              th:classappend="${activeTab}=='approval' or ${activeTab}=='ad-030' or ${activeTab}=='ad-031' or ${activeTab}=='ad-032' ? ' active'"
+              th:onclick="|location.href='@{/admin/purchase-approval}'|">승인/락인</span>
+        <span data-group-tab="users"
+              th:classappend="${activeTab}=='users' or ${activeTab}=='ad-040' or ${activeTab}=='ad-041' ? ' active'"
+              th:onclick="|location.href='@{/admin/user-management}'|">사용자/권한</span>
+        <span data-group-tab="codes"
+              th:classappend="${activeTab}=='codes' or ${activeTab}=='ad-050' or ${activeTab}=='ad-051' or ${activeTab}=='ad-052' or ${activeTab}=='ad-053' or ${activeTab}=='ad-054' or ${activeTab}=='ad-055' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-department}'|">코드 관리</span>
+        <span data-group-tab="work"
+              th:classappend="${activeTab}=='work' or ${activeTab}=='ad-060' or ${activeTab}=='ad-061' ? ' active'"
+              th:onclick="|location.href='@{/admin/work-status}'|">근무 관리</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="dashboard">
+        <span th:classappend="${activeTab}=='ad-001' ? ' active'"
+              th:onclick="|location.href='@{/admin/dashboard}'|">일일 대시보드</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="monitoring">
+        <span th:classappend="${activeTab}=='ad-010' ? ' active'"
+              th:onclick="|location.href='@{/admin/revenue-cycle-monitoring}'|">원무 흐름 모니터링</span>
+        <span th:classappend="${activeTab}=='ad-011' ? ' active'"
+              th:onclick="|location.href='@{/admin/inventory-monitoring}'|">재고/입출고 모니터링</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="report">
+        <span th:classappend="${activeTab}=='ad-020' ? ' active'"
+              th:onclick="|location.href='@{/admin/sales-report}'|">매출 리포트</span>
+        <span th:classappend="${activeTab}=='ad-021' ? ' active'"
+              th:onclick="|location.href='@{/admin/insurance-sales}'|">보험구분별 매출</span>
+        <span th:classappend="${activeTab}=='ad-022' ? ' active'"
+              th:onclick="|location.href='@{/admin/receivables-report}'|">AD-022 미수금/후불 리포트</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="approval">
+        <span th:classappend="${activeTab}=='ad-030' ? ' active'"
+              th:onclick="|location.href='@{/admin/purchase-approval}'|">구매 승인</span>
+        <span th:classappend="${activeTab}=='ad-031' ? ' active'"
+              th:onclick="|location.href='@{/admin/price-exception-approval}'|">기준가 초과 승인</span>
+        <span th:classappend="${activeTab}=='ad-032' ? ' active'"
+              th:onclick="|location.href='@{/admin/stock-lockin}'|">입출고 락인</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="users">
+        <span th:classappend="${activeTab}=='ad-040' ? ' active'"
+              th:onclick="|location.href='@{/admin/user-management}'|">사용자 관리</span>
+        <span th:classappend="${activeTab}=='ad-041' ? ' active'"
+              th:onclick="|location.href='@{/admin/role-permission}'|">역할/권한 관리</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="codes">
+        <span th:classappend="${activeTab}=='ad-050' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-department}'|">진료과 코드</span>
+        <span th:classappend="${activeTab}=='ad-051' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-insurance}'|">보험 코드</span>
+        <span th:classappend="${activeTab}=='ad-052' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-payment-method}'|">결제수단</span>
+        <span th:classappend="${activeTab}=='ad-053' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-fee-item}'|">수가 항목</span>
+        <span th:classappend="${activeTab}=='ad-054' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-diagnosis}'|">진단 코드</span>
+        <span th:classappend="${activeTab}=='ad-055' ? ' active'"
+              th:onclick="|location.href='@{/admin/code-status}'|">상태 코드</span>
+    </div>
+
+    <div class="tabs admin-sub-tabs" data-sub-group="work">
+        <span th:classappend="${activeTab}=='ad-060' ? ' active'"
+              th:onclick="|location.href='@{/admin/work-status}'|">근무 상태 조회</span>
+        <span th:classappend="${activeTab}=='ad-061' ? ' active'"
+              th:onclick="|location.href='@{/admin/work-type}'|">근무 타입 관리</span>
+    </div>
+
+    <div class="sub-bar" th:text="${title}">서브메뉴</div>
+    <script th:src="@{/js/header-actions.js}" defer></script>
+    <script>
+        (function () {
+            const header = document.querySelector('[data-admin-header]');
+            if (!header) return;
+
+            const activeTab = header.getAttribute('data-active-tab') || '';
+            const groupMap = {
+                'dashboard': 'dashboard',
+                'ad-001': 'dashboard',
+                'monitoring': 'monitoring',
+                'ad-010': 'monitoring',
+                'ad-011': 'monitoring',
+                'report': 'report',
+                'ad-020': 'report',
+                'ad-021': 'report',
+                'ad-022': 'report',
+                'approval': 'approval',
+                'ad-030': 'approval',
+                'ad-031': 'approval',
+                'ad-032': 'approval',
+                'users': 'users',
+                'ad-040': 'users',
+                'ad-041': 'users',
+                'codes': 'codes',
+                'ad-050': 'codes',
+                'ad-051': 'codes',
+                'ad-052': 'codes',
+                'ad-053': 'codes',
+                'ad-054': 'codes',
+                'ad-055': 'codes',
+                'work': 'work',
+                'ad-060': 'work',
+                'ad-061': 'work'
+            };
+
+            const subGroups = header.querySelectorAll('[data-sub-group]');
+            const activateGroup = (groupName) => {
+                subGroups.forEach(group => {
+                    group.classList.toggle('is-active', group.dataset.subGroup === groupName);
+                });
+            };
+
+            const initialGroup = groupMap[activeTab] || 'dashboard';
+            activateGroup(initialGroup);
+
+            header.querySelectorAll('[data-group-tab]').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    activateGroup(tab.dataset.groupTab);
+                });
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

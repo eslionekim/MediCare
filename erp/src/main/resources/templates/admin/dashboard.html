@@ -55,29 +55,7 @@
 </head>
 <body>
 <div class="admin-frame">
-    <div class="top-bar">
-        <div class="top-left">
-            <span>(아이콘)</span>
-            <span>시스템명 | 사용자ID : dlwnsrhkdD</span>
-        </div>
-        <div class="top-center">원무과 이준광</div>
-        <div class="top-right">
-            <button class="btn btn-red">로그아웃</button>
-            <button class="btn btn-blue">출근</button>
-            <button class="btn">퇴근</button>
-        </div>
-    </div>
-
-    <div class="tabs">
-        <span>대시보드</span>
-        <span>모니터링</span>
-        <span>리포트</span>
-        <span>승인/확인</span>
-        <span>사용자/권한</span>
-        <span>코드관리</span>
-        <span>근무관리</span>
-    </div>
-    <div class="sub-bar">대시보드</div>
+    <div th:replace="~{fragments/admin-header :: header(title='Dashboard', activeTab='ad-001')}"></div>
 
     <div class="content">
         <form class="filter-row" th:action="@{/admin/dashboard}" method="get">
