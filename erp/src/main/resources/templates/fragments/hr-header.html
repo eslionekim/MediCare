@@ -42,6 +42,9 @@
 			<li class="tab-item" th:classappend="${activeTab}=='hrSchedule' ? ' active'">
                 <a th:href="@{/hr/mySchedule}">스케줄 조회</a>
             </li>
+			<li class="tab-item" th:classappend="${activeTab}=='hrMyPage' ? ' active'">
+                <a th:href="@{/hr/verifyPassword}">마이페이지</a>
+            </li>
         </ul>
     </nav>
 

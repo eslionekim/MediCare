@@ -39,6 +39,9 @@
 			<li class="tab-item" th:classappend="${activeTab}=='logisSchedule' ? ' active'">
                 <a th:href="@{/logis/mySchedule}">스케줄 조회</a>
             </li>
+			<li class="tab-item" th:classappend="${activeTab}=='logisMyPage' ? ' active'">
+                <a th:href="@{/logis/verifyPassword}">마이페이지</a>
+            </li>
         </ul>
     </nav>
 

@@ -19,11 +19,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -59,6 +61,9 @@ import com.example.erp.Prescription.PrescriptionDTO;
 import com.example.erp.Prescription.PrescriptionRepository;
 import com.example.erp.Prescription_item.Prescription_item;
 import com.example.erp.Prescription_item.Prescription_itemRepository;
+import com.example.erp.Staff_profile.MyPageDTO;
+import com.example.erp.Staff_profile.Staff_profile;
+import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeDTO;
 import com.example.erp.Status_code.Status_codeRepository;
@@ -98,6 +103,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class pharmController {
 
+    private final PasswordEncoder passwordEncoder;
+
     private final NotificationService notificationService;
 
     private final Medication_guideRepository medication_guideRepository;
@@ -124,7 +131,7 @@ public class pharmController {
 	private final Work_scheduleService work_scheduleService;
 	private final VacationRepository vacationRepository;
 	private final Vacation_typeRepository vacation_typeRepository;
-
+	private final Staff_profileRepository staff_profileRepository;
 	
 	//약사->조제 리스트 by 은서
 	@GetMapping("/pharm/todayPrescription")
@@ -886,5 +893,87 @@ public class pharmController {
         }
         return result;
     }
+    
+  //약사->마이페이지->비밀번호 확인
+  	@GetMapping("/pharm/verifyPassword")
+  	public String verifyPasswordForm() {
+  	    return "pharm/verifyPassword";
+  	}
+
+  	@PostMapping("/pharm/verifyPassword")
+  	public String verifyPassword(@RequestParam("password") String password,
+  	                             Model model) {
+
+  	    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    // User_account repository 주입되어 있어야 함
+  	    User_account user = user_accountRepository.findByUser_id(userId)
+  	            .orElse(null);
+
+  	    if (user == null) {
+  	        model.addAttribute("error", "사용자 정보를 찾을 수 없습니다.");
+  	        return "pharm/verifyPassword";
+  	    }
+
+  	    // 평문이면 equals
+  	    // 암호화 되어 있으면 matches 사용
+  	    if (!passwordEncoder.matches(password, user.getPassword())) {
+  	        model.addAttribute("error", "비밀번호가 올바르지 않습니다.");
+  	        return "pharm/verifyPassword";
+  	    }
+
+  	    // 성공 → 마이페이지 이동
+  	    return "redirect:/pharm/pharmMyPage";
+  	}
+
+  	
+  	@GetMapping("/pharm/pharmMyPage") //의사->마이페이지
+      public String doctorMyPage(Model model) {
+  		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    User_account account = user_accountRepository.findById(userId).orElseThrow();
+
+  	    Staff_profile profile =
+  	            staff_profileRepository.findByUser_account_User_id(userId)
+  	            .orElse(new Staff_profile());   // 없으면 빈 객체
+
+  	    model.addAttribute("account", account);
+  	    model.addAttribute("profile", profile);
+  		return "pharm/pharmMyPage"; 
+      }
+  	
+  	@PutMapping("/pharm/pharmMyPage")
+  	@ResponseBody
+  	public String updateDoctor(@RequestBody MyPageDTO dto) {
+
+  	    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    User_account account = user_accountRepository.findById(userId).orElseThrow();
+
+  	    // 비밀번호가 비어있지 않을 때만 변경
+  	    if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+
+  	        // 비밀번호 중복 검사
+  	        if (user_accountRepository.existsByPassword(dto.getPassword())) {
+  	            return "이미 사용 중인 비밀번호입니다.";
+  	        }
+
+  	        account.setPassword(dto.getPassword());
+  	    }
+
+  	    user_accountRepository.save(account);
+
+  	    Staff_profile profile =
+  	            staff_profileRepository.findByUser_account_User_id(userId)
+  	            .orElse(new Staff_profile());
+
+  	    profile.setLicense_number(dto.getLicense());
+  	    profile.setBank_name(dto.getBank());
+  	    profile.setBank_account(dto.getAccount());
+
+  	    staff_profileRepository.save(profile);
+
+  	    return "수정 완료";
+  	}
 
 }

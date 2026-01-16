@@ -18,12 +18,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -45,6 +47,8 @@ import com.example.erp.Issue_request_item.Issue_request_itemRepository;
 import com.example.erp.Item.ItemRepository;
 import com.example.erp.Patient.PatientService;
 import com.example.erp.Reservation.ReservationRepository;
+import com.example.erp.Staff_profile.MyPageDTO;
+import com.example.erp.Staff_profile.Staff_profile;
 import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeDTO;
@@ -60,6 +64,7 @@ import com.example.erp.Stock_move.Stock_moveService;
 import com.example.erp.Stock_move_item.Stock_move_item;
 import com.example.erp.Stock_move_item.Stock_move_itemRepository;
 import com.example.erp.User_account.User_account;
+import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.Vacation.Vacation;
 import com.example.erp.Vacation.VacationDTO;
 import com.example.erp.Vacation.VacationRepository;
@@ -82,6 +87,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class logisController {
 
+    private final PasswordEncoder passwordEncoder;
+
     private final NotificationService notificationService;
 
     private final Fee_itemRepository fee_itemRepository;
@@ -101,6 +108,9 @@ public class logisController {
     private final Vacation_typeRepository vacation_typeRepository;
     private final Work_scheduleService work_scheduleService;
     private final Status_codeRepository status_codeRepository;
+    private final User_accountRepository user_accountRepository;
+    private final Staff_profileRepository staff_profileRepository;
+
 
 	@GetMapping("/logis/itemRequest") //물류->불출요청리스트
     public String getTodayVisitList(Model model) {
@@ -776,5 +786,88 @@ public class logisController {
         }
         return result;
     }
+    
+    //마이페이지
+  	@GetMapping("/logis/verifyPassword")
+  	public String verifyPasswordForm() {
+  	    return "logis/verifyPassword";
+  	}
+
+  	@PostMapping("/logis/verifyPassword")
+  	public String verifyPassword(@RequestParam("password") String password,
+  	                             Model model) {
+
+  	    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    // User_account repository 주입되어 있어야 함
+  	    User_account user = user_accountRepository.findByUser_id(userId)
+  	            .orElse(null);
+
+  	    if (user == null) {
+  	        model.addAttribute("error", "사용자 정보를 찾을 수 없습니다.");
+  	        return "doctor/verifyPassword";
+  	    }
+
+  	    // 평문이면 equals
+  	    // 암호화 되어 있으면 matches 사용
+  	    if (!passwordEncoder.matches(password, user.getPassword())) {
+  	        model.addAttribute("error", "비밀번호가 올바르지 않습니다.");
+  	        return "logis/verifyPassword";
+  	    }
+
+  	    // 성공 → 마이페이지 이동
+  	    return "redirect:/logis/logisMyPage";
+  	}
+
+  	
+  	@GetMapping("/logis/logisMyPage") //의사->마이페이지
+      public String doctorMyPage(Model model) {
+  		String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    User_account account = user_accountRepository.findById(userId).orElseThrow();
+
+  	    Staff_profile profile =
+  	            staff_profileRepository.findByUser_account_User_id(userId)
+  	            .orElse(new Staff_profile());   // 없으면 빈 객체
+
+  	    model.addAttribute("account", account);
+  	    model.addAttribute("profile", profile);
+  		return "logis/logisMyPage"; 
+      }
+  	
+  	@PutMapping("/logis/logisMyPage")
+  	@ResponseBody
+  	public String updateDoctor(@RequestBody MyPageDTO dto) {
+
+  	    String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+  	    User_account account = user_accountRepository.findById(userId).orElseThrow();
+
+  	    // 비밀번호가 비어있지 않을 때만 변경
+  	    if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+
+  	        // 비밀번호 중복 검사
+  	        if (user_accountRepository.existsByPassword(dto.getPassword())) {
+  	            return "이미 사용 중인 비밀번호입니다.";
+  	        }
+
+  	        account.setPassword(dto.getPassword());
+  	    }
+
+  	    user_accountRepository.save(account);
+
+  	    Staff_profile profile =
+  	            staff_profileRepository.findByUser_account_User_id(userId)
+  	            .orElse(new Staff_profile());
+
+  	    profile.setLicense_number(dto.getLicense());
+  	    profile.setBank_name(dto.getBank());
+  	    profile.setBank_account(dto.getAccount());
+
+  	    staff_profileRepository.save(profile);
+
+  	    return "수정 완료";
+  	}
+
 
 }

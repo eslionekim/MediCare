@@ -53,8 +53,8 @@ public class doctorController {
 	        return "doctor/verifyPassword";
 	    }
 
-	    // 👉 평문이면 equals
-	    // 👉 암호화 되어 있으면 matches 사용
+	    // 평문이면 equals
+	    // 암호화 되어 있으면 matches 사용
 	    if (!passwordEncoder.matches(password, user.getPassword())) {
 	        model.addAttribute("error", "비밀번호가 올바르지 않습니다.");
 	        return "doctor/verifyPassword";

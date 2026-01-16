@@ -48,6 +48,9 @@
 			<li class="tab-item" th:classappend="${activeTab}=='staffVacation' ? ' active'">
                 <a th:href="@{/staff/applyVacation}">휴가 신청</a>
             </li>
+			<li class="tab-item" th:classappend="${activeTab}=='staffMyPage' ? ' active'">
+                <a th:href="@{/staff/verifyPassword}">마이페이지</a>
+            </li>
         </ul>
     </nav>
 

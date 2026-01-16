@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+
+    <title>MediCare</title>
+	<!-- 구글 폰트 링크 -->
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+   
+	<link rel="stylesheet" th:href="@{/css/common-base.css}">
+	<style>
+		/* 전체 배경 */
+		.mypage-body {
+		    margin: 0;
+		    background: #D5DDED;
+		    font-family: 'Inter', '맑은 고딕', sans-serif;
+		}
+
+		/* 중앙 wrapper */
+		.mypage-wrapper {
+		    display: flex;
+		    justify-content: center;
+		    margin-top: 50px; /* 헤더 아래 여백 */
+		}
+
+		/* 카드 */
+		.mypage-card {
+		    width: 400px;
+		    background: #ffffff;
+		    padding: 28px 30px;
+		    border-radius: 10px;   /* 카드만 둥글게 */
+		    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+		}
+
+		/* 카드 제목 */
+		.mypage-title {
+		    font-size: 18px;
+		    font-weight: 600;
+		    color: #4D6CDB;
+		    text-align: center;
+		    margin-bottom: 24px;
+		}
+
+		/* form-row (레이블 + 입력) */
+		.form-row {
+		    display: flex;
+		    flex-direction: column;
+		    margin-bottom: 16px;
+		}
+
+		.form-row label {
+		    font-size: 13px;
+		    color: #555;
+		    margin-bottom: 4px;
+		}
+
+		/* input 스타일 */
+		.form-row input {
+		    height: 36px;
+		    padding: 0 10px;
+		    font-size: 13px;
+		    border: 1px solid #b0b7c7;
+		    border-radius: 4px;
+		    outline: none;
+		}
+
+		.form-row input:focus {
+		    border-color: #879BD5;
+		    background: #F3F6FF;
+		}
+
+		/* 버튼 */
+		#mypageCard button,
+		#saveBtn {
+		    width: 100%;
+		    height: 36px;
+		    background: #879BD5;
+		    color: white;
+		    border: none;
+		    border-radius: 4px;
+		    font-size: 14px;
+		    font-weight: 500;
+		    cursor: pointer;
+		}
+
+		#saveBtn:hover {
+		    background: #6f86d6;
+		}
+
+	</style>
+	<script>
+		document.addEventListener('DOMContentLoaded', () => {
+
+	    document.querySelector('.time-in').addEventListener('click', () => { //출근 처리
+	        fetch('/work/time-in', { method: 'POST' })
+	            .then(res =>
+	                res.text().then(msg => {
+	                    if (!res.ok) throw msg;
+	                    alert(msg);
+	                })
+	            )
+	            .catch(msg => alert(msg));
+	    });
+
+		document.querySelector('.time-out').addEventListener('click', () => { // 퇴근
+
+		        if (!confirm('퇴근하시겠습니까?')) return;
+
+		        fetch('/work/time-out', { method: 'POST' })
+		            .then(res => res.text())
+		            .then(msg => alert(msg))
+		            .catch(() => alert('퇴근 처리 실패'));
+		    });
+	});
+
+	
+	function logoutCheck() {
+	    if (!confirm("정말 로그아웃 하시겠습니까?")) return;
+
+	    fetch('/logout', { method: 'POST' })
+	        .then(res => res.text())
+	        .then(msg => {
+	            alert(msg);
+	            // 로그아웃 성공하면 페이지 이동 (로그인 페이지 등)
+	            window.location.href = '/login'; // 로그인 페이지 URL
+	        })
+	        .catch(() => alert('로그아웃 처리 실패'));
+	}
+	</script>
+
+
+</head>
+<body class="mypage-body">
+
+    <!-- 기존 의사 헤더 -->
+    <div th:replace="~{fragments/staff-header :: header(title='마이페이지', activeTab='staffMyPage')}"></div>
+
+    <!-- 정보 수정 카드 -->
+    <div class="mypage-wrapper">
+        <div class="mypage-card">
+            <h2 class="mypage-title">마이페이지 정보 수정</h2>
+
+            <form id="mypageForm">
+                
+                <div class="form-row">
+                    <label for="password">비밀번호 변경</label>
+                    <input type="password" id="password" placeholder="새 비밀번호 입력" />
+                </div>
+
+                <div class="form-row">
+                    <label for="license">면허번호</label>
+                    <input type="text" id="license" th:value="${profile.license_number}" />
+                </div>
+
+                <div class="form-row">
+                    <label for="bank">은행명</label>
+                    <input type="text" id="bank" th:value="${profile.bank_name}" />
+                </div>
+
+                <div class="form-row">
+                    <label for="account">계좌번호</label>
+                    <input type="text" id="account" th:value="${profile.bank_account}" />
+                </div>
+
+                <button type="submit" id="saveBtn">수정</button>
+
+            </form>
+        </div>
+    </div>
+	<script>
+		document.getElementById("saveBtn").addEventListener("click", function () {
+
+		    const data = {
+		        password: document.getElementById("password").value,
+		        license: document.getElementById("license").value,
+		        bank: document.getElementById("bank").value,
+		        account: document.getElementById("account").value
+		    };
+
+		    fetch("/staff/staffMyPage", {
+		        method: "PUT",
+		        headers: {"Content-Type": "application/json"},
+		        body: JSON.stringify(data)
+		    })
+		    .then(res => res.text())
+		    .then(msg => alert(msg));
+		});
+
+	</script>
+</body>
+</body>
+</html>
