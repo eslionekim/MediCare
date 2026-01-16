@@ -1,5 +1,6 @@
 package com.example.erp.Stock_move;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -128,24 +129,25 @@ public class Stock_moveService {
 
 	    	Stock_move_item mi = stock_move_itemRepository.findByStockMoveId(sm.getStock_move_id());
 
-	    	if (mi == null) continue;
+	    	if (mi == null) {
+	            System.out.println("[누락확인] Stock_move_item 없음 → Stock_move ID: " + sm.getStock_move_id());
+	            continue; // 이 조건 때문에 누락되는 항목이 있는지 확인
+	        }
 
 
 	            LogisOutboundDTO dto = new LogisOutboundDTO();
 
-	            // 1) 유형 변환
-	            if (sm.getDispense_id() != null) {
-	                dto.setType("투약"); // dispense_id가 있으면 투약
-	            } else if (sm.getMove_type().equals("transfer")) {
-	                dto.setType("불출");
-	            } else if (sm.getMove_type().equals("outbound")) {
-
-	                if ("sm_discard".equals(sm.getStatus_code())) {
-	                    dto.setType("폐기");
-	                } else if ("sm_quantity".equals(sm.getStatus_code())) {
-	                    dto.setType("수량조정");
-	                }
+	            // 1) 유형 변환 (status_code 기준)
+	            if ("SM_DONE".equalsIgnoreCase(sm.getStatus_code())) {
+	                dto.setType("투약");
+	            } else if ("sm_quantity".equalsIgnoreCase(sm.getStatus_code())) {
+	                dto.setType("수량조정");
+	            } else if ("sm_discard".equalsIgnoreCase(sm.getStatus_code())) {
+	                dto.setType("폐기");
+	            } else {
+	                dto.setType("기타"); // 필요하면 기본값
 	            }
+
 
 	            // 필터
 	            if (type != null && !type.isEmpty() && !type.equals(dto.getType())) {
@@ -164,7 +166,7 @@ public class Stock_moveService {
 	            
 
 	            // 4) 변화수량
-	            dto.setQuantity(mi.getQuantity());
+	            dto.setQuantity((mi != null) ? mi.getQuantity() : BigDecimal.ZERO);
 
 	            // 5) 사유
 	            dto.setNote(sm.getNote() != null ? sm.getNote() : "-");

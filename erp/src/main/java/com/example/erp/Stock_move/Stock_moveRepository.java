@@ -15,42 +15,43 @@ public interface Stock_moveRepository extends JpaRepository<Stock_move, Long>{
 	@Query("""
 		    select sm
 		    from Stock_move sm
-		    where sm.move_type = 'outbound'
-		      and (
-		          sm.from_warehouse_code in (
-		              select w.warehouse_code
-		              from Warehouse w
-		              where w.name = '물류창고'
-		          )
-		      )
+		    where 
+		        (sm.move_type = 'outbound' 
+		         and sm.from_warehouse_code in (
+		             select w.warehouse_code
+		             from Warehouse w
+		             where w.name = '물류창고'
+		         )
+		        )
+		        or sm.move_type = 'TRANSFER'
 		""")
 	List<Stock_move> findLogisOutboundMoves();
 	
 	//약사->출고리스트
 	@Query("""
-		    select sm
-		    from Stock_move sm
-		    left join Warehouse w 
-		        on sm.from_warehouse_code = w.warehouse_code
-		    where sm.move_type = 'outbound'
-		       and (w.name = '약제창고' or sm.dispense_id is not null)
-		""")
-		List<Stock_move> findPharmOutboundMoves();
+	    select sm
+	    from Stock_move sm
+	    join Warehouse w
+	      on sm.from_warehouse_code = w.warehouse_code
+	    where sm.move_type IN ('outbound', 'OUTBOUND')
+	    and w.name='약제창고'
+	""")
+	List<Stock_move> findPharmOutboundMoves();
 		
 	//원무->출고리스트
-		@Query("""
-			    select sm
-			    from Stock_move sm
-			    where sm.move_type = 'outbound'
-			      and (
-			          sm.from_warehouse_code in (
-			              select w.warehouse_code
-			              from Warehouse w
-			              where w.name = '원무창고'
-			          )
-			      )
-			""")
-		List<Stock_move> findExOutboundMoves();
+	@Query("""
+	    select sm
+	    from Stock_move sm
+	    where sm.move_type = 'outbound'
+	      and (
+	          sm.from_warehouse_code in (
+	              select w.warehouse_code
+	              from Warehouse w
+	              where w.name = '원무창고'
+	          )
+	      )
+	""")
+	List<Stock_move> findExOutboundMoves();
 
 
 	//원무->출고리스트->로트코드
