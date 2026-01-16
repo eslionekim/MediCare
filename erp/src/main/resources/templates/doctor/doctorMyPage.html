@@ -143,8 +143,15 @@
 		        headers: {"Content-Type": "application/json"},
 		        body: JSON.stringify(data)
 		    })
-		    .then(res => res.text())
-		    .then(msg => alert(msg));
+			.then(res => res.text())
+		        .then(msg => {
+		            alert(msg);
+		            location.reload();
+		        })
+		        .catch(err => {
+		            console.error(err);
+		            alert("저장 중 오류가 발생했습니다.");
+		        });
 		});
 
 	</script>
