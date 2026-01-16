@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", function() {
-    const user_id = document.getElementById("user_id").innerText.trim();
+	const user_id = document.body.dataset.userId;
+	if (!user_id) return;
     console.log("현재 로그인 user_id:", user_id);
 
     const socket = new SockJS('/ws');
@@ -12,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function() {
 		stompClient.subscribe('/user/queue/notify', function(msg) {
 			const data = JSON.parse(msg.body);
 			
-			alert("📢" + data.content);
+			alert(data.content);
 			location.reload();
 
             console.log("1:1 메시지 수신:", msg.body); 

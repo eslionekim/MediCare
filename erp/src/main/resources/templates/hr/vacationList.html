@@ -185,7 +185,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
 	
 </head>
-<body>
+<body th:attr="data-user-id=${username}">
    	<div th:replace="~{fragments/hr-header :: header(title='휴가 신청 리스트', activeTab='vacationList')}"></div>
 
 
@@ -538,7 +538,7 @@
 		        stompClient.subscribe('/topic/hr', function(msg) {
 					const data = JSON.parse(msg.body);  // JSON 파싱
 
-					alert("📢 " + data.title + "\n" + data.content);
+					alert(data.title + "\n" + data.content);
 					location.reload();
 		        });
 
@@ -557,7 +557,8 @@
 
 		// 3. DOMContentLoaded에서 실행
 		document.addEventListener("DOMContentLoaded", function() {
-		    const user_id = document.getElementById("user_id").innerText.trim();
+			const user_id = document.body.dataset.userId || document.getElementById("user_id")?.innerText?.trim();
+			if (!user_id) return;
 
 		    // HR 알림은 권한과 상관없이 연결
 		    connectWebSocket(user_id);

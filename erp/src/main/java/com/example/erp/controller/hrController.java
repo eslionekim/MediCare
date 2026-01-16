@@ -2,6 +2,8 @@ package com.example.erp.controller;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ import com.example.erp.Vacation_type.Vacation_type;
 import com.example.erp.Vacation_type.Vacation_typeDTO;
 import com.example.erp.Vacation_type.Vacation_typeRepository;
 import com.example.erp.Warehouse.WarehouseRepository;
+import com.example.erp.Work_schedule.ScheduleCalendarDTO;
 import com.example.erp.Work_schedule.Work_scheduleService;
 import com.example.erp.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -214,6 +217,53 @@ public class hrController {
         return "hr/mySchedule";
     }
 	
+	@GetMapping("/hr/mySchedule/events") //원무 -> 스케줄 조회 -> 근무 스케줄 달력 by 은서
+    @ResponseBody
+    public List<Map<String, Object>> getMyScheduleEvents(
+            @RequestParam(value="year",required = false) int year,
+            @RequestParam(value="month",required = false) int month
+    ) {
+        String userId = SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+
+        List<ScheduleCalendarDTO> list =
+                work_scheduleService.getStaffMonthlySchedule(userId, year, month);
+
+        List<Map<String, Object>> events = new ArrayList<>();
+
+        for (ScheduleCalendarDTO item : list) {
+            Map<String, Object> event = new HashMap<>();
+            
+            StringBuilder title = new StringBuilder();
+            title.append(item.getWorkName());
+
+            DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+
+            if (item.getStartTime() != null) {
+                title.append("\n출근 ")
+                     .append(item.getStartTime().format(timeFormatter));
+            }
+
+            if (item.getEndTime() != null) {
+                title.append("\n퇴근 ")
+                     .append(item.getEndTime().format(timeFormatter));
+            }
+
+            if (item.getStatusName() != null) {
+                title.append(item.getStatusName());
+            }
+
+            
+            event.put("title", title.toString());                 // ⭐ work_name
+            event.put("start", item.getWorkDate().toString());     // ⭐ yyyy-MM-dd
+            event.put("allDay", true);
+
+            events.add(event);
+        }
+
+        return events;
+    }
+	
 	@GetMapping("/hr/mySchedule/vacations") //인사 -> 스케줄 조회 -> 휴가 리스트 by 은서
     @ResponseBody
     public List<VacationDTO> getMyVacations() {
@@ -317,8 +367,8 @@ public class hrController {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String user_id = auth.getName(); //로그인 한 사용자의 user_id
 
-            User_account user = new User_account(); 
-            user.setUser_id(user_id); //새로 생성한 객체에 user_id 설정
+            User_account user = user_accountRepository.findByUser_id(user_id)
+                    .orElseThrow(() -> new RuntimeException("사용자 없음"));
 
             Vacation_type vt = vacation_typeRepository.findByTypeName(body.get("type_name")) //type_name으로 vacation_type 찾기
                     .orElseThrow(() -> new RuntimeException("존재하지 않는 휴가분류"));
@@ -338,7 +388,7 @@ public class hrController {
             
             result.put("success", true); // 저장 성공 시
             // 직원이 휴가 신청했을 때 HR에게 알림
-            notificationService.notifyHR("휴가 신청", "직원 " + user_id + "님이 휴가를 신청했습니다.");
+            notificationService.notifyHR("휴가 신청", "휴가 신청이 있습니다.");
         } catch(Exception e){
             result.put("success", false);
             result.put("message", e.getMessage());

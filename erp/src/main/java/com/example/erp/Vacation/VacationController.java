@@ -147,7 +147,7 @@ public class VacationController {
             
             result.put("success", true); // 저장 성공 시
             // 직원이 휴가 신청했을 때 HR에게 알림
-            notificationService.notifyHR("휴가 신청", "직원 " + user_id + "님이 휴가를 신청했습니다.");
+            notificationService.notifyHR("휴가 신청", "휴가 신청이 있습니다.");
         } catch(Exception e){
             result.put("success", false);
             result.put("message", e.getMessage());
