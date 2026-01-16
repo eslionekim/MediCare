@@ -311,6 +311,10 @@
 			    <div id="outboundArea" style="display:none; margin-top:20px;">
 
 			        <h4>출고 정보</h4>
+					<p id="stockLackMessage"
+					   style="display:none; color:#d32f2f; font-weight:bold;">
+					    재고가 부족하여 출고할 수 없습니다.
+					</p>
 
 			        <p>
 			            가용재고:
@@ -333,14 +337,8 @@
 			            </thead>
 			            <tbody id="lotTableBody"></tbody>
 			        </table>
-					<p id="remainingQtyContainer" style="display:none;">
-					    남은 환산 수량:
-					    <span id="remainingQty"></span>
-					</p>
-					
 			        <div class="action-buttons">
 			            <button id="outboundBtn">출고</button>
-			            <button id="partialOutboundBtn" style="display:none;">부분출고</button>
 			        </div>
 			    </div>
 
@@ -382,7 +380,7 @@
 	                outboundArea.style.display = "none";
 	            }
 	
-	            if (status === "승인"|| status === "부분출고") {
+	            if (status === "승인") {
 	                requestActionArea.style.display = "none";
 	                outboundArea.style.display = "block";
 					
@@ -441,7 +439,6 @@
 		function renderOutboundArea(data, status) { // 출고시 필드에 정보 뜨게하기
 			const totalAvailableQty = Number(data.totalAvailableQty || 0);
 		    const convertedRequestQty = Number(data.convertedRequestQty || 0);
-		    const approvedQty = Number(data.approvedQty ?? 0);
 		
 			// 가용재고 / 요청환산수량 표시
 		    document.getElementById("totalAvailableQty").textContent =
@@ -449,16 +446,6 @@
 		    document.getElementById("convertedRequestQty").textContent =
 		        `${convertedRequestQty} ${data.baseUnit || ''}`;
 
-			// 남은 환산 수량 (부분출고일 때만)
-		    const remainingQtyContainer = document.getElementById("remainingQtyContainer");
-		    const remainingQty = document.getElementById("remainingQty");
-			if (status === "부분출고") {
-			    const remaining = convertedRequestQty - approvedQty;
-			    remainingQty.textContent = `${remaining} ${data.baseUnit || ''}`;
-			    remainingQtyContainer.style.display = "block";
-			} else {
-			    remainingQtyContainer.style.display = "none";
-			}
 			
 		    // LOT 테이블
 		    const tbody = document.getElementById("lotTableBody");
@@ -489,81 +476,22 @@
 			tbody.innerHTML = lotRows;
 
 
-		    // 출고 / 부분출고 버튼 분기
+		    // 출고버튼
 		    const outboundBtn = document.getElementById("outboundBtn");
-		    const partialBtn = document.getElementById("partialOutboundBtn");
 			
-			const compareQty = status === "부분출고"
-			        ? data.convertedRequestQty - data.approvedQty // 남은 환산 수량
-			        : data.convertedRequestQty; // 최초 요청 환산 수량
+			const compareQty = data.convertedRequestQty; // 최초 요청 환산 수량
 
 		    if (data.totalAvailableQty >= data.convertedRequestQty) {
 		        outboundBtn.style.display = "inline-block";
-		        partialBtn.style.display = "none";
 		    } else {
-		        outboundBtn.style.display = "none";
-		        partialBtn.style.display = "inline-block";
+				outboundBtn.disabled = true;
+				stockLackMessage.style.display = "block";
+				
+				document.querySelectorAll("#lotTableBody input").forEach(input => {
+		            input.disabled = true;
+		        });
 		    }
 		}
-		
-		// 부분 출고 버튼
-		document.getElementById("partialOutboundBtn")?.addEventListener("click", () => {
-		    const issueRequestId = document.getElementById("issueRequestId").value;
-		    
-		    // JS에서 직접 계산
-		    const convertedRequestQty = Number(document.getElementById("convertedRequestQty").textContent.split(" ")[0] || 0);
-		    const approvedQty = Number(document.getElementById("totalApprovedQty")?.textContent || 0); // 서버에서 준 값 또는 0
-		    const remainingQty = convertedRequestQty - approvedQty;
-
-		    const lotList = [];
-		    let isValid = true;
-
-		    document.querySelectorAll("#lotTableBody tr").forEach(row => {
-		        const stockId = row.querySelector("input").dataset.stockId;
-		        const lotCode = row.querySelector("input").dataset.lotCode;
-		        const qty = parseFloat(row.querySelector("input").value || "0");
-		        const availableQty = parseInt(row.children[2].textContent || "0");
-
-		        if (qty > availableQty) {
-		            alert("가용재고가 부족합니다.");
-		            isValid = false;
-		            return;
-		        }
-
-		        if (qty > remainingQty) {
-		            alert("환산 수량을 초과했습니다.");
-		            isValid = false;
-		            return;
-		        }
-
-		        if (qty > 0) {
-		            lotList.push({ stockId: Number(stockId), lotCode, qty });
-		        }
-		    });
-
-		    if (!isValid) return;
-		    if (lotList.length === 0) {
-		        alert("출고 수량을 입력하세요.");
-		        return;
-		    }
-
-		    fetch("/logis/itemRequest/outbound/partial", {
-		        method: "POST",
-		        headers: { "Content-Type": "application/json" },
-		        body: JSON.stringify({
-		            issueRequestId: Number(issueRequestId),
-		            lotList: lotList,
-		            isPartial: true
-		        })
-		    })
-		    .then(res => res.text())
-		    .then(msg => {
-		        alert(msg);
-		        location.reload();
-		    })
-		    .catch(err => alert(err.message));
-		});
-
 		
 		// 전체출고 버튼 클릭
 		document.getElementById("outboundBtn")?.addEventListener("click", () => {

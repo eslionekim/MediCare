@@ -313,6 +313,7 @@
 				</table>
 		</div>
 		<div class="lot">
+			<!-- itemCode 보관용 -->
 			<div class="lot-empty-msg" style="display:none;">로트 정보가 없습니다.</div>
 
 			<div class="lotList" style="display: none;">
@@ -393,29 +394,31 @@
 		<div id="stockInForm" class="popup-form" style="display:none;">
 		    <h3>입고등록</h3>
 		    <form id="stockInFormElement">
+				<label>입고요청 선택</label>
+				<select id="stockMoveSelect" name="stock_move_id" required>
+				    <option value="">선택하세요</option>
+				</select><br>
+				
 				<input type="hidden" name="item_code" id="stockInItemCode">
-		        <label>로트코드:</label>
+		        <label>로트코드</label>
 		        <input type="text" name="lot_code" required><br>
 
-		        <label>입고일:</label>
+		        <label>입고일</label>
 		        <input type="date" name="created_at" required><br>
 
-				<label>위치:</label>
+				<label>위치</label>
 				<select name="location" id="locationSelect" required></select><br>
 				
-		        <label>구간:</label>
+		        <label>구간</label>
 		        <select name="zone" id="zoneSelect" required></select><br>
 
-		        <label>유통기한:</label>
+		        <label>유통기한</label>
 		        <input type="date" name="expiry_date"><br>
 
-		        <!--<label>출고마감일:</label>
-		        <input type="date" name="outbound_deadline"><br>-->
-
-		        <label>수량:</label>
+		        <label>수량</label>
 		        <input type="number" name="quantity" min="1" required><br>
 
-				<label>총액:</label>
+				<label>총액</label>
 				<input type="text" id="totalPrice" readonly><br>
 
 				
@@ -518,7 +521,7 @@
 		
 		const qtyInput = document.querySelector('input[name="quantity"]'); //수랭
 		const totalPriceInput = document.getElementById("totalPrice"); //전체 금액
-
+		
 		qtyInput.addEventListener("input", () => { //총액계산
 		    const qty = parseInt(qtyInput.value || 0);
 		    const total = unitPrice * qty;
@@ -566,6 +569,7 @@
 	        stockForm.style.display = "block";
 			qtyInput.value = "";
 			totalPriceInput.value = "0";
+			loadStockInRequests();
 	    });
 		
 		// 이벤트 위임
@@ -735,7 +739,6 @@
 		                    <td>${lot.created_at ?? "-"}</td>
 		                    <td>${lot.location}</td>
 		                    <td>${lot.expiry_date ?? "-"}</td>
-		                    <td>${lot.outbound_deadline ?? "-"}</td>
 		                    <td>${lot.quantity}</td>
 		                    <td>${lot.status}</td>
 		                    <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
@@ -861,6 +864,28 @@
 		    });
 		});
 
+		//불출리스트
+		function loadStockInRequests() {
+			console.log("itemCode:", selectedItemCode);
+			if (!selectedItemCode) {
+		        console.warn("itemCode가 선택되지 않음");
+		        return;
+		    }
+			fetch(`/pharm/stock/in/requests?itemCode=${encodeURIComponent(selectedItemCode)}`)
+		        .then(res => res.json())
+		        .then(list => {
+		            const select = document.getElementById("stockMoveSelect");
+		            select.innerHTML = '<option value="">선택하세요</option>';
+
+		            list.forEach(item => {
+		                const opt = document.createElement("option");
+		                opt.value = item.stockMoveId;
+		                opt.textContent =
+		                    `${item.itemName} / ${item.requestQty} / ${item.movedAt}`;
+		                select.appendChild(opt);
+		            });
+		        });
+		}
 
 	});
 	
