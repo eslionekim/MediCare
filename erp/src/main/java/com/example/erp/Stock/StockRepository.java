@@ -103,4 +103,22 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 	//원무->출고리스트
 	@Query("SELECT s FROM Stock s WHERE s.warehouse_code = :warehouseCode")
     Stock findByWarehouseCode(@Param("warehouseCode") String warehouseCode);
+
+	 // 의사->차트 조회
+    @Query("""
+	    SELECT s
+	    FROM Stock s
+	    WHERE s.item_code IN (
+	        SELECT i.item_code
+	        FROM Item i
+	        WHERE i.fee_item_code = :feeItemCode
+	          AND i.is_active = true
+	    )
+	      AND s.quantity > 0
+	      AND s.expiry_date IS NOT NULL
+	    ORDER BY s.expiry_date ASC
+	""")
+	List<Stock> findByFeeItemCodeOrderByExpiry(
+	        @Param("feeItemCode") String feeItemCode
+	);
 }

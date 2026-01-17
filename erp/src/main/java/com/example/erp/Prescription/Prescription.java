@@ -28,9 +28,6 @@ public class Prescription {
     @Column(nullable = false)
     private Long visit_id; //방문번호
 
-    @Column(nullable = false, length = 100)
-    private String user_id;
-
     @Column(nullable = false, length = 50)
     private String status_code;
 

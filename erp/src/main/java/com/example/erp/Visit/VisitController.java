@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.erp.Chart.Chart;
+import com.example.erp.Chart.ChartRepository;
 import com.example.erp.Chart.ChartService;
 import com.example.erp.Chart_diseases.Chart_diseases;
 import com.example.erp.Chart_diseases.Chart_diseasesRepository;
@@ -31,16 +32,24 @@ import com.example.erp.Department.Department;
 import com.example.erp.Department.DepartmentRepository;
 import com.example.erp.Diseases_code.Diseases_code;
 import com.example.erp.Diseases_code.Diseases_codeRepository;
+import com.example.erp.Fee_item.DrugViewDTO;
 import com.example.erp.Fee_item.Fee_item;
 import com.example.erp.Insurance_code.Insurance_code;
 import com.example.erp.Insurance_code.Insurance_codeRepository;
+import com.example.erp.Item.ItemRepository;
 import com.example.erp.Patient.Patient;
 import com.example.erp.Patient.PatientService;
 import com.example.erp.Patient.VisitHistoryDto;
+import com.example.erp.Prescription.Prescription;
+import com.example.erp.Prescription.PrescriptionRepository;
+import com.example.erp.Prescription_item.Prescription_item;
+import com.example.erp.Prescription_item.Prescription_itemRepository;
 import com.example.erp.Reservation.Reservation;
 import com.example.erp.Reservation.ReservationRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeRepository;
+import com.example.erp.Stock.Stock;
+import com.example.erp.Stock.StockRepository;
 import com.example.erp.User_account.User_account;
 import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.Visit.OutHistoryDTO;
@@ -56,6 +65,7 @@ public class VisitController {
         private final ChartService chartService;
         private final PatientService patientService;
         private final Chart_diseasesRepository chart_diseasesRepository;
+        private final ChartRepository chartRepository;
         private final Diseases_codeRepository diseases_codeRepository;
         private final ClaimRepository claimRepository;
         private final Claim_itemRepository claim_itemRepository;
@@ -66,6 +76,10 @@ public class VisitController {
         private final Status_codeRepository statusCodeRepository;
         private final Staff_profileRepository staffProfileRepository;
         private final ReservationRepository reservationRepository;
+        private final Prescription_itemRepository prescription_itemRepository;
+        private final PrescriptionRepository prescriptionRepository;
+        private final StockRepository stockRepository;
+        private final ItemRepository itemRepository;
 
         // ====================== 의사용 기능 ====================== by 은서
 
@@ -113,7 +127,9 @@ public class VisitController {
         public String chartWrite(@RequestParam("visit_id") Long visit_id, @RequestParam("patient_id") Long patient_id,
                                 Model model) {
 
-            Chart chart = chartService.createBasicChart(visit_id);
+        	// ✅ 있으면 가져오고 없으면 생성
+            Chart chart = chartRepository.findByVisit_VisitId(visit_id)
+                    .orElseGet(() -> chartService.createBasicChart(visit_id));
             Patient patient = patientService.findById(patient_id);
             List<Visit> pastVisits = visitService.findByPatientId(patient_id);
             Visit visit = visitService.findWithDepartmentAndInsurance(visit_id);
@@ -124,19 +140,49 @@ public class VisitController {
                             .map(Chart_diseases::getDiseases_code)
                             .collect(Collectors.toList());
 
-            // 처방 조회 (Claim_item 바로 visit_id로 조회)
-            List<Fee_item> fee_item = new ArrayList<>();
-            List<Claim_item> normalClaimItems = new ArrayList<>();
-            List<Claim_item> drugClaimItems = new ArrayList<>();
+            // Claim + Prescription → DTO
+		    List<Claim> claims = claimRepository.findAllByVisitId(visit_id);
+		
+		    List<Claim_item> normalClaimItems = new ArrayList<>();
+		    List<DrugViewDTO> drugItems = new ArrayList<>();
+		    
+		    List<Prescription_item> prescriptionItems =
+		            prescription_itemRepository.findAllByVisitId(visit_id);
 
-            List<Claim_item> allClaimItems = claim_itemRepository.findAllByVisitId(visit_id); // 수정된 부분
-            for (Claim_item ci : allClaimItems) {
-                if ("검사".equals(ci.getFee_item().getCategory())) {
-                    drugClaimItems.add(ci);
-                } else {
-                    normalClaimItems.add(ci);
+            for (Claim claim : claims) {
+                for (Claim_item ci : claim_itemRepository.findAllByClaim(claim)) {
+
+                    String category = ci.getFee_item().getCategory();
+
+                    // 진찰료 제외
+                    if ("진찰료".equals(category)) continue;
+
+                    // 약품
+					if ("약품".equals(category)) {
+					    DrugViewDTO dto = new DrugViewDTO();
+					
+					    dto.setFeeItemCode(ci.getFee_item().getFee_item_code());
+					    dto.setCategory(category);
+					    dto.setName(ci.getFee_item().getName());
+					    dto.setBasePrice(ci.getFee_item().getBase_price());
+					
+					    // item_code → Prescription_item 조회
+					    itemRepository.findByFeeItemCode(ci.getFee_item().getFee_item_code())
+					    .ifPresent(item -> {
+					        List<Prescription_item> pis = prescription_itemRepository.findAllByItemCodeAndVisitId(item.getItem_code(), visit_id);
+					        for (Prescription_item pi : pis) {
+					            dto.setDose(pi.getDose());
+					            dto.setFrequency(pi.getFrequency());
+					            dto.setDays(pi.getDays());
+					        }
+					    });
+
+					
+					    drugItems.add(dto);
+					} else {
+					    normalClaimItems.add(ci);
+					}
                 }
-                fee_item.add(ci.getFee_item()); // 필요하면 수집
             }
 
             model.addAttribute("chart", chart);
@@ -144,57 +190,92 @@ public class VisitController {
             model.addAttribute("pastVisits", pastVisits);
             model.addAttribute("visit", visit);
             model.addAttribute("diseases_code", diseasesList);
-            model.addAttribute("fee_item", fee_item);
             model.addAttribute("normal_claim_items", normalClaimItems);
-            model.addAttribute("drug_claim_items", drugClaimItems);
+            model.addAttribute("drugItems", drugItems);
 
             return "doctor/chartWrite";
         }
 
 
         @GetMapping("/doctor/chartView")
-        public String chartView(@RequestParam("visit_id") Long visit_id, @RequestParam("patient_id") Long patient_id,
-                        Model model) {
-                Chart chart = chartService.createBasicChart(visit_id); // userId로 차트 기본 생성
-                Patient patient = patientService.findById(patient_id); // patientId로 환자 정보 조회
-                List<Visit> pastVisits = visitService.findByPatientId(patient_id); // 해당 환자의 과거 방문 기록
-                Visit visit = visitService.findWithDepartmentAndInsurance(visit_id); // 진료과, 보험명 조회
+		public String chartView(
+		        @RequestParam("visit_id") Long visit_id,
+		        @RequestParam("patient_id") Long patient_id,
+		        Model model) {
+		
+		    Patient patient = patientService.findById(patient_id);
+		    List<Visit> pastVisits = visitService.findByPatientId(patient_id);
+		    Visit visit = visitService.findWithDepartmentAndInsurance(visit_id);
+		
+		    Chart chart = chartRepository.findByVisit_VisitId(visit_id)
+		            .orElseThrow(() -> new IllegalStateException("해당 방문의 차트가 존재하지 않습니다."));
+		    // 상병
+		    List<Chart_diseases> chart_diseases =
+		            chart_diseasesRepository.findByChart(chart);
+		
+		    List<Diseases_code> diseasesList = chart_diseases.stream()
+		            .map(Chart_diseases::getDiseases_code)
+		            .collect(Collectors.toList());
+		
+		    // Claim + Prescription → DTO
+		    List<Claim> claims = claimRepository.findAllByVisitId(visit_id);
+		
+		    List<Claim_item> normalClaimItems = new ArrayList<>();
+		    List<DrugViewDTO> drugItems = new ArrayList<>();
+		    
+		    List<Prescription_item> prescriptionItems =
+		            prescription_itemRepository.findAllByVisitId(visit_id);
 
-                // 차트 조회 > 상병 조회 (Chart_diseases -> Diseases_code)
-                List<Chart_diseases> chart_diseases = chart_diseasesRepository.findByChart(chart);
-                List<Diseases_code> diseasesList = chart_diseases.stream()
-                                .map(Chart_diseases::getDiseases_code) // Chart_diseases -> Diseases_code
-                                .collect(Collectors.toList());
+		
+		    for (Claim claim : claims) {
+		        for (Claim_item ci : claim_itemRepository.findAllByClaim(claim)) {
+		
+		            String category = ci.getFee_item().getCategory();
+		
+		            // 진찰료 제외
+		            if ("진찰료".equals(category)) continue;
+		
+		            // 약품
+					if ("약품".equals(category)) {
+					    DrugViewDTO dto = new DrugViewDTO();
+					
+					    dto.setFeeItemCode(ci.getFee_item().getFee_item_code());
+					    dto.setCategory(category);
+					    dto.setName(ci.getFee_item().getName());
+					    dto.setBasePrice(ci.getFee_item().getBase_price());
+					
+					    // item_code → Prescription_item 조회
+					    itemRepository.findByFeeItemCode(ci.getFee_item().getFee_item_code())
+					    .ifPresent(item -> {
+					        List<Prescription_item> pis = prescription_itemRepository.findAllByItemCodeAndVisitId(item.getItem_code(), visit_id);
+					        for (Prescription_item pi : pis) {
+					            dto.setDose(pi.getDose());
+					            dto.setFrequency(pi.getFrequency());
+					            dto.setDays(pi.getDays());
+					        }
+					    });
 
-             // 차트 조회 > 처방 조회
-                List<Claim> claims = claimRepository.findAllByVisitId(visit_id);
-                List<Fee_item> fee_item = new ArrayList<>();
-                List<Claim_item> normalClaimItems = new ArrayList<>();
-                List<Claim_item> drugClaimItems = new ArrayList<>();
+					
+					    drugItems.add(dto);
+					} else {
+					    normalClaimItems.add(ci);
+					}
 
-                for (Claim claim : claims) {
-                    List<Claim_item> allClaimItems = claim_itemRepository.findAllByVisitId(visit_id);
-                    for (Claim_item ci : allClaimItems) {
-                        if ("약품".equals(ci.getFee_item().getCategory())) {
-                            drugClaimItems.add(ci);
-                        } else {
-                            normalClaimItems.add(ci);
-                        }
-                        fee_item.add(ci.getFee_item()); // 모든 Fee_item 수집 (선택 사항)
-                    }
-                }
+		        }
+		    }
+		
+		    model.addAttribute("chart", chart);
+		    model.addAttribute("patient", patient);
+		    model.addAttribute("pastVisits", pastVisits);
+		    model.addAttribute("visit", visit);
+		    model.addAttribute("diseases_code", diseasesList);
+		
+		    model.addAttribute("normal_claim_items", normalClaimItems);
+		    model.addAttribute("drug_items", drugItems); // ⭐ 핵심
+		
+		    return "doctor/chartView";
+		}
 
-                model.addAttribute("chart", chart);
-                model.addAttribute("patient", patient);
-                model.addAttribute("pastVisits", pastVisits);
-                model.addAttribute("visit", visit);
-                model.addAttribute("diseases_code", diseasesList);
-                model.addAttribute("fee_item", fee_item);
-                model.addAttribute("normal_claim_items", normalClaimItems);
-                model.addAttribute("drug_claim_items", drugClaimItems);
-
-                return "doctor/chartView";
-        }
 
         // ====================== 원무과: 접수 화면 ======================
         @GetMapping("/receptions")
