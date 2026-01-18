@@ -259,8 +259,6 @@ public class staffContoller {
 	            @RequestParam("zone") String zone,
 	            @RequestParam("lot_code") String lot_code,
 	            @RequestParam("quantity") int quantity,
-	            @RequestParam(value = "expiry_date", required = false) LocalDate expiry_date,
-	            @RequestParam(value = "outbound_deadline", required = false) LocalDate outbound_deadline,
 	            @RequestParam("created_at") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate created_at
 	    ) {
 	    	//창고 찾기
@@ -274,8 +272,6 @@ public class staffContoller {
 	        stock.setItem_code(item_code);
 	        stock.setLot_code(lot_code);
 	        stock.setQuantity(BigDecimal.valueOf(quantity));
-	        stock.setExpiry_date(expiry_date);
-	        stock.setOutbound_deadline(outbound_deadline);
 	        stock.setCreated_at(created_at.atStartOfDay());
 
 	        stockRepository.save(stock);

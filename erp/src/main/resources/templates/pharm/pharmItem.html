@@ -270,7 +270,7 @@
 		<div class="container">
 			<div class="item">
 			<!-- 상태 필터링 -->
-				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+				<div style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
 					<form method="get" th:action="@{/pharm/pharmItem}" style="display:flex; gap:8px;">
 					    <!-- 상태 -->
 					    <select name="status">
@@ -342,6 +342,12 @@
 				</div>
 		</div>
 		<div class="lot">
+		    <div class="lotList" style="display: none;">
+		        <button id="purchaseRequestBtn">불출요청</button>
+		        <button id="stockInBtn">입고등록</button>
+		
+		        <table id="lotTable" border="1">
+		            <thead>
 			<!-- itemCode 보관용 -->
 			<div class="lot-empty-msg" style="display:none;">로트 정보가 없습니다.</div>
 
@@ -358,7 +364,6 @@
 		                    <th>입고일</th>
 		                    <th>위치</th>
 		                    <th>유통기한</th>
-		                    <!--<th>출고마감</th>-->
 		                    <th>수량</th>
 		                    <th>상태</th>
 		                    <th>폐기</th>
@@ -366,11 +371,10 @@
 		                </tr>
 		            </thead>
 		            <tbody id="lotTableBody"></tbody>
-				</table>
-				</div>
-			</div>
-			
+		        </table>
+		    </div>
 		</div>
+
 		
 		<!-- 신규등록요청 폼 (초기에는 숨김) -->
 		<div id="purchaseForm" class="popup-form" style="display:none;">
@@ -528,42 +532,35 @@
 	</div>
 	<script>
 	document.addEventListener("DOMContentLoaded", () => {
-
 	    const lotListDiv = document.querySelector(".lotList");
 	    const lotTableBody = document.getElementById("lotTableBody");
-	    const lotEmptyMsg = document.querySelector(".lot-empty-msg");
-		
-		const purchaseBtn = document.getElementById("purchaseRequestBtn");
+	
+	    const purchaseBtn = document.getElementById("purchaseRequestBtn");
 	    const stockBtn = document.getElementById("stockInBtn");
-		const discardBtn = document.getElementById("discardBtn");
-		const adjustBtn = document.getElementById("adjustBtn");
-
+	
 	    const purchaseForm = document.getElementById("purchaseForm");
 	    const stockForm = document.getElementById("stockInForm");
-		const discardForm = document.getElementById("discardForm");
-		const adjustForm = document.getElementById("adjustForm");
-		
-		const newItemForm = document.getElementById("newItemForm");
-		
-		let selectedStockId = null; // 폐기,수량조절
-		let selectedItemCode = null;
-
-		
-		let unitPrice = 0; //단가
-		
-		const qtyInput = document.querySelector('input[name="quantity"]'); //수랭
-		const totalPriceInput = document.getElementById("totalPrice"); //전체 금액
-		
-		qtyInput.addEventListener("input", () => { //총액계산
-		    const qty = parseInt(qtyInput.value || 0);
-		    const total = unitPrice * qty;
-
-		    totalPriceInput.value = total.toLocaleString(); // 보기 좋게
-		});
-
-
-
-		// location 불러오기
+	    const discardForm = document.getElementById("discardForm");
+	    const adjustForm = document.getElementById("adjustForm");
+	
+	    const newItemForm = document.getElementById("newItemForm");
+	
+	    let selectedStockId = null;
+	    let selectedItemCode = null;
+	    let unitPrice = 0;
+	
+	    const qtyInput = document.querySelector('input[name="quantity"]');
+	    const totalPriceInput = document.getElementById("totalPrice");
+	
+	    // 수량 변경 시 총액 계산
+	    if (qtyInput) {
+	        qtyInput.addEventListener("input", () => {
+	            const qty = parseInt(qtyInput.value || 0);
+	            totalPriceInput.value = (unitPrice * qty).toLocaleString();
+	        });
+	    }
+	
+	    // location 불러오기
 	    fetch("/pharm/warehouse/locations")
 	        .then(res => res.json())
 	        .then(data => {
@@ -573,95 +570,29 @@
 	                locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
 	            });
 	        });
-
+	
 	    // location 선택 시 zone 불러오기
-	    document.getElementById("locationSelect").addEventListener("change", function () {
-	        const location = this.value;
-	        const zoneSelect = document.getElementById("zoneSelect");
-	        zoneSelect.innerHTML = '<option value="">선택</option>';
-
-	        if (!location) return;
-
-	        fetch(`/pharm/warehouse/zones?location=${location}`)
-	            .then(res => res.json())
-	            .then(data => {
-	                data.forEach(zone => {
-	                    zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`;
+	    const locationSelect = document.getElementById("locationSelect");
+	    if (locationSelect) {
+	        locationSelect.addEventListener("change", function () {
+				const location = this.value;
+	           const zoneSelect = document.getElementById("zoneSelect");
+	           if (!zoneSelect) return;
+	           zoneSelect.innerHTML = '<option value="">선택</option>';
+	
+	            if (!location) return;
+	
+	            fetch(`/pharm/warehouse/zones?location=${location}`)
+	                .then(res => res.json())
+	                .then(data => {
+	                    data.forEach(zone => {
+	                        zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`;
+	                    });
 	                });
-	            });
-	    });
-
-	    // 열기
-	    purchaseBtn.addEventListener("click", () => {
-	        document.getElementById("requestModal").style.display = "block";
-			console.log("불출요청 itemCode:", selectedItemCode);
-		});
-
-	    stockBtn.addEventListener("click", () => {
-	        stockForm.style.display = "block";
-			qtyInput.value = "";
-			totalPriceInput.value = "0";
-			loadStockInRequests();
-	    });
-		
-		// 이벤트 위임
-		// lotList에서 이벤트 위임
-		lotListDiv.addEventListener("click", (e) => {
-		    // 폐기 버튼
-		    if (e.target.classList.contains("discardBtn")) {
-		        selectedStockId = e.target.dataset.stockId;
-		        discardForm.style.display = "block";
-		    }
-
-		    // 수량조정 버튼
-		    if (e.target.classList.contains("adjustBtn")) {
-		        selectedStockId = e.target.dataset.stockId;
-		        adjustForm.style.display = "block";
-		    }
-
-		    // 불출요청 버튼
-		    if (e.target.id === "purchaseRequestBtn") {
-		        selectedItemCode = e.target.dataset.itemCode; // 선택된 itemCode
-		        document.getElementById("requestModal").style.display = "block";
-		        console.log("불출요청 버튼 클릭됨"); // 확인용
-		    }
-		});
-
-
-
-	    // 닫기 버튼
-	    document.querySelectorAll(".closeBtn").forEach(btn => {
-	        btn.addEventListener("click", (e) => {
-	            e.target.closest(".popup-form").style.display = "none";
 	        });
-	    });
-
-		//신규등록요청폼
-		newItemForm.addEventListener("submit", (e) => {
-	        e.preventDefault(); // 기본 submit 막기
+	    }
 	
-	        const formData = new FormData(newItemForm);
-	
-	        fetch("/pharm/item/new", {
-	            method: "POST",
-	            body: formData
-	        })
-	        .then(res => {
-	            if (!res.ok) throw new Error("요청 실패");
-	            return res.text();
-	        })
-	        .then(msg => {
-	            alert(msg); // "신규 등록 요청 완료"
-	            purchaseForm.style.display = "none";
-	            newItemForm.reset();
-	        })
-	        .catch(err => {
-	            console.error(err);
-	            alert("신규 등록 요청 중 오류가 발생했습니다.");
-	        });
-	    });
-	    
-		//상세보기 클릭시 로트 리스트
+	    // 상세보기 버튼 클릭 (LOT 불러오기)
 	    document.querySelectorAll(".show-lot-btn").forEach(btn => {
 	        btn.addEventListener("click", () => {
 	            const itemCode = btn.dataset.itemCode;
@@ -683,39 +614,14 @@
 
 	            fetch(`/pharm/item/${itemCode}/lots`)
 	                .then(res => res.json())
-	                .then(data => {
-	                    // LOT 테이블 초기화
-	                    lotTableBody.innerHTML = "";
-
-	                    if (data.length === 0) {
-	                        lotListDiv.style.display = "none";
-	                        lotEmptyMsg.style.display = "block";
-	                        return;
-	                    }
-
-	                    data.forEach(lot => {
-							console.log(lot);
-	                        const tr = document.createElement("tr");
-	                        tr.innerHTML = `
-	                            <td>${lot.lot_code}</td>
-	                            <td>${lot.created_at ? lot.created_at : "-"}</td>
-	                            <td>${lot.location}</td>
-	                            <td>${lot.expiry_date ? lot.expiry_date : "-"}</td>
-	                            <td>${lot.quantity}</td>
-	                            <td>${lot.status}</td>
-	                            <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
-	                            <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
-	                        `;
-	                        lotTableBody.appendChild(tr);
-	                    });
-
-	                    lotListDiv.style.display = "block";
-	                    lotEmptyMsg.style.display = "none";
+	                .then(price => {
+	                    unitPrice = Number(price);
+	                    if(totalPriceInput) totalPriceInput.value = "0";
 	                })
-	                .catch(err => {
-	                    console.error(err);
-	                    alert("LOT 데이터를 불러오지 못했습니다.");
-	                });
+	                .catch(() => unitPrice = 0);
+	
+	            // LOT 테이블 로딩
+	            loadLotList(itemCode);
 	        });
 	    });
 		
@@ -922,5 +828,6 @@
 	});
 	
 	</script>
+
 </body>
 </html>

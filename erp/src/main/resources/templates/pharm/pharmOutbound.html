@@ -176,7 +176,18 @@
 		 text-decoration: none;
 	  }
 
-	
+	  .item-scroll {
+  	      width: 90%;
+  	      margin: 5px auto;
+  	      max-height: 520px;
+  	      overflow-y: auto;
+  	      border: 1px solid #7B7B7B;
+  	      background-color: #ffffff;
+  	  }
+
+  	  .item-scroll table {
+  	      width: 100%;
+  	  }
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
@@ -188,6 +199,7 @@
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
+		<div style="width:90%; margin: 5px auto; display:flex;  justify-content: center;">
 		<!-- 상태 필터링 -->
 			<form method="get" th:action="@{/pharm/pharmOutbound}">
 			    <!-- 유형 -->
@@ -210,7 +222,8 @@
 			
 			    <button type="submit">검색</button>
 			</form>
-
+		</div>
+		
 		
 
 		<div class="section-title" style="width:90%; margin:5px auto 0;">&#52636;&#44256; &#47532;&#49828;&#53944;</div>
@@ -224,8 +237,6 @@
 					<th>로트코드</th>
 					<th>변화수량</th>
 					<th>사유</th>
-			        <th>직원ID</th>
-			        <th>직원명</th>
 					<th>일시</th>
 			    </tr>
 			</thead>
@@ -243,13 +254,11 @@
 				    <td th:text="${o.lotCode}"></td>
 				    <td th:text="${o.quantity}"></td>
 				    <td th:text="${o.note}"></td>
-				    <td>-</td>
-				    <td>-</td>
 				    <td th:text="${#temporals.format(o.movedAt,'yyyy-MM-dd HH:mm')}"></td>
 				</tr>
 				
-			    <tr th:if="${outbounds.size() >0 }" 
-			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 15)}">
+			    <tr th:if="${outbounds.size() >0 and outbounds.size() <20}" 
+			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 20)}">
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
@@ -257,11 +266,10 @@
 			        <td>&nbsp;</td>
 					<td>&nbsp;</td>
 			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
-					<td>&nbsp;</td>
 				</tr>
 			</tbody>
 		</table>
+		</div>
 		
 		
 		

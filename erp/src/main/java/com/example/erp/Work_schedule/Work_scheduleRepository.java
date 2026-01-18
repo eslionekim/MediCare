@@ -118,8 +118,10 @@ public interface Work_scheduleRepository extends JpaRepository<Work_schedule, Lo
     	    SELECT ws
     	    FROM Work_schedule ws
     	    JOIN ws.user_account u
+    	    JOIN ws.work_type wt
     	    WHERE u.user_id = :userId
     	      AND ws.work_date = :workDate
+    	      AND wt.work_name NOT IN ('call', 'off', 'Post-Call Off')
     	""")
     Optional<Work_schedule> findByUser_account_UserIdAndWork_date(@Param("userId") String userId, @Param("workDate") LocalDate workDate);
 

@@ -101,14 +101,12 @@ public class ChartService {
             List<Integer> times_per_day,
             List<Integer> days
     ) {
-
-        /* =======================
-           1. 차트 저장
-        ======================== */
+    	
+        //1. 차트 저장
         Chart chart = (chart_id == null)
                 ? chartRepository.findByVisitId(visit_id).orElseThrow()
                 : chartRepository.findById(chart_id).orElseThrow();
-
+        
         chart.setSubjective(subjective);
         chart.setObjective(objective);
         chart.setAssessment(assessment);
@@ -116,19 +114,34 @@ public class ChartService {
         chart.setNote(note);
         chart.setUpdated_at(LocalDateTime.now());
         chartRepository.save(chart);
-
-        /* =======================
-           2. 기존 질병 삭제
-        ======================== */
+        
+        Visit visit = chart.getVisit();
+        // 2. 기존 질병,처방전 삭제
         List<Chart_diseases> existingDiseases =
                 chart_diseasesRepository.findByChart(chart);
         if (!existingDiseases.isEmpty()) {
             chart_diseasesRepository.deleteAll(existingDiseases);
         }
+        List<Prescription> oldPrescriptions =
+                prescriptionRepository.findByVisitId(visit.getVisit_id());
 
-        /* =======================
-           3. 질병 저장
-        ======================== */
+        for (Prescription old : oldPrescriptions) {
+            // prescription_item 먼저 삭제
+            prescription_itemRepository.deleteByPrescriptionId(
+                    old.getPrescription_id()
+            );
+        }
+        // prescription 삭제
+        prescriptionRepository.deleteAll(oldPrescriptions);
+        
+        List<Claim> oldClaims = claimRepository.findByVisitId(visit.getVisit_id());
+        for (Claim c : oldClaims) {
+            claim_itemRepository.deleteByClaim(c);
+        }
+        claimRepository.deleteAll(oldClaims);
+
+
+        // 3. 질병 저장
         if (diseases_code != null) {
             for (String code : diseases_code) {
 
@@ -145,11 +158,9 @@ public class ChartService {
             }
         }
 
-        Visit visit = chart.getVisit();
 
-        /* =======================
-           4. 일반 수가 Claim 저장
-        ======================== */
+
+        // 4. 일반 수가 Claim 저장
         if (normal_fee_item_code != null && !normal_fee_item_code.isEmpty()) {
 
             Claim normalClaim = new Claim();
@@ -274,11 +285,6 @@ public class ChartService {
             // 처방전
             Prescription prescription = new Prescription();
             prescription.setVisit_id(visit.getVisit_id());
-            String userId = visit.getUser_account() != null ? visit.getUser_account().getUser_id() : null;
-            if (userId == null || userId.isBlank()) {
-                throw new RuntimeException("Missing user_id");
-            }
-            prescription.setUser_id(userId);
             prescription.setStatus_code("VIS_COMPLETED");
             prescription.setPrescribed_at(LocalDateTime.now());
             prescriptionRepository.save(prescription);

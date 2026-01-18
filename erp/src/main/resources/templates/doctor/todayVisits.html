@@ -313,7 +313,7 @@
 						</td>
 				    </tr>
 					
-					<!-- 빈 행을 채워 최소 10행으로 유지 -->
+					
 					<tr th:if="${todayList.size() > 0 and todayList.size() < 13}" 
 					        th:each="i : ${#numbers.sequence(todayList.size() + 1, 13)}">
 					        <td>&nbsp;</td>

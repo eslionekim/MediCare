@@ -249,14 +249,14 @@
 	
 </head>
         <div th:replace="~{fragments/logis-header :: header(title='전체 재고 현황', activeTab='item')}"></div>
-
+<body>
 
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<div class="container">
 			<div class="item">
 			<!-- 상태 필터링 -->
-				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+				<div style="width:90%; margin: 5px auto; display:flex; justify-content:center;">
 					<form method="get" th:action="@{/logis/item}" style="display:flex; gap:8px;">
 					    <!-- 종류 -->
 					    <select name="itemType">
@@ -286,7 +286,6 @@
 					    <button type="submit">검색</button>
 					</form>
 
-					<button id="purchaseRequestBtn">신규등록요청</button>
 				</div>
 
 				<div class="section-title" style="width:90%; margin:5px auto 0;">&#51116;&#44256; &#47785;&#47197;</div>
@@ -329,7 +328,7 @@
 			                </td>
 						</tr>
 
-						<tr th:if="${itemList.size() > 0}"
+						<tr th:if="${itemList.size() > 0 and itemList.size() < 20}"
 						    th:each="i : ${#numbers.sequence(itemList.size() + 1, 20)}">
 						    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
 						    <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
@@ -340,22 +339,18 @@
 				</div>
 		</div>
 		<div class="lot">
-			<div class="lot-empty-msg" style="display:none;">로트 정보가 없습니다.</div>
+		    <div class="lotList" style="display: none;">
+		        <button id="stockInBtn">입고등록</button>
 
-			<div class="lotList" style="display: none;">
-				
-				<button id="purchaseRequestBtn">구매요청</button>
-				<button id="stockInBtn">입고등록</button>
-				<div class="section-title" style="width:90%; margin:5px auto 0;">&#47196;&#53944; &#51221;&#48372;</div>
-				<div class="lot-scroll">
-				<table id="lotTable" border="1">
-					<thead>
+		        <table id="lotTable" border="1">
+		            <thead>
+
 		                <tr>
 		                    <th>로트코드</th>
 		                    <th>입고일</th>
 		                    <th>위치</th>
 		                    <th>유통기한</th>
-		                    <th>출고마감</th>
+							<th>출고마감일</th>
 		                    <th>수량</th>
 		                    <th>상태</th>
 		                    <th>폐기</th>
@@ -363,61 +358,12 @@
 		                </tr>
 		            </thead>
 		            <tbody id="lotTableBody"></tbody>
-				</table>
-				</div>
-			</div>
-			
+		        </table>
+		    </div>
 		</div>
+
 		
-		<!-- 신규등록요청 폼 (초기에는 숨김) -->
-		<div id="purchaseForm" class="popup-form" style="display:none;">
-		    <h3>신규등록 요청</h3>
-		    <form id="newItemForm">
-		        <label>분류:</label>
-		        <select name="item_type" required>
-		            <option value="">선택</option>
-		            <option value="약품">약품</option>
-		            <option value="재료">재료</option>
-		            <option value="자재">기타</option>
-		        </select><br>
-
-		        <label>물품명:</label>
-		        <input type="text" name="name" required><br>
-
-				<label>일반 물품 코드:</label>
-		        <input type="text" name="code" required><br>
-				
-				<label>제조사 물품 코드:</label>
-				<input type="text" name="madecode" required><br>
-
-
-		        <label>기본단위:</label>
-		        <input type="text" name="base_unit" required><br>
-
-		        <label>포장단위명:</label>
-		        <input type="text" name="pack_name" required><br>
-
-		        <label>포장단위수량:</label>
-		        <input type="number" name="pack_quantity" min="1" required><br>
-
-		        <label>안전재고:</label>
-		        <input type="number" name="safety_stock" min="0" required><br>
-
-		        <label>기본 단가:</label>
-		        <input type="number" name="base_price" min="0" step="0.01" required><br>
-
-				<label>과세 여부:</label>
-				<select name="taxable" required>
-				    <option value="">선택</option>
-				    <option value="true">과세</option>
-				    <option value="false">비과세</option>
-				</select><br>
-
-				
-		        <button type="submit">요청</button>
-		        <button type="button" class="closeBtn">닫기</button>
-		    </form>
-		</div>
+		
 
 		<!-- 입고등록 폼 (초기에는 숨김) -->
 		<div id="stockInForm" class="popup-form" style="display:none;">
@@ -507,14 +453,11 @@
 
 	    const lotListDiv = document.querySelector(".lotList");
 	    const lotTableBody = document.getElementById("lotTableBody");
-	    const lotEmptyMsg = document.querySelector(".lot-empty-msg");
 		
-		const purchaseBtn = document.getElementById("purchaseRequestBtn");
 	    const stockBtn = document.getElementById("stockInBtn");
 		const discardBtn = document.getElementById("discardBtn");
 		const adjustBtn = document.getElementById("adjustBtn");
 
-	    const purchaseForm = document.getElementById("purchaseForm");
 	    const stockForm = document.getElementById("stockInForm");
 		const discardForm = document.getElementById("discardForm");
 		const adjustForm = document.getElementById("adjustForm");
@@ -567,10 +510,7 @@
 	            });
 	    });
 
-	    // 열기
-	    purchaseBtn.addEventListener("click", () => {
-	        purchaseForm.style.display = "block";
-	    });
+	    
 
 	    stockBtn.addEventListener("click", () => {
 	        stockForm.style.display = "block";
@@ -598,30 +538,7 @@
 	        });
 	    });
 
-		//신규등록요청폼
-		newItemForm.addEventListener("submit", (e) => {
-	        e.preventDefault(); // 기본 submit 막기
-	
-	        const formData = new FormData(newItemForm);
-	
-	        fetch("/logis/item/new", {
-	            method: "POST",
-	            body: formData
-	        })
-	        .then(res => {
-	            if (!res.ok) throw new Error("요청 실패");
-	            return res.text();
-	        })
-	        .then(msg => {
-	            alert(msg); // "신규 등록 요청 완료"
-	            purchaseForm.style.display = "none";
-	            newItemForm.reset();
-	        })
-	        .catch(err => {
-	            console.error(err);
-	            alert("신규 등록 요청 중 오류가 발생했습니다.");
-	        });
-	    });
+		
 	    
 		//상세보기 클릭시 로트 리스트
 	    document.querySelectorAll(".show-lot-btn").forEach(btn => {
@@ -647,12 +564,17 @@
 	                .then(data => {
 	                    // LOT 테이블 초기화
 	                    lotTableBody.innerHTML = "";
-
-	                    if (data.length === 0) {
-	                        lotListDiv.style.display = "none";
-	                        lotEmptyMsg.style.display = "block";
-	                        return;
-	                    }
+						lotListDiv.style.display = "block";
+						if (data.length === 0) {
+				            const tr = document.createElement("tr");
+				            tr.innerHTML = `
+				                <td colspan="9" style="text-align:center; height:500px;">
+				                    재고가 없습니다.
+				                </td>
+				            `;
+				            lotTableBody.appendChild(tr);
+				            return;
+				        }
 
 	                    data.forEach(lot => {
 							console.log(lot);
@@ -670,13 +592,6 @@
 	                        `;
 	                        lotTableBody.appendChild(tr);
 	                    });
-
-	                    lotListDiv.style.display = "block";
-	                    lotEmptyMsg.style.display = "none";
-	                })
-	                .catch(err => {
-	                    console.error(err);
-	                    alert("LOT 데이터를 불러오지 못했습니다.");
 	                });
 	        });
 	    });
@@ -713,7 +628,41 @@
 		
 
 		
-		function loadLotList(itemCode) { // 입고 시 새로고침?
+		function loadLotList(itemCode) {
+			    fetch(`/hr/item/${itemCode}/lots`)
+			        .then(res => res.json())
+			        .then(data => {
+			            lotTableBody.innerHTML = "";
+			            lotListDiv.style.display = "block";
+			
+			            if (data.length === 0) {
+			                lotTableBody.innerHTML = `
+			                    <tr>
+			                        <td colspan="8" style="text-align:center; height:200px;">
+			                            재고가 없습니다.
+			                        </td>
+			                    </tr>
+			                `;
+			                return;
+			            }
+			
+			            data.forEach(lot => {
+			                const tr = document.createElement("tr");
+			                tr.innerHTML = `
+			                    <td>${lot.lot_code}</td>
+			                    <td>${lot.created_at ?? "-"}</td>
+			                    <td>${lot.location}</td>
+			                    <td>${lot.expiry_date ?? "-"}</td>
+			                    <td>${lot.quantity}</td>
+			                    <td>${lot.status}</td>
+			                    <td><button class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+			                    <td><button class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+			                `;
+			                lotTableBody.appendChild(tr);
+			            });
+			        });
+			
+
 		    fetch(`/logis/item/${itemCode}/lots`)
 		        .then(res => res.json())
 		        .then(data => {
@@ -721,7 +670,6 @@
 
 		            if (data.length === 0) {
 		                lotListDiv.style.display = "none";
-		                lotEmptyMsg.style.display = "block";
 		                return;
 		            }
 
@@ -743,7 +691,6 @@
 		            });
 
 		            lotListDiv.style.display = "block";
-		            lotEmptyMsg.style.display = "none";
 		        })
 		        .catch(err => {
 		            console.error(err);
@@ -751,7 +698,7 @@
 		        });
 		}
 
-		//폐기
+	
 		document.getElementById("discardFormElement").addEventListener("submit", (e) => {
 		    e.preventDefault();
 
@@ -786,7 +733,7 @@
 		        loadLotList(selectedItemCode); // 재조회
 		    })
 		    .catch(() => alert("폐기 중 오류 발생"));
-		});
+			});
 
 		// 수량조절
 		document.getElementById("adjustFormElement").addEventListener("submit", (e) => {
@@ -823,9 +770,8 @@
 		    })
 		    .catch(() => alert("수량 조정 중 오류 발생"));
 		});
+});
 
-
-	});
 	
 	</script>
 </body>

@@ -22,4 +22,10 @@ public interface ChartRepository extends JpaRepository<Chart, Long> {
 	@Query("SELECT c FROM Chart c WHERE c.visit.visit_id = :visitId")
     Optional<Chart> findByVisitId(@Param("visitId") Long visitId);
 
+	@Query("""
+	        SELECT c
+	        FROM Chart c
+	        WHERE c.visit.visit_id = :visitId
+	    """)
+	    Optional<Chart> findByVisit_VisitId(@Param("visitId") Long visitId);
 }

@@ -1,6 +1,7 @@
 package com.example.erp.Prescription;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,12 @@ public interface PrescriptionRepository extends JpaRepository<Prescription, Long
 	    Optional<LocalDateTime> findLatestPrescribedAtByPatient(
 	        @Param("patientId") Long patientId
 	    );
+	
+	//차트 조회
+	@Query("""
+	        SELECT p
+	        FROM Prescription p
+	        WHERE p.visit_id = :visitId
+	    """)
+	    List<Prescription> findByVisitId(@Param("visitId") Long visitId);
 }

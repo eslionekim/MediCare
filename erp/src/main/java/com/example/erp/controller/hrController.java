@@ -82,7 +82,7 @@ public class hrController {
 
 
 	@GetMapping("/hr/employee")
-	public String employeeList(
+	public String employeeList( //직원 리스트
 	        @RequestParam(name="department", required = false) String department,
 	        @RequestParam(name="keyword", required = false) String keyword,
 	        @RequestParam(name = "hireDate",required = false)

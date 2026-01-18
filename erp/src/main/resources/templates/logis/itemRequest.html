@@ -206,7 +206,7 @@
 		<div class="container">
 			<div class="item">
 			<!-- 상태 필터링 -->
-				<div style="width:90%; margin: 5px auto; display:flex; justify-content:flex-end;">
+				<div style="width:90%; margin: 5px; display:flex; justify-content:flex-end;">
 				    <select id="statusFilter" style="padding: 5px; font-size: 14px;">
 				        <option value="">전체 보기</option>
 				        <option value="요청">요청</option>
@@ -216,6 +216,7 @@
 				</div>
 
 				<div class="section-title" style="width:90%; margin:5px auto 0;">&#47785;&#47197;</div>
+				<div class="item-scroll">
 				<!-- 금일 진료 리스트 -->
 				<table id="requestTable" border="1">
 					<thead>
@@ -258,13 +259,14 @@
 
 							</tr>
 
-							<th:block th:if="${list.size() > 0}">
+							<th:block th:if="${list.size() > 0 and list.size() <20}">
 							    <tr th:each="i : ${#numbers.sequence(list.size() + 1, 20)}">
 							        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
 							    </tr>
 							</th:block>
 					</tbody>
 				</table>
+				</div>
 		</div>
 		<div class="request">
 
@@ -273,20 +275,20 @@
 
 			<div id="requestDetail" style="display:none;">
 
-			    <!-- ✅ 공통 상세 영역 (그대로 유지) -->
-			    <p>요청번호:
+			    <!--  공통 상세 영역 (그대로 유지) -->
+			    <p>요청번호
 			        <span id="detailRequestId"></span>
 			    </p>
 
-			    <p>요청부서:
+			    <p>요청부서
 			        <span id="detailDepartmentName"></span>
 			    </p>
 
-			    <p>요청일시:
+			    <p>요청일시
 			        <span id="detailRequestedAt"></span>
 			    </p>
 
-			    <p>상태:
+			    <p>상태
 			        <span id="detailStatusCode"></span>
 			    </p>
 
