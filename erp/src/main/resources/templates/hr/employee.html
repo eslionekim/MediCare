@@ -64,7 +64,7 @@
 	
 	/* 상단 헤더 -> 출근 버튼 스타일 */
 	.time-in {
-	    background-color: #879BD5;
+	    background-color: var(--ui-panel-title);
 		color:#ffffff;
 	}
 	
@@ -171,8 +171,9 @@
 	      border-radius: 4px;
 	      height: 520px;
 	      overflow-y: auto;
-	      margin-top: 10px;
+	      margin: 10px auto 0;
 	      padding: 10px;
+		  width: 90%;
 	  }
 
 	  .visit-table-box table {
@@ -195,7 +196,7 @@
 	  .visit-table-box a.first {
 	      display: inline-block;
 	      padding: 4px 8px;
-	      background: #879BD5;
+	      background: var(--ui-panel-title);
 	      color: #fff;
 	      border-radius: 4px;
 	      text-decoration: none;
@@ -248,7 +249,7 @@
 	  /* 드롭다운 옆 버튼 */
 	  .btn-submit {
 	      padding: 5px 12px;
-	      background-color: #879BD5;
+	      background-color: var(--ui-panel-title);
 	      color: #fff;
 	      border: none;
 	      border-radius: 4px;
@@ -310,7 +311,7 @@
 	  }
 
 	  #submitVacation {
-	      background-color: #879BD5;
+	      background-color: var(--ui-panel-title);
 	      color: #fff;
 	  }
 
@@ -363,6 +364,7 @@
 		</div>
 
 		<!-- 금일 진료 리스트 -->
+		<div class="section-title" style="width:90%; margin:5px auto 0;">&#47785;&#47197;</div>
 		<div class="visit-table-box">
 		<table id="table" border="1">
 			<thead>

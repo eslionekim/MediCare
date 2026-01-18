@@ -3,6 +3,7 @@
   --ui-panel: #ffffff;
   --ui-primary: #879bd5;
   --ui-primary-dark: #6f86c9;
+  --ui-panel-title: #6b80bf;
   --ui-tab: #d5dded;
   --ui-submenu: #baccff;
   --ui-danger: #ff4b4b;
@@ -10,6 +11,9 @@
   --ui-text: #333333;
   --ui-muted: #555555;
   --ui-soft: #f3f6ff;
+  --ui-table-header: #e9edf7;
+  --ui-row-alt: #fafbff;
+  --ui-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 * {
@@ -59,13 +63,13 @@ th, td {
 }
 
 th {
-  background: var(--ui-soft);
+  background: var(--ui-table-header);
   font-weight: 600;
   color: var(--ui-text);
 }
 
 tbody tr:nth-child(even) {
-  background: #fafbff;
+  background: var(--ui-row-alt);
 }
 
 .erp-page {
@@ -73,7 +77,7 @@ tbody tr:nth-child(even) {
   max-width: 1920px;
   margin: 0 auto 24px;
   background: var(--ui-panel);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--ui-shadow);
 }
 
 .content-area {
@@ -88,19 +92,33 @@ tbody tr:nth-child(even) {
   border-radius: 4px;
   background: var(--ui-panel);
   overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .card-header {
   padding: 6px 10px;
   font-size: 13px;
   font-weight: 600;
-  background: var(--ui-primary);
+  background: var(--ui-panel-title);
   color: #fff;
 }
 
 .card-body {
   padding: 10px;
   background: #fff;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ui-panel-title);
+  color: #fff;
+  border: 1px solid var(--ui-border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
 }
 
 .top-bar {

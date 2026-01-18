@@ -62,7 +62,7 @@
 	
 	/* 상단 헤더 -> 출근 버튼 스타일 */
 	.time-in {
-	    background-color: #879BD5;
+	    background-color: var(--ui-panel-title);
 		color:#ffffff;
 	}
 	
@@ -150,7 +150,7 @@
 	 }
 
 	 th {
-	     background-color: #879BD5; 
+	     background-color: var(--ui-panel-title); 
 		 font-weight: normal; /* 글씨 굵기 보통으로 */
 		 color: rgb(31, 31, 31);
 	 }
@@ -302,6 +302,7 @@
 					</form>
 				</div>
 
+				<div class="section-title" style="width:90%; margin:5px auto 0;">&#51116;&#44256; &#47785;&#47197;</div>
 				<!-- 금일 진료 리스트 -->
 				<div class="item-scroll">
 				<table id="requestTable" border="1">
@@ -359,6 +360,7 @@
 				
 				<button id="purchaseRequestBtn" data-item-code="{{itemCode}}">불출요청</button>
 				<button id="stockInBtn">입고등록</button>
+				<div class="section-title" style="width:90%; margin:5px auto 0;">&#47196;&#53944; &#51221;&#48372;</div>
 				<div class="lot-scroll">
 				<table id="lotTable" border="1">
 					<thead>

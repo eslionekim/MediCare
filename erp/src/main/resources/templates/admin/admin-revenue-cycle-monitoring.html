@@ -186,8 +186,8 @@
                         표시할 상세 정보가 없습니다.
                     </div>
                     <div style="margin-top:10px;">
-                        <button class="btn" type="button">상태 정정 요청</button>
-                        <button class="btn" type="button">결제/청구 정정</button>
+                        <button class="btn" type="button" th:if="${isAdmin}">상태 정정 요청</button>
+                        <button class="btn" type="button" th:if="${isAdmin}">결제/청구 정정</button>
                     </div>
                 </div>
             </div>

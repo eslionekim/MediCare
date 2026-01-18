@@ -109,8 +109,8 @@
                     <div class="box">
                         <strong>관리자 처리</strong>
                         <div>
-                            <button class="btn" type="button">후불 처리 등록/해제</button>
-                            <button class="btn" type="button">회수 완료 처리</button>
+                            <button class="btn" type="button" th:if="${isAdmin}">후불 처리 등록/해제</button>
+                            <button class="btn" type="button" th:if="${isAdmin}">회수 완료 처리</button>
                         </div>
                     </div>
                     <div class="box">

@@ -35,9 +35,9 @@
                 <option value="0" th:selected="${selectedActive == '0'}">비활성</option>
             </select>
             <button class="btn btn-blue" type="submit">검색</button>
-            <button class="btn" type="button">신규</button>
-            <button class="btn" type="button">수정</button>
-            <button class="btn" type="button">비활성</button>
+            <button class="btn" type="button" th:if="${isAdmin}">신규</button>
+            <button class="btn" type="button" th:if="${isAdmin}">수정</button>
+            <button class="btn" type="button" th:if="${isAdmin}">비활성</button>
         </form>
 
         <div class="panel">

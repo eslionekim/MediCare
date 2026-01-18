@@ -12,19 +12,19 @@
         .search-row { display:flex; gap:8px; }
         .search-box { flex:1; display:flex; align-items:center; background:#fff; border-radius:999px; border:1px solid #b0b7c7; padding:4px 10px; }
         .search-box input { border:none; outline:none; font-size:13px; flex:1; background:transparent; }
-        .btn-small { padding:5px 12px; font-size:13px; border-radius:4px; border:1px solid #7B7B7B; background:#879BD5; color:#fff; cursor:pointer; }
-        .patient-table-box { background:#fff; border:1px solid #b0b7c7; border-radius:4px; height:520px; overflow-y:auto; }
+        .btn-small { padding:5px 12px; font-size:13px; border-radius:4px; border:1px solid #7B7B7B; background: var(--ui-panel-title); color:#fff; cursor:pointer; }
+        .patient-table-box { background:#fff; border:1px solid #b0b7c7; border-top:none; border-radius:0 0 4px 4px; height:520px; overflow-y:auto; }
         .patient-table-box table { width:100%; border-collapse:collapse; font-size:13px; }
         .patient-table-box th, .patient-table-box td { border:1px solid #ccc; padding:6px; }
         .patient-table-box th { background:#f3f6ff; }
         .btn-xs { padding:4px 10px; font-size:12px; border-radius:4px; border:1px solid #7B7B7B; background:#D5DDED; cursor:pointer; }
         .card { border:1px solid #b0b7c7; border-radius:4px; background:#f7f9ff; }
-        .card-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; font-size:13px; font-weight:600; background:#879BD5; color:#fff; }
+        .card-header { display:flex; justify-content:space-between; align-items:center; padding:6px 10px; font-size:13px; font-weight:600; background:var(--ui-panel-title); color:#fff; }
         .card-body { background:#fff; padding:10px; }
         .form-row { display:flex; gap:6px; margin-bottom:8px; font-size:13px; }
         .form-row label { width:70px; font-weight:500; }
         .form-row input, .form-row select { flex:1; padding:5px; border-radius:4px; border:1px solid #cbd2e1; font-size:13px; }
-        .btn-new { align-self:flex-end; padding:6px 14px; background:#879BD5; color:#fff; border-radius:4px; border:1px solid #7B7B7B; cursor:pointer; }
+        .btn-new { align-self:flex-end; padding:6px 14px; background: var(--ui-panel-title); color:#fff; border-radius:4px; border:1px solid #7B7B7B; cursor:pointer; }
         .quick-buttons { display:flex; gap:6px; }
         .card-body table { width:100%; border-collapse:collapse; font-size:12px; }
         .card-body th, .card-body td { border:1px solid #ccc; padding:4px 6px; }
@@ -50,6 +50,7 @@
                     <button class="btn-small" type="submit">조회</button>
                 </form>
 
+                <div class="section-title">&#54872;&#51088; &#47785;&#47197;</div>
                 <div class="patient-table-box">
                     <table>
                         <thead>
@@ -98,7 +99,7 @@
                         <a class="btn-xs"
                            th:href="@{/patients(page=${p}, size=${pageSize}, keyword=${keyword})}"
                            th:text="${p + 1}"
-                           th:style="${p == currentPage} ? 'background:#879BD5;color:#fff;' : ''">
+                           th:style="${p == currentPage} ? 'background: var(--ui-panel-title);color:#fff;' : ''">
                         </a>
                     </span>
                     <a class="btn-xs"

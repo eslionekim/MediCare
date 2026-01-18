@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -26,6 +27,7 @@ public class UserInfoAdvice {
         if (auth == null || !auth.isAuthenticated()) {
             model.addAttribute("userId", "");
             model.addAttribute("userName", "");
+            model.addAttribute("isAdmin", false);
             return;
         }
 
@@ -33,6 +35,7 @@ public class UserInfoAdvice {
         if ("anonymousUser".equalsIgnoreCase(userId)) {
             model.addAttribute("userId", "");
             model.addAttribute("userName", "");
+            model.addAttribute("isAdmin", false);
             return;
         }
 
@@ -41,5 +44,9 @@ public class UserInfoAdvice {
 
         model.addAttribute("userId", userId);
         model.addAttribute("userName", userName);
+        boolean isAdmin = auth.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch("ROLE_ADMIN"::equals);
+        model.addAttribute("isAdmin", isAdmin);
     }
 }

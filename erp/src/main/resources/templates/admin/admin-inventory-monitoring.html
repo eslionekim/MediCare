@@ -164,8 +164,8 @@
                                 </tbody>
                             </table>
                             <div style="margin-top:8px;">
-                                <button class="btn" type="button">락인(확정)</button>
-                                <button class="btn" type="button">락인 해제 요청 처리</button>
+                                <button class="btn" type="button" th:if="${isAdmin}">락인(확정)</button>
+                                <button class="btn" type="button" th:if="${isAdmin}">락인 해제 요청 처리</button>
                             </div>
                         </div>
                     </div>

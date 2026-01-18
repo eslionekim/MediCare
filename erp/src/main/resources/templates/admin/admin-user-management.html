@@ -97,8 +97,8 @@
                         <strong>부서·직무·권한</strong>
                         <div>부서 / 직무 / Role</div>
                         <div style="margin-top:8px;">
-                            <button class="btn" type="button">계정 활성/비활성</button>
-                            <button class="btn" type="button">비밀번호 초기화</button>
+                            <button class="btn" type="button" th:if="${isAdmin}">계정 활성/비활성</button>
+                            <button class="btn" type="button" th:if="${isAdmin}">비밀번호 초기화</button>
                         </div>
                     </div>
                 </div>

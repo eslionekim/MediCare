@@ -59,8 +59,8 @@
                     </tbody>
                 </table>
                 <div style="margin-top:8px;">
-                    <button class="btn" type="button">승인</button>
-                    <button class="btn" type="button">반려</button>
+                    <button class="btn" type="button" th:if="${isAdmin}">승인</button>
+                    <button class="btn" type="button" th:if="${isAdmin}">반려</button>
                 </div>
             </div>
         </div>

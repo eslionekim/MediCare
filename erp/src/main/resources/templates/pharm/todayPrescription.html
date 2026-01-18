@@ -62,7 +62,7 @@
 	
 	/* 상단 헤더 -> 출근 버튼 스타일 */
 	.time-in {
-	    background-color: #879BD5;
+	    background-color: var(--ui-panel-title);
 		color:#ffffff;
 	}
 	
@@ -139,6 +139,7 @@
 	    border-collapse: collapse; /* 표 한줄로 합치기 */
 	    font-size: 14px;
 	    background-color: white;
+		margin: 0 auto;
 		
 	 }
 
@@ -150,7 +151,7 @@
 	 }
 
 	 th {
-	     background-color: #879BD5; 
+	     background-color: var(--ui-panel-title); 
 		 font-weight: normal; /* 글씨 굵기 보통으로 */
 		 color: rgb(31, 31, 31);
 	 }
@@ -187,6 +188,7 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<div class="container">
+			<div class="section-title" style="width:90%; margin:5px auto 0;">&#47785;&#47197;</div>
 			<table id="requestTable" border="1">
 				<thead>
 				    <tr>
