@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.example.erp.Department.Department;
 import com.example.erp.Department.DepartmentDTO;
 import com.example.erp.Department.DepartmentRepository;
+import com.example.erp.Staff_profile.Staff_profile;
 import com.example.erp.Staff_profile.Staff_profileRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeDTO;
@@ -77,8 +78,15 @@ public class Work_scheduleController {
         year = (year == null) ? now.getYear() : year;
         month = (month == null) ? now.getMonthValue() : month;
 
-        // 직원 리스트 + 상태 계산
-        List<User_account> user = user_accountRepository.findAll(); // 필요시 진료과 join fetch
+        // Staff_profile 기준으로 가져오기 (관리자 제외)
+        List<Staff_profile> profiles = staff_profileRepository.findAllExceptAdmin();
+
+        // 이제 User_account 리스트로 변환
+        List<User_account> user = profiles.stream()
+                .map(Staff_profile::getUser_account)
+                .distinct() // 중복 제거
+                .collect(Collectors.toList());
+
         
         // 1일 스케줄 여부 계산
         LocalDate firstDay = LocalDate.of(year, month, 1);

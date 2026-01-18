@@ -206,6 +206,19 @@
 	      margin-top: 2px;
 	  }
 	
+	  .item-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
+
+	  .item-scroll table {
+	      width: 100%;
+	  }
+
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -218,7 +231,7 @@
 		<div class="container">
 		<!-- 상태 필터링 -->
 			<div class="user_list">
-				<div> <!-- 검색창 -->
+				<div style="width:90%; margin: 5px auto; display:flex;  justify-content: center;">
 					<form method="get" action="/hr/scheduleAssignment">
 						<!-- 진료과 -->
 						  <select name="departmentCode">
@@ -249,7 +262,8 @@
 					</form>
 				</div>
 				
-				<div> <!-- 리스트 -->
+				
+				<div class="item-scroll">  <!-- 리스트 -->
 				<table id="table" border="1">
 					<thead>
 					    <tr>
@@ -280,7 +294,7 @@
 						    </tr>
 							
 							<!-- 빈 행을 채워 최소 10행으로 유지 -->
-							    <tr th:if="${userWithFlag.size() >0 }" 
+							    <tr th:if="${userWithFlag.size() >0 and userWithFlag.size() <20}" 
 							        th:each="i : ${#numbers.sequence(userWithFlag.size() + 1, 20)}">
 							        <td>&nbsp;</td>
 							        <td>&nbsp;</td>

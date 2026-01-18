@@ -176,8 +176,103 @@
 		 text-decoration: none;
 	  }
 
+	  .item-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
+
+	  .item-scroll table {
+	      width: 100%;
+	  }
 	
-	
+	  /* 팝업 전체 스타일 (중앙 고정 + 적당한 너비) */
+	  .popup {
+	      display: none;
+	      position: fixed;
+	      top: 50%;
+	      left: 50%;
+	      transform: translate(-50%, -50%);
+	      width: 500px;           /* 적당한 너비 */
+	      max-width: 90%;         /* 화면 작으면 줄어듦 */
+	      background: rgb(255, 255, 255);    /* 기존 색감 */
+	      border-radius: 8px;     /* 기존 테두리 반경 */
+	      box-shadow: 0 4px 12px rgba(0,0,0,0.15); /* 기존 그림자 */
+	      padding: 20px;
+	      z-index: 1000;
+	      font-size: 14px;
+	  }
+
+	  /* 팝업 헤더 */
+	  .popup-header {
+	      display: flex;
+	      justify-content: space-between;
+	      align-items: center;
+	      margin-bottom: 15px;
+	      font-weight: 600;
+	      font-size: 16px;
+	  }
+
+	  #popupCloseBtn {
+	      background: none;
+	      border: none;
+	      font-size: 20px;
+	      cursor: pointer;
+	      color: #333;
+	  }
+
+	  /* 팝업 내용 */
+	  .popup-content {
+	      display: flex;
+	      flex-direction: column;
+	      gap: 10px;
+	  }
+
+	  /* 인풋/텍스트에어리어/셀렉트 */
+	  .popup-content input,
+	  .popup-content textarea,
+	  .popup-content select {
+	      width: 100%;
+	      padding: 5px 8px; /* 기존 색감 스타일 따라감 */
+	      font-size: 14px;
+	      border-radius: 4px;
+	      border: 1px solid #b0b7c7;
+	      margin-bottom: 5px;
+	      box-sizing: border-box;
+	  }
+
+	  /* footer (버튼 영역) */
+	  .popup-footer {
+	      display: flex;
+	      justify-content: flex-end;
+	      gap: 10px;
+	      margin-top: 15px;
+	      flex-wrap: wrap; /* 화면 작으면 버튼 줄바꿈 */
+	  }
+
+	  .popup-footer button {
+	      padding: 6px 12px;
+	      border: none;
+	      border-radius: 4px;
+	      cursor: pointer;
+	      font-weight: 500;
+	  }
+
+	  /* 버튼 색감 */
+	  .popup-footer .approve {
+	      background-color: #879BD5; /* 기존 submitVacation 색 */
+	      color: #fff;
+	  }
+
+	  .popup-footer .reject {
+	      background-color: #ccc;    /* 기존 closePopup 색 */
+	      color: #333;
+	  }
+
+
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -192,7 +287,7 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<!-- 검색 영역 -->
-		<div id="vacationSearchArea" style="width:90%; margin:10px auto; display:flex; gap:10px; justify-content:flex-end;">
+		<div id="vacationSearchArea" style="width:90%; margin:10px auto; display:flex; gap:10px; justify-content:center;">
 
 		    <!-- 진료과 -->
 		    <select id="departmentSelect">
@@ -220,6 +315,7 @@
 
 
 		<!-- 금일 진료 리스트 -->
+		<div class="item-scroll">
 		<table id="table" border="1">
 			<thead>
 			    <tr>
@@ -258,7 +354,7 @@
 				    </tr>
 					
 					<!-- 빈 행을 채워 최소 10행으로 유지 -->
-					    <tr th:if="${vacation.size() >0 }" 
+					    <tr th:if="${vacation.size() >0 and vacation.size() <20}" 
 					        th:each="i : ${#numbers.sequence(vacation.size() + 1, 20)}">
 					        <td>&nbsp;</td>
 					        <td>&nbsp;</td>
@@ -272,34 +368,37 @@
 					</tr>
 			</tbody>
 		</table>
-		
+		</div>
 		<!-- 팝업 -->
-		<div id="vacationPopup" class="popup" style="display:none;"> <!-- 안보이게 -->
-		    <div class="popup-header"> <!-- 상단 -->
-		        <button id="popupBackBtn">이전</button>
+		<!-- 팝업 -->
+		<div id="vacationPopup" class="popup" style="display:none;">
+		    <div class="popup-header">
 		        <span id="popupTitle">상세 보기</span>
+		        <button id="popupCloseBtn">이전</button>
 		    </div>
-		    <div class="popup-content"> <!-- 중앙 -->
-		        <label>진료과:</label>
+		    <div class="popup-content">
+		        <label>진료과</label>
 		        <input type="text" id="popupDepartment" readonly />
 
-		        <label>직원ID:</label>
+		        <label>직원ID</label>
 		        <input type="text" id="popupUserId" readonly />
 
-		        <label>직원명:</label>
+		        <label>직원명</label>
 		        <input type="text" id="popupUserName" readonly />
 
-		        <label>기간:</label>
+		        <label>기간</label>
 		        <input type="date" id="popupStartDate" readonly />
 		        <input type="date" id="popupEndDate" readonly />
 
-		        <label>분류:</label>
+		        <label>분류</label>
 		        <input type="text" id="popupType" readonly />
 
-		        <label>사유:</label>
-		        <textarea id="popupReason" readonly ></textarea>
+		        <label>사유</label>
+		        <textarea id="popupReason" readonly></textarea>
+		    </div>
+		    <div class="popup-footer" id="popupFooter"></div>
 		</div>
-		<div class="popup-footer" id="popupFooter"></div> <!-- 하단 -->
+
 		
 		
     </div>
@@ -474,7 +573,7 @@
 	});
 
 	// 이전 버튼
-	document.getElementById('popupBackBtn').addEventListener('click', () => {
+	document.getElementById('popupCloseBtn').addEventListener('click', () => {
 	    vacationPopup.style.display = 'none';
 	});
 

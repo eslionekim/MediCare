@@ -192,7 +192,175 @@
 	.request{
 		grid-column:2/3 ;
 	}
+	.item-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
 	
+	  .item-scroll table {
+	      width: 100%;
+	  }
+	  /* ===============================
+	     상세 팝업 전체 컨테이너
+	     =============================== */
+	  #requestDetail {
+	      display: none;
+	      background-color: #ffffff;      /* 깨끗한 흰색 */
+	      padding: 25px 30px;
+	      border-radius: 12px;
+	      box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+	      width: 90%;
+	      max-width: 750px;
+	      margin: 20px auto;
+	      font-family: 'Inter', sans-serif;
+	      font-size: 14px;
+	      color: #333;
+	      transition: all 0.3s ease;
+	  }
+
+	  /* ===============================
+	     기본 정보 p 태그
+	     =============================== */
+	  #requestDetail p {
+	      margin: 8px 0;
+	      display: flex;
+	      justify-content: space-between;
+	  }
+
+	  #requestDetail p span {
+	      font-weight: 500;
+	      color: #1e1e2f;
+	  }
+
+	  /* ===============================
+	     테이블 스타일
+	     =============================== */
+	  #requestDetail table {
+	      width: 100%;
+	      border-collapse: separate;
+	      border-spacing: 0;
+	      margin-top: 12px;
+	      font-size: 14px;
+	      border-radius: 8px;
+	      overflow: hidden;
+	      box-shadow: inset 0 0 0 1px #d0d5dd;
+	  }
+
+	  #requestDetail table th,
+	  #requestDetail table td {
+	      padding: 8px 12px;
+	      text-align: center;
+	      vertical-align: middle;
+	  }
+
+	  #requestDetail table th {
+	      background-color: #f1f3f7;
+	      font-weight: 600;
+	      color: #1e1e2f;
+	  }
+
+	  /* 테이블 홀수 줄 배경색 */
+	  #requestDetail table tbody tr:nth-child(odd) {
+	      background-color: #fbfbfd;
+	  }
+
+	  /* ===============================
+	     버튼 영역 공통
+	     =============================== */
+	  #requestDetail .action-buttduons,
+	  #requestDetail .action-buttons {
+	      display: flex;
+	      justify-content: flex-end;
+	      gap: 12px;
+	      margin-top: 15px;
+	      flex-wrap: wrap;
+	  }
+
+	  /* 버튼 기본 스타일 */
+	  #requestDetail button {
+	      padding: 6px 16px;
+	      border: none;
+	      border-radius: 6px;
+	      cursor: pointer;
+	      font-weight: 600;
+	      font-size: 14px;
+	      transition: all 0.2s ease;
+	  }
+
+	  #requestDetail button:hover {
+	      opacity: 0.9;
+	  }
+
+	  /* ===============================
+	     버튼 색상
+	     =============================== */
+	  #approveBtn {
+	      background-color: #879BD5; /* 밝은 파랑 */
+	      color: #fff;
+	  }
+
+	  #rejectBtn {
+	      background-color: #ff6b6b; /* 부드러운 빨강 */
+	      color: #fff;
+	  }
+
+	  #outboundBtn {
+	      background-color: #879BD5; /* 녹색 */
+	      color: #fff;
+	  }
+
+	  /* ===============================
+	     출고 영역
+	     =============================== */
+	  #outboundArea {
+	      display: none;
+	      margin-top: 20px;
+	      padding: 18px 20px;
+	      border-radius: 10px;
+	      background-color: #f7f8fa;
+	      border: 1px solid #e0e3eb;
+	  }
+
+	  #outboundArea h4 {
+	      margin-top: 0;
+	      margin-bottom: 12px;
+	      font-size: 16px;
+	      font-weight: 600;
+	      color: #1e1e2f;
+	  }
+
+	  #stockLackMessage {
+	      color: #d32f2f;
+	      font-weight: 600;
+	      margin-bottom: 10px;
+	  }
+
+	  /* ===============================
+	     인풋, 텍스트 영역, 셀렉트
+	     =============================== */
+	  #requestDetail input,
+	  #requestDetail textarea,
+	  #requestDetail select {
+	      width: 100%;
+	      padding: 6px 10px;
+	      font-size: 14px;
+	      border-radius: 6px;
+	      border: 1px solid #d0d5dd;
+	      box-sizing: border-box;
+	      margin-top: 4px;
+	      margin-bottom: 8px;
+	      background-color: #fff;
+	  }
+
+	  #requestDetail textarea {
+	      resize: vertical;
+	      min-height: 60px;
+	  }
+
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -215,6 +383,7 @@
 				    </select>
 				</div>
 
+				<div class="item-scroll">
 				<!-- 금일 진료 리스트 -->
 				<table id="requestTable" border="1">
 					<thead>
@@ -257,13 +426,14 @@
 
 							</tr>
 
-							<th:block th:if="${list.size() > 0}">
+							<th:block th:if="${list.size() > 0 and list.size() <20}">
 							    <tr th:each="i : ${#numbers.sequence(list.size() + 1, 20)}">
 							        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
 							    </tr>
 							</th:block>
 					</tbody>
 				</table>
+				</div>
 		</div>
 		<div class="request">
 
@@ -273,19 +443,19 @@
 			<div id="requestDetail" style="display:none;">
 
 			    <!--  공통 상세 영역 (그대로 유지) -->
-			    <p>요청번호:
+			    <p>요청번호
 			        <span id="detailRequestId"></span>
 			    </p>
 
-			    <p>요청부서:
+			    <p>요청부서
 			        <span id="detailDepartmentName"></span>
 			    </p>
 
-			    <p>요청일시:
+			    <p>요청일시
 			        <span id="detailRequestedAt"></span>
 			    </p>
 
-			    <p>상태:
+			    <p>상태
 			        <span id="detailStatusCode"></span>
 			    </p>
 

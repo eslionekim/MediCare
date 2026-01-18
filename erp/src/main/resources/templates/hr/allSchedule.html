@@ -193,6 +193,19 @@
 		 grid-column: 2/3;
 	  }
 	
+	  .item-scroll {
+	      width: 90%;
+	      margin: 5px auto;
+	      max-height: 520px;
+	      overflow-y: auto;
+	      border: 1px solid #7B7B7B;
+	      background-color: #ffffff;
+	  }
+
+	  .item-scroll table {
+	      width: 100%;
+	  }
+
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -233,7 +246,7 @@
 					
 				</div>
 
-				
+				<div class="item-scroll">
 				<table border="1" width="100%">
 				    <thead id="userScheduleHead" style="display:none;">
 				        <tr>
@@ -246,10 +259,11 @@
 				    </thead>
 				    <tbody id="userScheduleBody">
 				        <tr>
-				            <td colspan="5">날짜를 선택하세요</td>
+				            <td colspan="5" style="height:500px;">날짜를 선택하세요</td>
 				        </tr>
 				    </tbody>
 				</table>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -338,7 +352,7 @@
 	    if (data.length === 0) {
 	        tbody.innerHTML = `
 	            <tr>
-	                <td colspan="5">해당 날짜에 스케줄이 부여되지 않았습니다.</td>
+	                <td colspan="5" style="height:450px;">해당 날짜에 스케줄이 부여되지 않았습니다.</td>
 	            </tr>
 	        `;
 	        return;
