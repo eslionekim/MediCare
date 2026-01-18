@@ -269,8 +269,8 @@
 	
 	function openDispensePopup(prescriptionId) {
 	    // 화면 크기 가져오기
-	    const width = window.screen.availWidth * 0.95;  // 화면 가로의 95%
-	    const height = window.screen.availHeight * 0.95; // 화면 세로의 95%
+	    const width = window.screen.availWidth;  // 화면 가로의 95%
+	    const height = window.screen.availHeight; // 화면 세로의 95%
 
 	    window.open(
 	        `/pharm/todayPrescription/popup/${prescriptionId}`,

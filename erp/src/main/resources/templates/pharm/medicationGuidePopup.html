@@ -5,64 +5,146 @@
 <title>복약지도</title>
 
 <style>
-body{
-    font-family: 'Inter','맑은 고딕';
-    background:#EEF3FF;
+body {
+    font-family: 'Inter', '맑은 고딕';
+    background: #f5f6fa;
+    color: #333;
+    margin: 0;
+    padding: 0;
 }
 
-.container{
-    width:95%;
-    margin:10px auto;
+.container {
+    width: 95%;
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 0 10px;
 }
 
-.box{
-    background:white;
-    border-radius:8px;
-    padding:12px 15px;
-    box-shadow:0 2px 6px rgba(0,0,0,0.08);
-    margin-bottom:10px;
+.box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 15px;
 }
 
-.flex{
-    display:flex;
-    gap:10px;
+.flex {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
 }
 
-.left{
-    flex:3;
-}
-.right{
-    flex:1.2;
+.left {
+    flex: 3;
+    min-width: 300px;
 }
 
-.title{
-    font-weight:600;
-    margin-bottom:6px;
+.right {
+    flex: 1.2;
+    min-width: 220px;
 }
 
-table{
-    width:100%;
-    border-collapse:collapse;
-    font-size:13px;
+.title {
+    font-weight: 600;
+    margin-bottom: 10px;
+    font-size: 16px;
+    border-bottom: 2px solid #879BD5;
+    padding-bottom: 4px;
 }
 
-th,td{
-    border:1px solid #bbb;
-    padding:6px;
-    text-align:center;
+.patient-header div {
+    margin-bottom: 5px;
+    font-size: 14px;
 }
 
-th{
-    background:#CFE0FF;
+.patient-header span {
+    font-weight: 600;
 }
 
-.patient-header hr{
-    border:0;
-    border-top:1px solid #999;
-    margin:8px 0;
+.patient-header hr {
+    border: 0;
+    border-top: 1px dashed #bbb;
+    margin: 10px 0;
 }
 
-    </style>
+/* 표 스타일 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    table-layout: fixed;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+    vertical-align: middle;
+}
+
+th {
+    background-color: #879BD5;
+    color: white;
+    font-weight: 600;
+}
+
+td small {
+    color: #555;
+    display: block;
+    margin-top: 2px;
+    font-size: 12px;
+}
+
+.box table tbody tr:nth-child(even) {
+    background: #f7f9ff;
+}
+
+/* 우측 요약 박스 */
+.right .box div {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.right .box b {
+    font-weight: 600;
+    color: #222;
+}
+
+/* 버튼 */
+button {
+    background-color: #879BD5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin: 0 5px;
+}
+
+button:hover {
+    background-color: #6a7fc1;
+}
+
+/* PDF 버튼 구분 */
+button:nth-child(2) {
+    background-color: #4caf50;
+}
+
+button:nth-child(2):hover {
+    background-color: #3b8b3b;
+}
+
+/* 반응형 */
+@media(max-width: 800px){
+    .flex {
+        flex-direction: column;
+    }
+}
+</style>
+
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 <!--pdf-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
@@ -107,9 +189,6 @@ th{
                     <span th:text="${guide.prescriptionId}"></span>
                 </div>
 
-                <div>
-                    발행기관 ㅇㅇ병원
-                </div>
             </div>
 
             <!-- 좌측 중앙 약품 리스트 -->
@@ -120,7 +199,6 @@ th{
                 <table>
                     <thead>
                         <tr>
-                            <th>이미지</th>
                             <th>약품명 / 설명</th>
                             <th>복약안내</th>
                             <th>투약량</th>
@@ -131,7 +209,6 @@ th{
 
                     <tbody>
                         <tr th:each="i : ${guide.items}">
-                            <td>💊</td>
 
                             <td>
                                 <div th:text="${i.name}"></div>
@@ -173,7 +250,7 @@ th{
                 </div>
 				
 				<div>보험율
-                    <b th:text="${#numbers.formatDecimal(guide.discountRate * 100, 0, 0)}"></b>%
+                    <b th:text="${100 - (guide.discountRate * 100)}"></b>%
                 </div>
 				
                 <div>보험부담금

@@ -461,6 +461,19 @@
 		
 		document.getElementById("submitVacation").addEventListener("click", function () {
 	
+			// 각 필드 값 가져오기
+			    const name = document.getElementById("name").value.trim();
+			    const userId = document.getElementById("userId").value.trim();
+			    const password = document.getElementById("password").value.trim();
+			    const hireDate = document.getElementById("hire_date").value.trim();
+			    const department = document.getElementById("department").value.trim();
+
+			    // 하나라도 비어있으면 제출 막기
+			    if (!name || !userId || !password || !hireDate || !department) {
+			        alert("모든 필드를 입력해주세요.");
+			        return;
+			    }
+			
 		    const data = {
 		        userId: document.getElementById("userId").value,
 		        name: document.getElementById("name").value,
@@ -477,7 +490,15 @@
 		        body: JSON.stringify(data)
 		    })
 			.then(res => res.text())  
-			.then(data => console.log(data));
+			.then(data => {
+		        console.log(data); 
+		        // 성공하면 새로고침
+		        location.reload();
+		    })
+		    .catch(err => {
+		        console.error("직원 등록 실패:", err);
+		        alert("직원 등록에 실패했습니다.");
+		    });
 		});
 		</script>
 	
