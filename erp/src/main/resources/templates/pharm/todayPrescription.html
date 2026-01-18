@@ -176,7 +176,18 @@
 		 text-decoration: none;
 	  }
 
-	
+	  .item-scroll {
+  	      width: 90%;
+  	      margin: 5px auto;
+  	      max-height: 520px;
+  	      overflow-y: auto;
+  	      border: 1px solid #7B7B7B;
+  	      background-color: #ffffff;
+  	  }
+
+  	  .item-scroll table {
+  	      width: 100%;
+  	  }
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -187,6 +198,7 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<div class="container">
+			<div class="item-scroll">
 			<table id="requestTable" border="1">
 				<thead>
 				    <tr>
@@ -222,6 +234,7 @@
 						</th:block>
 				    </tbody>
 			</table>
+			</div>
 		</div>
 	</div>
 	<!-- 콘텐츠 영역 끝-->
@@ -254,12 +267,17 @@
 	}
 	
 	function openDispensePopup(prescriptionId) {
+	    // 화면 크기 가져오기
+	    const width = window.screen.availWidth * 0.95;  // 화면 가로의 95%
+	    const height = window.screen.availHeight * 0.95; // 화면 세로의 95%
+
 	    window.open(
 	        `/pharm/todayPrescription/popup/${prescriptionId}`,
 	        "dispensePopup",
-	        "width=1000,height=700"
+	        `width=${width},height=${height},top=10,left=10,resizable=yes,scrollbars=yes`
 	    );
 	}
+
 	
 	function openGuidePopup(prescriptionId) {
 	    window.open(

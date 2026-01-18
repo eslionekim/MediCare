@@ -176,7 +176,18 @@
 		 text-decoration: none;
 	  }
 
-	
+	  .item-scroll {
+  	      width: 90%;
+  	      margin: 5px auto;
+  	      max-height: 520px;
+  	      overflow-y: auto;
+  	      border: 1px solid #7B7B7B;
+  	      background-color: #ffffff;
+  	  }
+
+  	  .item-scroll table {
+  	      width: 100%;
+  	  }
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
@@ -187,8 +198,9 @@
     <div th:replace="~{fragments/staff-header :: header(title='출고 리스트', activeTab='logisOutbound')}"></div>
 
 	<!-- 콘텐츠 영역 시작-->
-    <div class="content-area">
+    <div class="content-area" >
 		<!-- 상태 필터링 -->
+		<div style="width:90%; margin: 5px auto; display:flex;  justify-content: center;">
 		<form method="get" th:action="@{/staff/staffOutbound}">
 		    <!-- 유형 -->
 		    <select name="type">
@@ -210,7 +222,9 @@
 		
 		    <button type="submit">검색</button>
 		</form>
-
+		</div>
+		
+		<div class="item-scroll">
 		<!-- 금일 진료 리스트 -->
 		<table id="table" border="1">
 			<thead>
@@ -245,8 +259,8 @@
 				    <td th:text="${#temporals.format(o.movedAt,'yyyy-MM-dd HH:mm')}"></td>
 				</tr>
 				
-			    <tr th:if="${outbounds.size() >0 }" 
-			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 15)}">
+			    <tr th:if="${outbounds.size() >0 and outbounds.size() < 20}" 
+			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 20)}">
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
@@ -259,7 +273,7 @@
 				</tr>
 			</tbody>
 		</table>
-		
+		</div>
 		
 		
     </div>

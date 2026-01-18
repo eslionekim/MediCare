@@ -176,7 +176,18 @@
 		 text-decoration: none;
 	  }
 
-	
+	  .item-scroll {
+  	      width: 90%;
+  	      margin: 5px auto;
+  	      max-height: 520px;
+  	      overflow-y: auto;
+  	      border: 1px solid #7B7B7B;
+  	      background-color: #ffffff;
+  	  }
+
+  	  .item-scroll table {
+  	      width: 100%;
+  	  }
 	
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
@@ -190,6 +201,7 @@
 	<!-- 콘텐츠 영역 시작-->
     <div class="content-area">
 		<!-- 상태 필터링 -->
+		<div style="width:90%; margin: 5px auto; display:flex;  justify-content: center;">
 		<form method="get" th:action="@{/logis/logisOutbound}">
 		    <!-- 유형 -->
 		    <select name="type">
@@ -211,8 +223,9 @@
 		
 		    <button type="submit">검색</button>
 		</form>
-
-
+		</div>
+		
+		<div class="item-scroll">
 		<!-- 금일 진료 리스트 -->
 		<table id="table" border="1">
 			<thead>
@@ -223,8 +236,6 @@
 					<th>로트코드</th>
 					<th>변화수량</th>
 					<th>사유</th>
-			        <th>직원ID</th>
-			        <th>직원명</th>
 					<th>일시</th>
 			    </tr>
 			</thead>
@@ -241,16 +252,13 @@
 				    <td th:text="${o.lotCode != null ? o.lotCode : '-'}"></td>
 				    <td th:text="${o.quantity != null ? o.quantity : '-'}"></td>
 				    <td th:text="${o.note != null ? o.note : '-'}"></td>
-				    <td>-</td>
-				    <td>-</td>
-
 				    <!-- ⭐ 가장 중요: movedAt null-safe -->
 				    <td th:text="${o.movedAt != null ? #temporals.format(o.movedAt,'yyyy-MM-dd HH:mm') : '-'}"></td>
 				</tr>
 
 				
-			    <tr th:if="${outbounds.size() >0 }" 
-			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 15)}">
+			    <tr th:if="${outbounds.size() >0 and outbounds.size() < 20}" 
+			        th:each="i : ${#numbers.sequence(outbounds.size() + 1, 20)}">
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
 					<td>&nbsp;</td>
@@ -258,11 +266,10 @@
 			        <td>&nbsp;</td>
 			        <td>&nbsp;</td>
 					<td>&nbsp;</td>
-			        <td>&nbsp;</td>
-			        <td>&nbsp;</td>
 				</tr>
 			</tbody>
 		</table>
+		</div>
     </div>
 	<!-- 콘텐츠 영역 끝-->
 </body>

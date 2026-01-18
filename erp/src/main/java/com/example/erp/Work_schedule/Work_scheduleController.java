@@ -410,7 +410,7 @@ public class Work_scheduleController {
     }
 
     @Transactional
-    @PostMapping("/work/time-out")
+    @PostMapping("/work/time-out")  //퇴근
     public ResponseEntity<String> timeOut() {
 
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();

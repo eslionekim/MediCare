@@ -17,11 +17,11 @@
   };
 
   const handleTimeOut = async () => {
-    const checkMsg = await requestText("/work/time-out/check");
-    if (!confirm("퇴근하시겠습니까?")) return;
-    const msg = await requestText("/work/time-out", { method: "POST" });
-    alert(msg || checkMsg);
+      if (!confirm("퇴근하시겠습니까?")) return;
+      const msg = await requestText("/work/time-out", { method: "POST" });
+      alert(msg);
   };
+
 
   const handleLogout = async () => {
     if (!confirm("정말 로그아웃 하시겠습니까?")) return;
