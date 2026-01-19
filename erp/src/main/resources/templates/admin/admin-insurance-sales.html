@@ -70,7 +70,7 @@
             <div class="panel-title">보험구분별 매출</div>
             <div class="panel-body">
                 <div class="chart-box" th:if="${rows != null and !#lists.isEmpty(rows)}"
-                     th:with="maxTotal=${#lists.max(rows.?[true].![amount])}">
+                     th:with="maxTotal=${insuranceMaxTotal}">
                     <div class="chart-row" th:each="row : ${rows}">
                         <div class="chart-label" th:text="${row.insuranceName}">-</div>
                         <div class="chart-bar">
@@ -96,7 +96,7 @@
                         <td th:text="${row.percent + '%'}">-</td>
                     </tr>
                     <tr th:if="${rows == null or #lists.isEmpty(rows)}">
-                        <td colspan="3">검색결과 없음</td>
+                        <td colspan="3">검색 결과 없음</td>
                     </tr>
                     </tbody>
                 </table>

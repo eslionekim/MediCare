@@ -112,7 +112,7 @@
                 <div class="panel-body">
                     <div class="chart-box chart-daily"
                          th:if="${dailyRows != null and !#lists.isEmpty(dailyRows)}"
-                         th:with="maxTotal=${#lists.max(dailyRows.?[true].![totalAmount])}">
+                         th:with="maxTotal=${dailyMaxTotal}">
                         <div class="bar-wrap" th:each="row : ${dailyRows}">
                             <div class="bar"
                                  th:style="${'height:' + (maxTotal == 0 ? 0 : (row.totalAmount * 100 / maxTotal)) + '%'}">
@@ -139,7 +139,7 @@
                             <td th:text="${#numbers.formatInteger(row.noncoveredAmount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${dailyRows == null or #lists.isEmpty(dailyRows)}">
-                            <td colspan="4">검색결과 없음</td>
+                            <td colspan="4">검색 결과 없음</td>
                         </tr>
                         </tbody>
                     </table>
@@ -163,7 +163,7 @@
                             <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${paymentRows == null or #lists.isEmpty(paymentRows)}">
-                            <td colspan="2">검색결과 없음</td>
+                            <td colspan="2">검색 결과 없음</td>
                         </tr>
                         </tbody>
                     </table>
@@ -184,7 +184,7 @@
                             <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${rankRows == null or #lists.isEmpty(rankRows)}">
-                            <td colspan="3">검색결과 없음</td>
+                            <td colspan="3">검색 결과 없음</td>
                         </tr>
                         </tbody>
                     </table>

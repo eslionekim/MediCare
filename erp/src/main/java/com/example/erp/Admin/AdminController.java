@@ -111,8 +111,13 @@ public class AdminController {
             Model model) {
         AdminReportService.SalesReportData data = adminReportService.loadSalesReport(
                 startDate, endDate, departmentCode, doctorId, insuranceCode, paymentMethod, visitType);
+        long dailyMaxTotal = data.dailyRows().stream()
+                .mapToLong(AdminReportService.DailySalesRow::totalAmount)
+                .max()
+                .orElse(0);
         model.addAttribute("summary", data.summary());
         model.addAttribute("dailyRows", data.dailyRows());
+        model.addAttribute("dailyMaxTotal", dailyMaxTotal);
         model.addAttribute("paymentRows", data.paymentMethods());
         model.addAttribute("rankRows", data.rankRows());
         model.addAttribute("paymentMethodOptions", data.paymentMethodOptions());
@@ -139,7 +144,12 @@ public class AdminController {
             Model model) {
         AdminReportService.InsuranceSalesData data = adminReportService.loadInsuranceSales(
                 startDate, endDate, departmentCode, doctorId, insuranceCode);
+        long insuranceMaxTotal = data.rows().stream()
+                .mapToLong(AdminReportService.InsuranceRow::amount)
+                .max()
+                .orElse(0);
         model.addAttribute("rows", data.rows());
+        model.addAttribute("insuranceMaxTotal", insuranceMaxTotal);
         model.addAttribute("departmentOptions", adminDashboardService.getDepartmentOptions());
         model.addAttribute("doctorOptions", adminDashboardService.getDoctorOptions());
         model.addAttribute("insuranceOptions", adminDashboardService.getInsuranceOptions());
