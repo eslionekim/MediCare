@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,6 +15,42 @@ public class AdminApprovalService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Transactional
+    public void updatePurchaseStatus(Long requestId, String statusCode) {
+        Query query = entityManager.createNativeQuery("""
+                update issue_request
+                set status_code = :status
+                where issue_request_id = :id
+                """);
+        query.setParameter("status", statusCode);
+        query.setParameter("id", requestId);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void updateItemActive(String itemCode, boolean active) {
+        Query query = entityManager.createNativeQuery("""
+                update item
+                set is_active = :active
+                where item_code = :itemCode
+                """);
+        query.setParameter("active", active ? 1 : 0);
+        query.setParameter("itemCode", itemCode);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void updateStockMoveStatus(Long moveId, String statusCode) {
+        Query query = entityManager.createNativeQuery("""
+                update stock_move
+                set status_code = :status
+                where stock_move_id = :id
+                """);
+        query.setParameter("status", statusCode);
+        query.setParameter("id", moveId);
+        query.executeUpdate();
+    }
 
     public List<PurchaseApprovalRow> loadPurchaseApprovals() {
         Query query = entityManager.createNativeQuery("""

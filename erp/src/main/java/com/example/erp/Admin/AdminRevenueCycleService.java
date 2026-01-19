@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -50,20 +51,20 @@ public class AdminRevenueCycleService {
     private List<KanbanColumn> buildKanbanColumns(LocalDateTime start, LocalDateTime end,
             String departmentCode, String doctorId, String insuranceCode) {
         List<KanbanColumn> columns = new ArrayList<>();
-        columns.add(buildColumn("RECEPTION_WAIT", "접수대기", "v.status_code = 'VIS_REGISTERED'",
+        columns.add(buildColumn("RECEPTION_WAIT", "접수 대기", "v.status_code = 'VIS_REGISTERED'",
                 start, end, departmentCode, doctorId, insuranceCode));
         columns.add(buildColumn("IN_TREATMENT", "진료중", "v.status_code = 'VIS_IN_PROGRESS'",
                 start, end, departmentCode, doctorId, insuranceCode));
-        columns.add(buildColumn("TREATMENT_DONE", "진료완료",
+        columns.add(buildColumn("TREATMENT_DONE", "진료 완료",
                 "v.status_code in ('VIS_COMPLETED','VIS_CLAIMED')",
                 start, end, departmentCode, doctorId, insuranceCode));
-        columns.add(buildColumn("PAY_WAIT", "수납대기", "v.status_code = 'VIS_WAITING'",
+        columns.add(buildColumn("PAY_WAIT", "수납 대기", "v.status_code = 'VIS_WAITING'",
                 start, end, departmentCode, doctorId, insuranceCode));
-        columns.add(buildColumn("PAY_DONE", "수납완료", "pmt.status_code = 'PAY_COMPLETED'",
+        columns.add(buildColumn("PAY_DONE", "수납 완료", "pmt.status_code = 'PAY_COMPLETED'",
                 start, end, departmentCode, doctorId, insuranceCode));
-        columns.add(buildColumn("CLAIM_WAIT", "청구대기", "c.is_confirmed = 0",
+        columns.add(buildColumn("CLAIM_WAIT", "청구 대기", "c.is_confirmed = 0",
                 start, end, departmentCode, doctorId, insuranceCode));
-        columns.add(buildColumn("CLAIM_DONE", "청구완료", "c.is_confirmed = 1",
+        columns.add(buildColumn("CLAIM_DONE", "청구 완료", "c.is_confirmed = 1",
                 start, end, departmentCode, doctorId, insuranceCode));
         return columns;
     }
@@ -308,4 +309,41 @@ public class AdminRevenueCycleService {
                     row.claimStatus);
         }
     }
+
+    @Transactional
+    public void requestStatusCorrection(Long visitId) {
+        Query query = entityManager.createNativeQuery("""
+                update visit
+                set status_code = 'VIS_WAITING'
+                where visit_id = :visitId
+                """);
+        query.setParameter("visitId", visitId);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void requestPaymentClaimCorrection(Long visitId) {
+        Query claimQuery = entityManager.createNativeQuery("""
+                update claim
+                set is_confirmed = 0
+                where visit_id = :visitId
+                """);
+        claimQuery.setParameter("visitId", visitId);
+        claimQuery.executeUpdate();
+
+        Query paymentQuery = entityManager.createNativeQuery("""
+                update payment
+                set status_code = 'PAY_PENDING'
+                where payment_id = (
+                    select p2.payment_id
+                    from payment p2
+                    where p2.visit_id = :visitId
+                    order by p2.paid_at desc
+                    limit 1
+                )
+                """);
+        paymentQuery.setParameter("visitId", visitId);
+        paymentQuery.executeUpdate();
+    }
 }
+

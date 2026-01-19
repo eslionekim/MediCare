@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -14,6 +16,11 @@ public class AdminUserService {
 
     @PersistenceContext
     private EntityManager entityManager;
+    private final PasswordEncoder passwordEncoder;
+
+    public AdminUserService(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public UserData loadUsers(String keyword, String department, String role, String status) {
         StringBuilder sql = new StringBuilder("""
@@ -102,5 +109,41 @@ public class AdminUserService {
     }
 
     public record Option(String code, String name) {
+    }
+
+    @Transactional
+    public void toggleUserActive(String userId) {
+        Query select = entityManager.createNativeQuery("""
+                select is_active
+                from user_account
+                where user_id = :userId
+                """);
+        select.setParameter("userId", userId);
+        List<Object> rows = select.getResultList();
+        if (rows.isEmpty()) {
+            return;
+        }
+        int current = ((Number) rows.get(0)).intValue();
+        int next = current == 1 ? 0 : 1;
+        Query update = entityManager.createNativeQuery("""
+                update user_account
+                set is_active = :active
+                where user_id = :userId
+                """);
+        update.setParameter("active", next);
+        update.setParameter("userId", userId);
+        update.executeUpdate();
+    }
+
+    @Transactional
+    public void resetPassword(String userId, String rawPassword) {
+        Query update = entityManager.createNativeQuery("""
+                update user_account
+                set password = :password
+                where user_id = :userId
+                """);
+        update.setParameter("password", passwordEncoder.encode(rawPassword));
+        update.setParameter("userId", userId);
+        update.executeUpdate();
     }
 }

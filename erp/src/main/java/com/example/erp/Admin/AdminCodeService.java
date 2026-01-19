@@ -187,7 +187,17 @@ public class AdminCodeService {
     }
 
     private String toActive(Object value) {
-        return value != null && value.toString().equals("1") ? "활성" : "비활성";
+        if (value == null) {
+            return "비활성";
+        }
+        if (value instanceof Number number) {
+            return number.intValue() != 0 ? "활성" : "비활성";
+        }
+        String text = value.toString().trim();
+        if ("1".equals(text) || "true".equalsIgnoreCase(text) || "y".equalsIgnoreCase(text)) {
+            return "활성";
+        }
+        return "비활성";
     }
 
     public record CodeRow(String code, String name, String active) {
@@ -211,3 +221,4 @@ public class AdminCodeService {
     public record RoleRow(String code, String name, String active) {
     }
 }
+

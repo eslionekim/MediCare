@@ -10,6 +10,8 @@
         .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
         .filter-row .date { width:120px; }
         .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .selectable-row { cursor: pointer; }
+        .selected-row { background: #eef2ff; }
         .btn-blue { background:#879bd5; color:#fff; }
 
         .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
@@ -69,7 +71,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${rows}">
+                    <tr th:each="row : ${rows}" class="selectable-row" th:attr="data-visit-id=${row.visitId}">
                         <td th:text="${row.patientName}">-</td>
                         <td th:text="${row.visitId}">-</td>
                         <td th:text="${row.occurredAt}">-</td>
@@ -109,8 +111,8 @@
                     <div class="box">
                         <strong>관리자 처리</strong>
                         <div>
-                            <button class="btn" type="button" th:if="${isAdmin}">후불 처리 등록/해제</button>
-                            <button class="btn" type="button" th:if="${isAdmin}">회수 완료 처리</button>
+                            <button class="btn" type="button" th:if="${isAdmin}" id="postpaidBtn">후불 처리 등록/해제</button>
+                            <button class="btn" type="button" th:if="${isAdmin}" id="collectBtn">회수 완료 처리</button>
                         </div>
                     </div>
                     <div class="box">
@@ -122,5 +124,48 @@
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        const rows = Array.from(document.querySelectorAll("tr[data-visit-id]"));
+        let selectedId = null;
+        rows.forEach((row) => {
+            row.addEventListener("click", () => {
+                rows.forEach((r) => r.classList.remove("selected-row"));
+                row.classList.add("selected-row");
+                selectedId = row.dataset.visitId || null;
+            });
+        });
+
+        const postpaidBtn = document.getElementById("postpaidBtn");
+        const collectBtn = document.getElementById("collectBtn");
+        const postAction = async (url) => {
+            const res = await fetch(url, { method: "POST" });
+            if (!res.ok) {
+                alert("Action failed.");
+                return;
+            }
+            location.reload();
+        };
+
+        if (postpaidBtn) {
+            postpaidBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/receivable/${encodeURIComponent(selectedId)}/toggle-postpaid`);
+            });
+        }
+        if (collectBtn) {
+            collectBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/receivable/${encodeURIComponent(selectedId)}/collect`);
+            });
+        }
+    })();
+</script>
 </body>
 </html>

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -126,5 +127,116 @@ public class AdminReceivableService {
             String status,
             String manager,
             String memo) {
+    }
+
+    @Transactional
+    public void togglePostpaid(Long visitId) {
+        Long pendingId = findLatestPaymentId(visitId, "PAY_PENDING");
+        if (pendingId != null) {
+            Query cancel = entityManager.createNativeQuery("""
+                    update payment
+                    set status_code = 'PAY_CANCELLED'
+                    where payment_id = :paymentId
+                    """);
+            cancel.setParameter("paymentId", pendingId);
+            cancel.executeUpdate();
+            return;
+        }
+        long balance = calculateBalance(visitId);
+        if (balance <= 0) {
+            return;
+        }
+        String paymentMethod = findDefaultPaymentMethod();
+        if (paymentMethod == null) {
+            return;
+        }
+        insertPayment(visitId, paymentMethod, balance, "PAY_PENDING");
+    }
+
+    @Transactional
+    public void markCollected(Long visitId) {
+        long balance = calculateBalance(visitId);
+        if (balance <= 0) {
+            return;
+        }
+        String paymentMethod = findDefaultPaymentMethod();
+        if (paymentMethod == null) {
+            return;
+        }
+        insertPayment(visitId, paymentMethod, balance, "PAY_COMPLETED");
+
+        Query cancelPending = entityManager.createNativeQuery("""
+                update payment
+                set status_code = 'PAY_CANCELLED'
+                where visit_id = :visitId
+                  and status_code = 'PAY_PENDING'
+                """);
+        cancelPending.setParameter("visitId", visitId);
+        cancelPending.executeUpdate();
+    }
+
+    private long calculateBalance(Long visitId) {
+        Query query = entityManager.createNativeQuery("""
+                select c.total_amount,
+                       c.discount_amount,
+                       coalesce(sum(case when p.status_code = 'PAY_COMPLETED' then p.amount else 0 end),0)
+                from claim c
+                left join payment p on p.visit_id = c.visit_id
+                where c.visit_id = :visitId
+                group by c.total_amount, c.discount_amount
+                """);
+        query.setParameter("visitId", visitId);
+        List<Object[]> rows = query.getResultList();
+        if (rows.isEmpty()) {
+            return 0;
+        }
+        Object[] row = rows.get(0);
+        long total = row[0] == null ? 0 : ((Number) row[0]).longValue();
+        long discount = row[1] == null ? 0 : ((Number) row[1]).longValue();
+        long paid = row[2] == null ? 0 : ((Number) row[2]).longValue();
+        return (total - discount) - paid;
+    }
+
+    private Long findLatestPaymentId(Long visitId, String statusCode) {
+        Query query = entityManager.createNativeQuery("""
+                select payment_id
+                from payment
+                where visit_id = :visitId
+                  and status_code = :statusCode
+                order by paid_at desc
+                limit 1
+                """);
+        query.setParameter("visitId", visitId);
+        query.setParameter("statusCode", statusCode);
+        List<Object> rows = query.getResultList();
+        if (rows.isEmpty()) {
+            return null;
+        }
+        return ((Number) rows.get(0)).longValue();
+    }
+
+    private String findDefaultPaymentMethod() {
+        Query query = entityManager.createNativeQuery("""
+                select payment_method_code
+                from payment_method
+                where is_active = 1
+                order by payment_method_code
+                limit 1
+                """);
+        List<Object> rows = query.getResultList();
+        return rows.isEmpty() ? null : rows.get(0).toString();
+    }
+
+    private void insertPayment(Long visitId, String paymentMethod, long amount, String statusCode) {
+        Query insert = entityManager.createNativeQuery("""
+                insert into payment (visit_id, payment_method_code, amount, paid_at, status_code)
+                values (:visitId, :paymentMethod, :amount, :paidAt, :statusCode)
+                """);
+        insert.setParameter("visitId", visitId);
+        insert.setParameter("paymentMethod", paymentMethod);
+        insert.setParameter("amount", amount);
+        insert.setParameter("paidAt", LocalDateTime.now());
+        insert.setParameter("statusCode", statusCode);
+        insert.executeUpdate();
     }
 }

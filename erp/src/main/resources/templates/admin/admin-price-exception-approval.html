@@ -13,6 +13,8 @@
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
         .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .selectable-row { cursor: pointer; }
+        .selected-row { background: #eef2ff; }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -36,7 +38,7 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${rows}">
+                    <tr th:each="row : ${rows}" class="selectable-row" th:attr="data-item-code=${row.itemCode}">
                         <td th:text="${row.itemCode}">-</td>
                         <td th:text="${row.itemName}">-</td>
                         <td th:text="${row.unitPrice}">-</td>
@@ -50,12 +52,55 @@
                     </tbody>
                 </table>
                 <div style="margin-top:8px;">
-                    <button class="btn" type="button" th:if="${isAdmin}">승인</button>
-                    <button class="btn" type="button" th:if="${isAdmin}">반려</button>
+                    <button class="btn" type="button" th:if="${isAdmin}" id="approveBtn">승인</button>
+                    <button class="btn" type="button" th:if="${isAdmin}" id="rejectBtn">반려</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        const rows = Array.from(document.querySelectorAll("tr[data-item-code]"));
+        let selectedId = null;
+        rows.forEach((row) => {
+            row.addEventListener("click", () => {
+                rows.forEach((r) => r.classList.remove("selected-row"));
+                row.classList.add("selected-row");
+                selectedId = row.dataset.itemCode || null;
+            });
+        });
+
+        const approveBtn = document.getElementById("approveBtn");
+        const rejectBtn = document.getElementById("rejectBtn");
+        const postAction = async (url) => {
+            const res = await fetch(url, { method: "POST" });
+            if (!res.ok) {
+                alert("Action failed.");
+                return;
+            }
+            location.reload();
+        };
+
+        if (approveBtn) {
+            approveBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/price-exception/${encodeURIComponent(selectedId)}/approve`);
+            });
+        }
+        if (rejectBtn) {
+            rejectBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/price-exception/${encodeURIComponent(selectedId)}/reject`);
+            });
+        }
+    })();
+</script>
 </body>
 </html>

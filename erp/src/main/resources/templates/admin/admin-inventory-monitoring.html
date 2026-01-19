@@ -10,6 +10,8 @@
         .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
         .filter-row .date { width:120px; }
         .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .selectable-row { cursor: pointer; }
+        .selected-row { background: #eef2ff; }
         .btn-blue { background:#879bd5; color:#fff; }
 
         .monitor-grid { display:grid; grid-template-columns:1.1fr 1.4fr; gap:12px; margin-top:12px; }
@@ -142,7 +144,7 @@
                     <div class="panel" style="margin-top:10px;">
                         <div class="panel-title">락인(확정) 대기</div>
                         <div class="panel-body">
-                            <table>
+                            <table id="lockinTable">
                                 <thead>
                                 <tr>
                                     <th>전표번호</th>
@@ -152,7 +154,7 @@
                                 </tr>
                                 </thead>
                                 <tbody>
-                                <tr th:each="row : ${lockinRows}">
+                                <tr th:each="row : ${lockinRows}" class="selectable-row" th:attr="data-move-id=${row.moveId}">
                                     <td th:text="${row.moveId}">-</td>
                                     <td th:text="${row.moveType}">-</td>
                                     <td th:text="${row.status}">-</td>
@@ -164,8 +166,8 @@
                                 </tbody>
                             </table>
                             <div style="margin-top:8px;">
-                                <button class="btn" type="button" th:if="${isAdmin}">락인(확정)</button>
-                                <button class="btn" type="button" th:if="${isAdmin}">락인 해제 요청 처리</button>
+                                <button class="btn" type="button" th:if="${isAdmin}" id="confirmBtn">락인(확정)</button>
+                                <button class="btn" type="button" th:if="${isAdmin}" id="releaseBtn">락인 해제 요청 처리</button>
                             </div>
                         </div>
                     </div>
@@ -174,5 +176,48 @@
         </div>
     </div>
 </div>
+<script>
+    (function () {
+        const rows = Array.from(document.querySelectorAll("#lockinTable tr[data-move-id]"));
+        let selectedId = null;
+        rows.forEach((row) => {
+            row.addEventListener("click", () => {
+                rows.forEach((r) => r.classList.remove("selected-row"));
+                row.classList.add("selected-row");
+                selectedId = row.dataset.moveId || null;
+            });
+        });
+
+        const confirmBtn = document.getElementById("confirmBtn");
+        const releaseBtn = document.getElementById("releaseBtn");
+        const postAction = async (url) => {
+            const res = await fetch(url, { method: "POST" });
+            if (!res.ok) {
+                alert("Action failed.");
+                return;
+            }
+            location.reload();
+        };
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/stock-lockin/${encodeURIComponent(selectedId)}/confirm`);
+            });
+        }
+        if (releaseBtn) {
+            releaseBtn.addEventListener("click", () => {
+                if (!selectedId) {
+                    alert("Select a row first.");
+                    return;
+                }
+                postAction(`/admin/actions/stock-lockin/${encodeURIComponent(selectedId)}/release`);
+            });
+        }
+    })();
+</script>
 </body>
 </html>
