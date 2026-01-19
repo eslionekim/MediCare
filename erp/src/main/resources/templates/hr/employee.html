@@ -460,28 +460,46 @@
 	    
 		
 		document.getElementById("submitVacation").addEventListener("click", function () {
-	
-			// 각 필드 값 가져오기
-			    const name = document.getElementById("name").value.trim();
-			    const userId = document.getElementById("userId").value.trim();
-			    const password = document.getElementById("password").value.trim();
-			    const hireDate = document.getElementById("hire_date").value.trim();
-			    const department = document.getElementById("department").value.trim();
 
-			    // 하나라도 비어있으면 제출 막기
-			    if (!name || !userId || !password || !hireDate || !department) {
-			        alert("모든 필드를 입력해주세요.");
-			        return;
-			    }
-			
+		    // 값 가져오기
+		    const name = document.getElementById("name").value.trim();
+		    const userId = document.getElementById("userId").value.trim();
+		    const password = document.getElementById("password").value.trim();
+		    const hireDate = document.getElementById("hire_date").value.trim();
+		    const department = document.getElementById("department").value.trim();
+		
+		    // 빈 값 체크
+		    if (!name || !userId || !password || !hireDate || !department) {
+		        alert("모든 필드를 입력해주세요.");
+		        return;
+		    }
+		
+		    // 아이디 정규식 (영문 소문자 + 숫자, 4~20자)
+		    const idRegex = /^[a-z0-9]{4,20}$/;
+		    if (!idRegex.test(userId)) {
+		        alert("아이디는 영문 소문자와 숫자만 사용 가능하며 4~20자여야 합니다.");
+		        return;
+		    }
+		
+		    // 비밀번호 정규식 (대문자/소문자/숫자/특수문자 포함, 8자 이상)
+		    const pwRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+		    if (!pwRegex.test(password)) {
+		        alert(
+		            "비밀번호는 8자 이상이며\n" +
+		            "영문 대문자, 소문자, 숫자, 특수문자를 각각 1개 이상 포함해야 합니다."
+		        );
+		        return;
+		    }
+		
+		    //조건 통과 → 서버로 전송
 		    const data = {
-		        userId: document.getElementById("userId").value,
-		        name: document.getElementById("name").value,
-		        password: document.getElementById("password").value,
-		        hireDate: document.getElementById("hire_date").value,
-		        departmentName: document.getElementById("department").value
+		        userId: userId,
+		        name: name,
+		        password: password,
+		        hireDate: hireDate,
+		        departmentName: department
 		    };
-	
+		
 		    fetch("/hr/employee", {
 		        method: "POST",
 		        headers: {
@@ -489,10 +507,8 @@
 		        },
 		        body: JSON.stringify(data)
 		    })
-			.then(res => res.text())  
-			.then(data => {
-		        console.log(data); 
-		        // 성공하면 새로고침
+		    .then(res => res.text())
+		    .then(() => {
 		        location.reload();
 		    })
 		    .catch(err => {
@@ -500,6 +516,7 @@
 		        alert("직원 등록에 실패했습니다.");
 		    });
 		});
+	
 		</script>
 	
 </body>

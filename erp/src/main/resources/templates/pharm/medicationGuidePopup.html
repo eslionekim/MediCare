@@ -264,10 +264,11 @@ button:nth-child(2):hover {
 
         </div>
     </div>
-	<div style="margin-top: 15px; text-align: center;">
+	<div id="actionButtons" style="margin-top: 15px; text-align: center;">
 	    <button onclick="completeDispense()">투약 완료</button>
 	    <button onclick="downloadPdf()">복약지도 출력(PDF)</button>
 	</div>
+
 </div>
 <script>
 	// 투약
@@ -295,9 +296,11 @@ button:nth-child(2):hover {
 	    .catch(err => alert(err.message));
 	}
 	
-	//복약지도 출력
 	function downloadPdf() { 
 	    const element = document.body;
+	    const buttons = document.getElementById("actionButtons");
+
+	    buttons.style.display = "none";
 
 	    const opt = {
 	        filename: 'medication_guide.pdf',
@@ -306,7 +309,13 @@ button:nth-child(2):hover {
 	        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
 	    };
 
-	    html2pdf().set(opt).from(element).save();
+	    html2pdf()
+	        .set(opt)
+	        .from(element)
+	        .save()
+	        .then(() => {
+	            buttons.style.display = "block";
+	        });
 	}
 </script>
 
