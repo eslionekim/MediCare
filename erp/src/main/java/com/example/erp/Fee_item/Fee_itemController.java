@@ -30,6 +30,7 @@ public class Fee_itemController {
         	    .filter(f -> 
         	        !"약품".equals(f.getCategory()) 
         	        && !"기타(구매)".equals(f.getCategory())
+        	        && !"진찰료".equals(f.getCategory())
         	    ).toList();
 
 
