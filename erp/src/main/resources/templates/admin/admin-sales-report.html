@@ -24,7 +24,14 @@
         table { width:100%; border-collapse:collapse; font-size:12px; }
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
-        .chart-box { border:1px dashed #c9cfde; background:#f8f9fd; height:160px; display:flex; align-items:center; justify-content:center; color:#7a86a8; }
+
+        .chart-box { border:1px dashed #c9cfde; background:#f8f9fd; height:180px; display:flex; align-items:center; justify-content:center; color:#7a86a8; }
+        .chart-daily { align-items:flex-end; justify-content:flex-start; gap:8px; padding:10px; }
+        .chart-daily .bar-wrap { display:flex; flex-direction:column; align-items:center; flex:1; min-width:24px; }
+        .chart-daily .bar { width:100%; background:#6c7ec3; border-radius:6px 6px 0 0; position:relative; }
+        .chart-daily .bar-label { margin-top:4px; font-size:10px; color:#4b5678; }
+        .chart-daily .bar-value { position:absolute; top:-16px; font-size:10px; color:#4b5678; white-space:nowrap; }
+        .chart-empty { font-size:12px; color:#7a86a8; }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -103,7 +110,18 @@
             <div class="panel">
                 <div class="panel-title">일자별 매출 추이</div>
                 <div class="panel-body">
-                    <div class="chart-box">차트 영역</div>
+                    <div class="chart-box chart-daily"
+                         th:if="${dailyRows != null and !#lists.isEmpty(dailyRows)}"
+                         th:with="maxTotal=${#lists.max(dailyRows.?[true].![totalAmount])}">
+                        <div class="bar-wrap" th:each="row : ${dailyRows}">
+                            <div class="bar"
+                                 th:style="${'height:' + (maxTotal == 0 ? 0 : (row.totalAmount * 100 / maxTotal)) + '%'}">
+                                <span class="bar-value" th:text="${#numbers.formatInteger(row.totalAmount, 0, 'COMMA')}"></span>
+                            </div>
+                            <span class="bar-label" th:text="${row.day}">-</span>
+                        </div>
+                    </div>
+                    <div class="chart-box chart-empty" th:if="${dailyRows == null or #lists.isEmpty(dailyRows)}">차트 데이터 없음</div>
                     <table style="margin-top:8px;">
                         <thead>
                         <tr>
@@ -121,7 +139,7 @@
                             <td th:text="${#numbers.formatInteger(row.noncoveredAmount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${dailyRows == null or #lists.isEmpty(dailyRows)}">
-                            <td colspan="4">검색 결과 없음</td>
+                            <td colspan="4">검색결과 없음</td>
                         </tr>
                         </tbody>
                     </table>
@@ -145,7 +163,7 @@
                             <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${paymentRows == null or #lists.isEmpty(paymentRows)}">
-                            <td colspan="2">검색 결과 없음</td>
+                            <td colspan="2">검색결과 없음</td>
                         </tr>
                         </tbody>
                     </table>
@@ -166,7 +184,7 @@
                             <td th:text="${#numbers.formatInteger(row.amount, 0, 'COMMA')}">-</td>
                         </tr>
                         <tr th:if="${rankRows == null or #lists.isEmpty(rankRows)}">
-                            <td colspan="3">검색 결과 없음</td>
+                            <td colspan="3">검색결과 없음</td>
                         </tr>
                         </tbody>
                     </table>

@@ -305,7 +305,7 @@ public class VisitController {
                 List<Visit> waiting = todays.stream()
                                 .filter(v -> v.getStatus_code() != null
                                                 && v.getStatus_code().getStatus_code() != null
-                                                && v.getStatus_code().getStatus_code().equalsIgnoreCase("WAIT"))
+                                && v.getStatus_code().getStatus_code().equalsIgnoreCase("VIS_WAITING"))
                                 .collect(Collectors.toList());
                 
                 model.addAttribute("userId", userId);

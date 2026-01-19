@@ -10,15 +10,17 @@
         .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
         .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
         .btn-blue { background:#879bd5; color:#fff; }
-
         .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
         .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
         .panel-body { padding:8px; font-size:12px; }
         table { width:100%; border-collapse:collapse; font-size:12px; }
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
-        .detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-        .box { border:1px solid #c9cfde; border-radius:4px; background:#f8f9fd; padding:8px; min-height:120px; }
+        .form-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .form-field { display:flex; flex-direction:column; gap:4px; }
+        .form-field label { font-size:11px; color:#4b5678; }
+        .form-field input, .form-field select { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; }
+        .action-row { margin-top:8px; display:flex; gap:8px; }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -30,15 +32,40 @@
         <form class="filter-row" method="get">
             <input type="text" name="keyword" placeholder="코드/명칭 검색" th:value="${selectedKeyword}">
             <select name="active">
-                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">활성여부</option>
-                <option value="1" th:selected="${selectedActive == '1'}">활성</option>
-                <option value="0" th:selected="${selectedActive == '0'}">비활성</option>
+                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">진료 가능 여부</option>
+                <option value="1" th:selected="${selectedActive == '1'}">진료 가능</option>
+                <option value="0" th:selected="${selectedActive == '0'}">진료 불가능</option>
             </select>
             <button class="btn btn-blue" type="submit">검색</button>
-            <button class="btn" type="button" th:if="${isAdmin}">신규</button>
-            <button class="btn" type="button" th:if="${isAdmin}">수정</button>
-            <button class="btn" type="button" th:if="${isAdmin}">비활성</button>
         </form>
+
+        <div class="panel">
+            <div class="panel-title">코드 관리</div>
+            <div class="panel-body">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="codeInput">코드</label>
+                        <input id="codeInput" type="text" placeholder="예: ORTHO">
+                    </div>
+                    <div class="form-field">
+                        <label for="nameInput">진료과</label>
+                        <input id="nameInput" type="text" placeholder="정형외과">
+                    </div>
+                    <div class="form-field">
+                        <label for="activeInput">진료 가능 여부</label>
+                        <select id="activeInput">
+                            <option value="1">진료 가능</option>
+                            <option value="0">진료 불가능</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button type="button" class="btn btn-blue" onclick="createCode()">신규</button>
+                    <button type="button" class="btn" onclick="updateCode()">수정</button>
+                    <button type="button" class="btn" onclick="deactivateCode()">비활성</button>
+                </div>
+            </div>
+        </div>
 
         <div class="panel">
             <div class="panel-title">코드 리스트</div>
@@ -46,35 +73,78 @@
                 <table>
                     <thead>
                     <tr>
-                        <th>code</th>
-                        <th>name</th>
-                        <th>is_active</th>
+                        <th>코드</th>
+                        <th>진료과</th>
+                        <th>진료 가능 여부</th>
+                        <th>선택</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${rows}">
+                    <tr th:each="row : ${rows}"
+                        th:attr="data-code=${row.code}, data-name=${row.name}, data-active=${row.active == '진료 가능' ? '1' : '0'}">
                         <td th:text="${row.code}">-</td>
                         <td th:text="${row.name}">-</td>
                         <td th:text="${row.active}">-</td>
+                        <td><button type="button" class="btn" onclick="selectRow(this)">선택</button></td>
                     </tr>
                     <tr th:if="${rows == null or #lists.isEmpty(rows)}">
-                        <td colspan="3">검색 결과 없음</td>
+                        <td colspan="4">검색결과 없음</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-
-        <div class="panel">
-            <div class="panel-title">상세 폼</div>
-            <div class="panel-body">
-                <div class="detail-grid">
-                    <div class="box">코드값 / 표시명</div>
-                    <div class="box">설명 / 활성여부</div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
+<script>
+    function selectRow(button) {
+        const row = button.closest('tr');
+        document.getElementById('codeInput').value = row.dataset.code || '';
+        document.getElementById('nameInput').value = row.dataset.name || '';
+        document.getElementById('activeInput').value = row.dataset.active || '1';
+    }
+
+    function postAction(url, params) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(params)
+        }).then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { throw text; });
+            }
+        });
+    }
+
+    function createCode() {
+        const payload = {
+            code: document.getElementById('codeInput').value.trim(),
+            name: document.getElementById('nameInput').value.trim(),
+            active: document.getElementById('activeInput').value
+        };
+        postAction('/admin/actions/code/department/create', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+
+    function updateCode() {
+        const payload = {
+            code: document.getElementById('codeInput').value.trim(),
+            name: document.getElementById('nameInput').value.trim(),
+            active: document.getElementById('activeInput').value
+        };
+        postAction('/admin/actions/code/department/update', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+
+    function deactivateCode() {
+        const payload = { code: document.getElementById('codeInput').value.trim() };
+        postAction('/admin/actions/code/department/deactivate', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+</script>
 </body>
 </html>

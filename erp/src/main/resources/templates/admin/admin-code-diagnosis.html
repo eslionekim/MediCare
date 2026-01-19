@@ -10,13 +10,17 @@
         .filter-row select, .filter-row input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; background:#fff; }
         .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
         .btn-blue { background:#879bd5; color:#fff; }
-
         .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
         .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
         .panel-body { padding:8px; font-size:12px; }
         table { width:100%; border-collapse:collapse; font-size:12px; }
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
+        .form-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+        .form-field { display:flex; flex-direction:column; gap:4px; }
+        .form-field label { font-size:11px; color:#4b5678; }
+        .form-field input, .form-field select { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; }
+        .action-row { margin-top:8px; display:flex; gap:8px; }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -28,7 +32,7 @@
         <form class="filter-row" method="get">
             <input type="text" name="keyword" placeholder="코드/명칭 검색" th:value="${selectedKeyword}">
             <select name="active">
-                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">활성여부</option>
+                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">활성 여부</option>
                 <option value="1" th:selected="${selectedActive == '1'}">활성</option>
                 <option value="0" th:selected="${selectedActive == '0'}">비활성</option>
             </select>
@@ -36,28 +40,67 @@
         </form>
 
         <div class="panel">
-            <div class="panel-title">진단 코드 리스트</div>
+            <div class="panel-title">코드 관리</div>
+            <div class="panel-body">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="codeInput">코드</label>
+                        <input id="codeInput" type="text" placeholder="예: KCD001">
+                    </div>
+                    <div class="form-field">
+                        <label for="nameKorInput">한글명</label>
+                        <input id="nameKorInput" type="text" placeholder="감기">
+                    </div>
+                    <div class="form-field">
+                        <label for="nameEngInput">영문명</label>
+                        <input id="nameEngInput" type="text" placeholder="Cold">
+                    </div>
+                    <div class="form-field">
+                        <label for="deptInput">진료과</label>
+                        <input id="deptInput" type="text" placeholder="IM">
+                    </div>
+                    <div class="form-field">
+                        <label for="activeInput">활성 여부</label>
+                        <select id="activeInput">
+                            <option value="1">활성</option>
+                            <option value="0">비활성</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button type="button" class="btn btn-blue" onclick="createCode()">신규</button>
+                    <button type="button" class="btn" onclick="updateCode()">수정</button>
+                    <button type="button" class="btn" onclick="deactivateCode()">비활성</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-title">코드 리스트</div>
             <div class="panel-body">
                 <table>
                     <thead>
                     <tr>
-                        <th>code</th>
-                        <th>name_kor</th>
-                        <th>name_eng</th>
-                        <th>department</th>
-                        <th>is_active</th>
+                        <th>코드</th>
+                        <th>한글명</th>
+                        <th>영문명</th>
+                        <th>진료과</th>
+                        <th>활성 여부</th>
+                        <th>선택</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${rows}">
+                    <tr th:each="row : ${rows}"
+                        th:attr="data-code=${row.code}, data-namekor=${row.nameKor}, data-nameeng=${row.nameEng}, data-department=${row.department}, data-active=${row.active == '활성' ? '1' : '0'}">
                         <td th:text="${row.code}">-</td>
                         <td th:text="${row.nameKor}">-</td>
                         <td th:text="${row.nameEng}">-</td>
                         <td th:text="${row.department}">-</td>
                         <td th:text="${row.active}">-</td>
+                        <td><button type="button" class="btn" onclick="selectRow(this)">선택</button></td>
                     </tr>
                     <tr th:if="${rows == null or #lists.isEmpty(rows)}">
-                        <td colspan="5">검색 결과 없음</td>
+                        <td colspan="6">검색결과 없음</td>
                     </tr>
                     </tbody>
                 </table>
@@ -65,5 +108,61 @@
         </div>
     </div>
 </div>
+
+<script>
+    function selectRow(button) {
+        const row = button.closest('tr');
+        document.getElementById('codeInput').value = row.dataset.code || '';
+        document.getElementById('nameKorInput').value = row.dataset.namekor || '';
+        document.getElementById('nameEngInput').value = row.dataset.nameeng || '';
+        document.getElementById('deptInput').value = row.dataset.department || '';
+        document.getElementById('activeInput').value = row.dataset.active || '1';
+    }
+
+    function postAction(url, params) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(params)
+        }).then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { throw text; });
+            }
+        });
+    }
+
+    function createCode() {
+        const payload = {
+            code: document.getElementById('codeInput').value.trim(),
+            nameKor: document.getElementById('nameKorInput').value.trim(),
+            nameEng: document.getElementById('nameEngInput').value.trim(),
+            department: document.getElementById('deptInput').value.trim(),
+            active: document.getElementById('activeInput').value
+        };
+        postAction('/admin/actions/code/diagnosis/create', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+
+    function updateCode() {
+        const payload = {
+            code: document.getElementById('codeInput').value.trim(),
+            nameKor: document.getElementById('nameKorInput').value.trim(),
+            nameEng: document.getElementById('nameEngInput').value.trim(),
+            department: document.getElementById('deptInput').value.trim(),
+            active: document.getElementById('activeInput').value
+        };
+        postAction('/admin/actions/code/diagnosis/update', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+
+    function deactivateCode() {
+        const payload = { code: document.getElementById('codeInput').value.trim() };
+        postAction('/admin/actions/code/diagnosis/deactivate', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+</script>
 </body>
 </html>

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -18,11 +19,12 @@ public class AdminWorkService {
 
     public List<WorkStatusRow> loadWorkStatus(LocalDate workDate, String departmentCode, String workTypeCode) {
         StringBuilder sql = new StringBuilder("""
-                select ws.work_date, u.name, d.name, wt.work_name, ws.status_code
+                select ws.work_date, u.name, d.name, wt.work_name, sc.name
                 from work_schedule ws
                 join user_account u on ws.user_id = u.user_id
                 left join department d on ws.department_code = d.department_code
                 left join work_type wt on ws.work_type_code = wt.work_type_code
+                left join status_code sc on ws.status_code = sc.status_code
                 where 1=1
                 """);
         if (workDate != null) {
@@ -78,12 +80,49 @@ public class AdminWorkService {
         return results;
     }
 
+    @Transactional
+    public void createWorkType(String workTypeCode, String roleCode, String workName,
+            String startTime, String endTime, String note) {
+        Query query = entityManager.createNativeQuery("""
+                insert into work_type (work_type_code, role_code, work_name, start_time, end_time, note)
+                values (:workTypeCode, :roleCode, :workName, :startTime, :endTime, :note)
+                """);
+        query.setParameter("workTypeCode", workTypeCode);
+        query.setParameter("roleCode", roleCode);
+        query.setParameter("workName", workName);
+        query.setParameter("startTime", startTime);
+        query.setParameter("endTime", endTime);
+        query.setParameter("note", note);
+        query.executeUpdate();
+    }
+
+    @Transactional
+    public void updateWorkType(String workTypeCode, String roleCode, String workName,
+            String startTime, String endTime, String note) {
+        Query query = entityManager.createNativeQuery("""
+                update work_type
+                set role_code = :roleCode,
+                    work_name = :workName,
+                    start_time = :startTime,
+                    end_time = :endTime,
+                    note = :note
+                where work_type_code = :workTypeCode
+                """);
+        query.setParameter("workTypeCode", workTypeCode);
+        query.setParameter("roleCode", roleCode);
+        query.setParameter("workName", workName);
+        query.setParameter("startTime", startTime);
+        query.setParameter("endTime", endTime);
+        query.setParameter("note", note);
+        query.executeUpdate();
+    }
+
     public record WorkStatusRow(
             String workDate,
             String staffName,
             String departmentName,
             String workTypeName,
-            String statusCode) {
+            String statusName) {
     }
 
     public record WorkTypeRow(

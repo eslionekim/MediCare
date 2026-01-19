@@ -6,12 +6,20 @@
         body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
         .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
         .content { padding:14px; }
-        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; }
+        .panel { border:1px solid #b0b7c7; border-radius:4px; background:#fff; overflow:hidden; margin-top:12px; }
         .panel-title { background:#6b80bf; color:#fff; font-size:12px; padding:6px 8px; font-weight:600; }
         .panel-body { padding:8px; font-size:12px; }
         table { width:100%; border-collapse:collapse; font-size:12px; }
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
+
+        .form-row { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+        .form-field { display:flex; flex-direction:column; gap:4px; }
+        .form-field label { font-size:11px; color:#4b5678; }
+        .form-field input { padding:4px 6px; border:1px solid #cbd2e1; border-radius:4px; font-size:12px; }
+        .action-row { margin-top:8px; display:flex; gap:8px; }
+        .btn { border:1px solid #7b7b7b; border-radius:6px; padding:4px 10px; font-size:12px; background:#d5dded; cursor:pointer; }
+        .btn-blue { background:#879bd5; color:#fff; }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -21,30 +29,69 @@
 
     <div class="content">
         <div class="panel">
+            <div class="panel-title">근무 타입 등록/변경</div>
+            <div class="panel-body">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="workTypeCode">근무 타입 코드</label>
+                        <input id="workTypeCode" type="text" placeholder="예: DAY">
+                    </div>
+                    <div class="form-field">
+                        <label for="roleCode">직군 코드</label>
+                        <input id="roleCode" type="text" placeholder="예: STAFF">
+                    </div>
+                    <div class="form-field">
+                        <label for="workName">근무명</label>
+                        <input id="workName" type="text" placeholder="예: 주간">
+                    </div>
+                    <div class="form-field">
+                        <label for="startTime">시작</label>
+                        <input id="startTime" type="text" placeholder="09:00">
+                    </div>
+                    <div class="form-field">
+                        <label for="endTime">종료</label>
+                        <input id="endTime" type="text" placeholder="18:00">
+                    </div>
+                    <div class="form-field">
+                        <label for="note">설명</label>
+                        <input id="note" type="text" placeholder="메모">
+                    </div>
+                </div>
+                <div class="action-row">
+                    <button type="button" class="btn btn-blue" onclick="createWorkType()">추가</button>
+                    <button type="button" class="btn" onclick="updateWorkType()">변경</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel">
             <div class="panel-title">근무 타입 리스트</div>
             <div class="panel-body">
                 <table>
                     <thead>
                     <tr>
-                        <th>근무타입 코드</th>
+                        <th>근무 타입 코드</th>
                         <th>직군 코드</th>
                         <th>근무명</th>
                         <th>시작</th>
                         <th>종료</th>
                         <th>설명</th>
+                        <th>선택</th>
                     </tr>
                     </thead>
                     <tbody>
-                    <tr th:each="row : ${rows}">
+                    <tr th:each="row : ${rows}"
+                        th:attr="data-code=${row.workTypeCode}, data-role=${row.roleCode}, data-name=${row.workName}, data-start=${row.startTime}, data-end=${row.endTime}, data-note=${row.note}">
                         <td th:text="${row.workTypeCode}">-</td>
                         <td th:text="${row.roleCode}">-</td>
                         <td th:text="${row.workName}">-</td>
                         <td th:text="${row.startTime}">-</td>
                         <td th:text="${row.endTime}">-</td>
                         <td th:text="${row.note}">-</td>
+                        <td><button type="button" class="btn" onclick="selectRow(this)">선택</button></td>
                     </tr>
                     <tr th:if="${rows == null or #lists.isEmpty(rows)}">
-                        <td colspan="6">검색 결과 없음</td>
+                        <td colspan="7">검색결과 없음</td>
                     </tr>
                     </tbody>
                 </table>
@@ -52,5 +99,57 @@
         </div>
     </div>
 </div>
+
+<script>
+    function selectRow(button) {
+        const row = button.closest('tr');
+        document.getElementById('workTypeCode').value = row.dataset.code || '';
+        document.getElementById('roleCode').value = row.dataset.role || '';
+        document.getElementById('workName').value = row.dataset.name || '';
+        document.getElementById('startTime').value = row.dataset.start || '';
+        document.getElementById('endTime').value = row.dataset.end || '';
+        document.getElementById('note').value = row.dataset.note || '';
+    }
+
+    function postAction(url, params) {
+        return fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams(params)
+        }).then(res => {
+            if (!res.ok) {
+                return res.text().then(text => { throw text; });
+            }
+        });
+    }
+
+    function createWorkType() {
+        const payload = {
+            workTypeCode: document.getElementById('workTypeCode').value.trim(),
+            roleCode: document.getElementById('roleCode').value.trim(),
+            workName: document.getElementById('workName').value.trim(),
+            startTime: document.getElementById('startTime').value.trim(),
+            endTime: document.getElementById('endTime').value.trim(),
+            note: document.getElementById('note').value.trim()
+        };
+        postAction('/admin/actions/work-type/create', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+
+    function updateWorkType() {
+        const payload = {
+            workTypeCode: document.getElementById('workTypeCode').value.trim(),
+            roleCode: document.getElementById('roleCode').value.trim(),
+            workName: document.getElementById('workName').value.trim(),
+            startTime: document.getElementById('startTime').value.trim(),
+            endTime: document.getElementById('endTime').value.trim(),
+            note: document.getElementById('note').value.trim()
+        };
+        postAction('/admin/actions/work-type/update', payload)
+            .then(() => location.reload())
+            .catch(err => alert(err || '처리 실패'));
+    }
+</script>
 </body>
 </html>

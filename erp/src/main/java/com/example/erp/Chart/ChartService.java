@@ -285,6 +285,7 @@ public class ChartService {
             // 처방전
             Prescription prescription = new Prescription();
             prescription.setVisit_id(visit.getVisit_id());
+            prescription.setUser_id(visit.getUser_account().getUser_id());
             prescription.setStatus_code("VIS_COMPLETED");
             prescription.setPrescribed_at(LocalDateTime.now());
             prescriptionRepository.save(prescription);
