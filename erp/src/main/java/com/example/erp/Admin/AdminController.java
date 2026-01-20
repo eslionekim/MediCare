@@ -195,6 +195,12 @@ public class AdminController {
         return "admin/admin-price-exception-approval";
     }
 
+    @GetMapping("/admin/item-approval")
+    public String itemApproval(Model model) {
+        model.addAttribute("rows", adminApprovalService.loadNewItemApprovals());
+        return "admin/admin-item-approval";
+    }
+
     @GetMapping("/admin/stock-lockin")
     public String stockLockin(Model model) {
         model.addAttribute("rows", adminApprovalService.loadStockLockins());

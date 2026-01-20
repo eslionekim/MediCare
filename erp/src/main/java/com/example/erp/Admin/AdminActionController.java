@@ -45,6 +45,18 @@ public class AdminActionController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/item-approval/{requestId}/approve")
+    public ResponseEntity<Void> approveNewItem(@PathVariable("requestId") Long requestId) {
+        adminApprovalService.updateNewItemApproval(requestId, true);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/item-approval/{requestId}/reject")
+    public ResponseEntity<Void> rejectNewItem(@PathVariable("requestId") Long requestId) {
+        adminApprovalService.updateNewItemApproval(requestId, false);
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/stock-lockin/{moveId}/confirm")
     public ResponseEntity<Void> confirmStockLockin(@PathVariable("moveId") Long moveId) {
         adminApprovalService.updateStockMoveStatus(moveId, "SM_DONE");

@@ -51,7 +51,7 @@
               th:classappend="${activeTab}=='report' or ${activeTab}=='ad-020' or ${activeTab}=='ad-021' or ${activeTab}=='ad-022' ? ' active'"
               th:onclick="|location.href='@{/admin/sales-report}'|">리포트</span>
         <span data-group-tab="approval"
-              th:classappend="${activeTab}=='approval' or ${activeTab}=='ad-030' or ${activeTab}=='ad-031' or ${activeTab}=='ad-032' ? ' active'"
+              th:classappend="${activeTab}=='approval' or ${activeTab}=='ad-030' or ${activeTab}=='ad-031' or ${activeTab}=='ad-032' or ${activeTab}=='ad-033' ? ' active'"
               th:onclick="|location.href='@{/admin/purchase-approval}'|">승인/락인</span>
         <span data-group-tab="users"
               th:classappend="${activeTab}=='users' or ${activeTab}=='ad-040' or ${activeTab}=='ad-041' ? ' active'"
@@ -90,6 +90,8 @@
               th:onclick="|location.href='@{/admin/purchase-approval}'|">구매 승인</span>
         <span th:classappend="${activeTab}=='ad-031' ? ' active'"
               th:onclick="|location.href='@{/admin/price-exception-approval}'|">기준가 초과 승인</span>
+        <span th:classappend="${activeTab}=='ad-033' ? ' active'"
+              th:onclick="|location.href='@{/admin/item-approval}'|">&#49888;&#44508; &#51116;&#44256; &#49849;&#51064;</span>
         <span th:classappend="${activeTab}=='ad-032' ? ' active'"
               th:onclick="|location.href='@{/admin/stock-lockin}'|">입출고 락인</span>
     </div>
@@ -145,6 +147,7 @@
                 'ad-030': 'approval',
                 'ad-031': 'approval',
                 'ad-032': 'approval',
+                'ad-033': 'approval',
                 'users': 'users',
                 'ad-040': 'users',
                 'ad-041': 'users',

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>수가 항목</title>
+    <title>수가 항목 코드 관리</title>
     <style>
         body { margin:0; padding:0; font-family:"Inter","맑은 고딕",sans-serif; background:#9aa0a6; }
         .admin-frame { max-width:1920px; border:2px solid #2b7cff; background:#d7ddeb; }
@@ -26,15 +26,15 @@
 </head>
 <body>
 <div class="admin-frame">
-    <div th:replace="~{fragments/admin-header :: header(title='수가 항목', activeTab='ad-053')}"></div>
+    <div th:replace="~{fragments/admin-header :: header(title='수가 항목 코드 관리', activeTab='ad-053')}"></div>
 
     <div class="content">
         <form class="filter-row" method="get">
             <input type="text" name="keyword" placeholder="코드/명칭 검색" th:value="${selectedKeyword}">
             <select name="active">
-                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">활성 여부</option>
-                <option value="1" th:selected="${selectedActive == '1'}">활성</option>
-                <option value="0" th:selected="${selectedActive == '0'}">비활성</option>
+                <option value="" th:selected="${selectedActive == null or selectedActive == ''}">급여/비급여</option>
+                <option value="1" th:selected="${selectedActive == '1'}">급여</option>
+                <option value="0" th:selected="${selectedActive == '0'}">비급여</option>
             </select>
             <button class="btn btn-blue" type="submit">검색</button>
         </form>
@@ -44,29 +44,32 @@
             <div class="panel-body">
                 <div class="form-row">
                     <div class="form-field">
-                        <label for="codeInput">코드</label>
+                        <label for="codeInput">수가항목코드</label>
                         <input id="codeInput" type="text" placeholder="예: FEE001">
                     </div>
                     <div class="form-field">
                         <label for="categoryInput">분류</label>
                         <select id="categoryInput">
-                            <option value="급여">급여</option>
-                            <option value="비급여">비급여</option>
+                            <option value="약품">약품</option>
+                            <option value="진찰료">진찰료</option>
+                            <option value="기타(대여)">기타(대여)</option>
+                            <option value="기타(판매)">기타(판매)</option>
+                            <option value="촬영">촬영</option>
                         </select>
                     </div>
                     <div class="form-field">
-                        <label for="nameInput">명칭</label>
-                        <input id="nameInput" type="text" placeholder="진찰료">
+                        <label for="nameInput">이름</label>
+                        <input id="nameInput" type="text" placeholder="항목명">
                     </div>
                     <div class="form-field">
                         <label for="priceInput">단가</label>
                         <input id="priceInput" type="text" placeholder="10000">
                     </div>
                     <div class="form-field">
-                        <label for="activeInput">활성 여부</label>
+                        <label for="activeInput">급여/비급여</label>
                         <select id="activeInput">
-                            <option value="1">활성</option>
-                            <option value="0">비활성</option>
+                            <option value="1">급여</option>
+                            <option value="0">비급여</option>
                         </select>
                     </div>
                 </div>
@@ -86,26 +89,24 @@
                     <tr>
                         <th>코드</th>
                         <th>분류</th>
-                        <th>명칭</th>
+                        <th>이름</th>
                         <th>단가</th>
                         <th>급여/비급여</th>
-                        <th>활성 여부</th>
                         <th>선택</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:each="row : ${rows}"
-                        th:attr="data-code=${row.code}, data-category=${row.category}, data-name=${row.name}, data-price=${row.basePrice}, data-active=${row.active == '활성' ? '1' : '0'}">
+                        th:attr="data-code=${row.code}, data-category=${row.category}, data-name=${row.name}, data-price=${row.basePrice}, data-active=${row.coverage == '급여' ? '1' : '0'}">
                         <td th:text="${row.code}">-</td>
                         <td th:text="${row.category}">-</td>
                         <td th:text="${row.name}">-</td>
                         <td th:text="${row.basePrice}">-</td>
                         <td th:text="${row.coverage}">-</td>
-                        <td th:text="${row.active}">-</td>
                         <td><button type="button" class="btn" onclick="selectRow(this)">선택</button></td>
                     </tr>
                     <tr th:if="${rows == null or #lists.isEmpty(rows)}">
-                        <td colspan="7">검색결과 없음</td>
+                        <td colspan="6">검색결과 없음</td>
                     </tr>
                     </tbody>
                 </table>
@@ -118,7 +119,7 @@
     function selectRow(button) {
         const row = button.closest('tr');
         document.getElementById('codeInput').value = row.dataset.code || '';
-        document.getElementById('categoryInput').value = row.dataset.category || '급여';
+        document.getElementById('categoryInput').value = row.dataset.category || '약품';
         document.getElementById('nameInput').value = row.dataset.name || '';
         document.getElementById('priceInput').value = row.dataset.price || '';
         document.getElementById('activeInput').value = row.dataset.active || '1';

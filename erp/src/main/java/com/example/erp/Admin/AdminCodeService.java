@@ -95,8 +95,8 @@ public class AdminCodeService {
                     category,
                     row[2] != null ? row[2].toString() : "",
                     row[3] != null ? row[3].toString() : "",
-                    toCoverage(category),
-                    toActive(row[4])));
+                    toCoverageFromActive(row[4]),
+                    ""));
         }
         return results;
     }
@@ -411,18 +411,8 @@ public class AdminCodeService {
         return isTruthy(value) ? "진료 가능" : "진료 불가능";
     }
 
-    private String toCoverage(Object categoryValue) {
-        if (categoryValue == null) {
-            return "";
-        }
-        String text = categoryValue.toString().trim();
-        if (text.contains("비급여")) {
-            return "비급여";
-        }
-        if (text.contains("급여")) {
-            return "급여";
-        }
-        return text;
+    private String toCoverageFromActive(Object value) {
+        return isTruthy(value) ? "급여" : "비급여";
     }
 
     private boolean isTruthy(Object value) {
@@ -430,31 +420,27 @@ public class AdminCodeService {
             return false;
         }
         if (value instanceof Number number) {
-            return number.intValue() != 0;
+            return number.intValue() == 1;
         }
         String text = value.toString().trim();
-        return "1".equals(text) || "true".equalsIgnoreCase(text) || "y".equalsIgnoreCase(text);
+        if (text.isEmpty()) {
+            return false;
+        }
+        return text.equals("1") || text.equalsIgnoreCase("true") || text.equalsIgnoreCase("y");
     }
 
-    public record CodeRow(String code, String name, String active) {
-    }
+    public record CodeRow(String code, String name, String active) {}
 
-    public record InsuranceRow(String code, String name, String discountRate, String active) {
-    }
+    public record InsuranceRow(String code, String name, String discountRate, String active) {}
 
-    public record PaymentMethodRow(String code, String name, String active) {
-    }
+    public record PaymentMethodRow(String code, String name, String active) {}
 
     public record FeeItemRow(String code, String category, String name, String basePrice, String coverage,
-            String active) {
-    }
+                             String active) {}
 
-    public record DiseaseRow(String code, String nameKor, String nameEng, String department, String active) {
-    }
+    public record DiseaseRow(String code, String nameKor, String nameEng, String department, String active) {}
 
-    public record StatusRow(String code, String category, String name, String active) {
-    }
+    public record StatusRow(String code, String category, String name, String active) {}
 
-    public record RoleRow(String code, String name, String active) {
-    }
+    public record RoleRow(String code, String name, String active) {}
 }
