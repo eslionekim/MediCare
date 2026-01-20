@@ -193,7 +193,18 @@
 	.request{
 		grid-column:2/3 ;
 	}
-	
+	.item-scroll {
+  	      width: 90%;
+  	      margin: 5px auto;
+  	      max-height: 520px;
+  	      overflow-y: auto;
+  	      border: 1px solid #7B7B7B;
+  	      background-color: #ffffff;
+  	  }
+
+  	  .item-scroll table {
+  	      width: 100%;
+  	  }
     </style>
 <link rel="stylesheet" th:href="@{/css/common-base.css}">
 	
@@ -329,6 +340,10 @@
 			            요청 환산 수량:
 			            <span id="convertedRequestQty"></span>
 			        </p>
+					<p>
+					    남은 요청 환산 수량:
+					    <span id="remainingQty"></span>
+					</p>
 
 			        <table border="1">
 			            <thead>
@@ -384,7 +399,7 @@
 	                outboundArea.style.display = "none";
 	            }
 	
-	            if (status === "승인") {
+	            if (status === "승인" || status === "부분출고") {
 	                requestActionArea.style.display = "none";
 	                outboundArea.style.display = "block";
 					
@@ -440,63 +455,72 @@
 		        .catch(err => alert(err.message));
 		}
 		
-		function renderOutboundArea(data, status) { // 출고시 필드에 정보 뜨게하기
-			const totalAvailableQty = Number(data.totalAvailableQty || 0);
-		    const convertedRequestQty = Number(data.convertedRequestQty || 0);
-		
-			// 가용재고 / 요청환산수량 표시
-		    document.getElementById("totalAvailableQty").textContent =
-		        `${totalAvailableQty} ${data.baseUnit || ''}`;
-		    document.getElementById("convertedRequestQty").textContent =
-		        `${convertedRequestQty} ${data.baseUnit || ''}`;
-
+			function renderOutboundArea(data, status) {
+	
+	    const totalAvailableQty = Number(data.totalAvailableQty || 0);
+	
+	    document.getElementById("totalAvailableQty").textContent =
+	        `${totalAvailableQty} ${data.baseUnit || ''}`;
+	
+	    // LOT 테이블 생성
+	    const tbody = document.getElementById("lotTableBody");
+	    tbody.innerHTML = "";
+	    let lotRows = "";
+	
+	    data.lotList.forEach(lot => {
+	        const avail = Number(lot.availableQty || 0);
+	        if (avail > 0) {
+	            lotRows += `
+	                <tr>
+	                    <td>${lot.lotCode}</td>
+	                    <td>${lot.outboundDeadline ?? '-'}</td>
+	                    <td>${avail}</td>
+	                    <td>
+	                        <input type="number"
+	                               min="0"
+	                               max="${avail}"
+	                               data-stock-id="${lot.stockId}"
+	                               data-lot-code="${lot.lotCode}">
+	                    </td>
+	                </tr>
+	            `;
+	        }
+	    });
+	
+	    tbody.innerHTML = lotRows;
+	
+	    // ✅ 여기 ↓↓↓ (출고/부분출고 버튼 로직)
+	    const outboundBtn = document.getElementById("outboundBtn");
+	    const stockLackMessage = document.getElementById("stockLackMessage");
+	
+	    const requestedQty = Number(data.convertedRequestQty || 0);
+	    const approvedQty = Number(data.approvedQty || 0);
+	    const remainingQty = requestedQty - approvedQty;
+	
+		//요청 환산수량
+		document.getElementById("convertedRequestQty").textContent =
+		    `${requestedQty} ${data.baseUnit || ''}`;
 			
-		    // LOT 테이블
-		    const tbody = document.getElementById("lotTableBody");
-		    tbody.innerHTML = "";
+		//남은 환산수량
+		document.getElementById("remainingQty").textContent =
+		    `${remainingQty} ${data.baseUnit || ''}`;
+	
+	    if (remainingQty <= 0) {
+	        outboundBtn.style.display = "none";
+	        return;
+	    }
+	
+	    if (totalAvailableQty > 0) {
+	        outboundBtn.style.display = "inline-block";
+	        outboundBtn.disabled = false;
+	        outboundBtn.textContent =
+	            totalAvailableQty < remainingQty ? "부분 출고" : "출고";
+	    } else {
+	        outboundBtn.disabled = true;
+	        stockLackMessage.style.display = "block";
+	    }
+	}
 
-			let lotRows = '';
-			data.lotList.forEach(lot => {
-				const avail = Number(lot.availableQty || 0);
-			    if (avail > 0) {
-			        lotRows += `
-			            <tr>
-			                <td>${lot.lotCode}</td>
-							<td>${lot.outboundDeadline ?? '-'}</td>
-
-			                <td>${avail}</td>
-			                <td>
-			                    <input type="number"
-			                           min="0"
-			                           max="${avail}"
-			                           data-lot-code="${lot.lotCode}"
-			                           data-stock-id="${lot.stockId}">
-			                </td>
-			            </tr>
-			        `;
-			    }
-			});
-
-			tbody.innerHTML = lotRows;
-
-
-		    // 출고버튼
-		    const outboundBtn = document.getElementById("outboundBtn");
-			
-			const compareQty = data.convertedRequestQty; // 최초 요청 환산 수량
-
-		    if (data.totalAvailableQty >= data.convertedRequestQty) {
-		        outboundBtn.style.display = "inline-block";
-		    } else {
-				outboundBtn.disabled = true;
-				stockLackMessage.style.display = "block";
-				
-				document.querySelectorAll("#lotTableBody input").forEach(input => {
-		            input.disabled = true;
-		        });
-		    }
-		}
-		
 		// 전체출고 버튼 클릭
 		document.getElementById("outboundBtn")?.addEventListener("click", () => {
 		    const issueRequestId = Number(document.getElementById("issueRequestId").value);
@@ -523,21 +547,23 @@
 
 			if (!isValid) return;
 
-			if (totalQty !== remainingQty) { // 전체 합계 체크
-		        alert(`출고 수량 합계가 요청 환산 수량과 일치해야 합니다.\n요청 환산 수량: ${remainingQty}, 현재 합계: ${totalQty}`);
-		        return;
-		    }
-			console.log("전송할 lotList:", lotList);
+			if (totalQty > remainingQty) {
+			    alert(`출고 수량이 남은 요청 수량(${remainingQty})을 초과할 수 없습니다.`);
+			    return;
+			}
 
-		    fetch("/logis/itemRequest/outbound/partial", { // 기존 컨트롤러 재활용
-		        method: "POST",
-		        headers: { "Content-Type": "application/json" },
-		        body: JSON.stringify({
-		            issueRequestId: Number(issueRequestId),
-		            lotList: lotList,
-		            isPartial: false // 전체출고임을 표시
-		        })
-		    })
+			const isPartial = totalQty < remainingQty;
+
+
+			fetch("/logis/itemRequest/outbound/partial", {
+			    method: "POST",
+			    headers: { "Content-Type": "application/json" },
+			    body: JSON.stringify({
+			        issueRequestId,
+			        lotList
+			    })
+			})
+
 		    .then(res => res.text())
 		    .then(msg => {
 		        alert(msg);
