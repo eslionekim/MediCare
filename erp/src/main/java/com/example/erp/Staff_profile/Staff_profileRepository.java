@@ -11,6 +11,10 @@ import java.util.Optional;
 @Repository
 public interface Staff_profileRepository extends JpaRepository<Staff_profile, Long> {
 
+	//차트작성->진단코드
+	@Query("SELECT s FROM Staff_profile s WHERE s.user_account.user_id = :userId")
+    Staff_profile findByUserId(@Param("userId") String userId);
+	
     @Query("select sp from Staff_profile sp join fetch sp.user_account ua join fetch sp.department d")
     List<Staff_profile> findAllWithUserAndDepartment();
 
