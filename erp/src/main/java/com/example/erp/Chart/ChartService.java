@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
 public class ChartService {
 
     private final PrescriptionRepository prescriptionRepository;
-	private final ChartRepository chartRepository;
+    private final ChartRepository chartRepository;
     private final VisitRepository visitRepository; // Visit 조회 위해 추가
     private final Diseases_codeRepository diseases_codeRepository;
     private final Chart_diseasesRepository chart_diseasesRepository;
@@ -49,10 +49,9 @@ public class ChartService {
     private final Status_codeRepository status_codeRepository;
     private final ItemRepository itemRepository;
     private final Prescription_itemRepository prescription_itemRepository;
-    
-    
+
     @Transactional
-    public Chart createBasicChart(Long visitId) { 
+    public Chart createBasicChart(Long visitId) {
         List<Chart> existingCharts = chartRepository.findByVisitIdList(visitId);
 
         if (!existingCharts.isEmpty()) {
@@ -60,8 +59,8 @@ public class ChartService {
         }
 
         Visit visit = visitRepository.findById(visitId)
-                 .orElseThrow(() -> new RuntimeException("해당 방문이 없습니다. visitId=" + visitId));
-        
+                .orElseThrow(() -> new RuntimeException("해당 방문이 없습니다. visitId=" + visitId));
+
         Chart chart = new Chart();
         chart.setVisit(visit);
         chart.setUser_account(visit.getUser_account());
@@ -75,9 +74,7 @@ public class ChartService {
         }
     }
 
-
-
- // 의사 -> 차트 저장 by 은서
+    // 의사 -> 차트 저장 by 은서
     @Transactional
     public void saveAll(
             Long visit_id,
@@ -99,14 +96,13 @@ public class ChartService {
             List<String> drug_fee_item_code,
             List<Integer> dose,
             List<Integer> times_per_day,
-            List<Integer> days
-    ) {
-    	
-        //1. 차트 저장
+            List<Integer> days) {
+
+        // 1. 차트 저장
         Chart chart = (chart_id == null)
                 ? chartRepository.findByVisitId(visit_id).orElseThrow()
                 : chartRepository.findById(chart_id).orElseThrow();
-        
+
         chart.setSubjective(subjective);
         chart.setObjective(objective);
         chart.setAssessment(assessment);
@@ -114,38 +110,35 @@ public class ChartService {
         chart.setNote(note);
         chart.setUpdated_at(LocalDateTime.now());
         chartRepository.save(chart);
-        
+
         Visit visit = chart.getVisit();
         // 2. 기존 질병,처방전 삭제
-        List<Chart_diseases> existingDiseases =
-                chart_diseasesRepository.findByChart(chart);
+        List<Chart_diseases> existingDiseases = chart_diseasesRepository.findByChart(chart);
         if (!existingDiseases.isEmpty()) {
             chart_diseasesRepository.deleteAll(existingDiseases);
         }
-        List<Prescription> oldPrescriptions =
-                prescriptionRepository.findByVisitId(visit.getVisit_id());
+        List<Prescription> oldPrescriptions = prescriptionRepository.findByVisitId(visit.getVisit_id());
 
         for (Prescription old : oldPrescriptions) {
             // prescription_item 먼저 삭제
             prescription_itemRepository.deleteByPrescriptionId(
-                    old.getPrescription_id()
-            );
+                    old.getPrescription_id());
         }
         // prescription 삭제
         prescriptionRepository.deleteAll(oldPrescriptions);
-        
+
         List<Claim> oldClaims = claimRepository.findByVisitId(visit.getVisit_id());
         for (Claim c : oldClaims) {
             claim_itemRepository.deleteByClaim(c);
         }
         claimRepository.deleteAll(oldClaims);
 
-
         // 3. 질병 저장
         if (diseases_code != null) {
             for (String code : diseases_code) {
 
-                if (code == null || code.isEmpty()) continue;
+                if (code == null || code.isEmpty())
+                    continue;
 
                 Diseases_code disease = diseases_codeRepository
                         .findById(code)
@@ -158,8 +151,6 @@ public class ChartService {
             }
         }
 
-
-
         // 4. 일반 수가 Claim 저장
         if (normal_fee_item_code != null && !normal_fee_item_code.isEmpty()) {
 
@@ -170,7 +161,7 @@ public class ChartService {
 
             int totalAmount = 0;
 
-            //초진일경우
+            // 초진일경우
             if ("초진".equals(visit.getVisit_type())) {
 
                 Fee_item feeItem = fee_itemRepository.findById("OUTCON")
@@ -191,7 +182,7 @@ public class ChartService {
                 claim_itemRepository.save(autoItem);
                 totalAmount += total;
             }
-            //재진일경우
+            // 재진일경우
             else if ("재진".equals(visit.getVisit_type())) {
 
                 Fee_item feeItem = fee_itemRepository.findById("OUTFOL")
@@ -213,10 +204,11 @@ public class ChartService {
                 totalAmount += total;
             }
 
-            //나머지 처방항목
+            // 나머지 처방항목
             for (int i = 0; i < normal_fee_item_code.size(); i++) {
 
-                if (normal_fee_item_code.get(i) == null) continue;
+                if (normal_fee_item_code.get(i) == null)
+                    continue;
 
                 Fee_item fee = fee_itemRepository
                         .findById(normal_fee_item_code.get(i))
@@ -242,9 +234,11 @@ public class ChartService {
             claimRepository.save(normalClaim);
         }
 
-        /* =======================
-           5. 약품 Claim 저장
-        ======================== */
+        /*
+         * =======================
+         * 5. 약품 Claim 저장
+         * ========================
+         */
         if (drug_fee_item_code != null && !drug_fee_item_code.isEmpty()) {
 
             Claim drugClaim = new Claim();
@@ -256,7 +250,8 @@ public class ChartService {
 
             for (int i = 0; i < drug_fee_item_code.size(); i++) {
 
-                if (drug_fee_item_code.get(i) == null) continue;
+                if (drug_fee_item_code.get(i) == null)
+                    continue;
 
                 Fee_item fee = fee_itemRepository
                         .findById(drug_fee_item_code.get(i))
@@ -280,23 +275,22 @@ public class ChartService {
 
             drugClaim.setTotal_amount(totalAmount);
             claimRepository.save(drugClaim);
-            
-            
+
             // 처방전
             Prescription prescription = new Prescription();
             prescription.setVisit_id(visit.getVisit_id());
-            prescription.setUser_id(visit.getUser_account().getUser_id());
             prescription.setStatus_code("VIS_COMPLETED");
             prescription.setPrescribed_at(LocalDateTime.now());
             prescriptionRepository.save(prescription);
 
             for (int i = 0; i < drug_fee_item_code.size(); i++) {
-                if (drug_fee_item_code.get(i) == null) continue;
+                if (drug_fee_item_code.get(i) == null)
+                    continue;
 
                 Fee_item fee = fee_itemRepository.findById(drug_fee_item_code.get(i))
                         .orElseThrow(() -> new RuntimeException("약품 수가 없음"));
 
-                //item_code 가져오기
+                // item_code 가져오기
                 Item item = itemRepository.findByFeeItemCode(fee.getFee_item_code())
                         .orElseThrow(() -> new RuntimeException("아이템 없음"));
                 String item_code = item.getItem_code(); // 실제 Prescription_item에 넣을 값
@@ -316,13 +310,14 @@ public class ChartService {
 
                 prescription_itemRepository.save(pItem);
             }
-        
 
         }
 
-        /* =======================
-           6. 방문 상태 완료 처리
-        ======================== */
+        /*
+         * =======================
+         * 6. 방문 상태 완료 처리
+         * ========================
+         */
         Status_code completed = status_codeRepository
                 .findById("VIS_COMPLETED")
                 .orElseThrow(() -> new RuntimeException("상태코드 없음"));
