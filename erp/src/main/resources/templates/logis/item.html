@@ -284,6 +284,7 @@
 					           th:value="${keyword}"/>
 
 					    <button type="submit">검색</button>
+						<button type="button" id="purchaseRequestBtn">신규등록요청</button>
 					</form>
 
 				</div>
@@ -363,7 +364,55 @@
 		</div>
 
 		
-		
+		<!-- 신규등록요청 폼 (초기에는 숨김) -->
+		<div id="purchaseForm" class="popup-form" style="display:none;">
+		    <h3>신규등록 요청</h3>
+		    <form id="newItemForm">
+		        <label>분류:</label>
+		        <select name="item_type" required>
+		            <option value="">선택</option>
+		            <option value="약품">약품</option>
+		            <option value="재료">재료</option>
+		            <option value="자재">기타</option>
+		        </select><br>
+
+		        <label>물품명:</label>
+		        <input type="text" name="name" required><br>
+
+				<label>일반 물품 코드:</label>
+		        <input type="text" name="code" required><br>
+
+				<label>제조사 물품 코드:</label>
+				<input type="text" name="madecode" required><br>
+
+
+		        <label>기본단위:</label>
+		        <input type="text" name="base_unit" required><br>
+
+		        <label>포장단위명:</label>
+		        <input type="text" name="pack_name" required><br>
+
+		        <label>포장단위수량:</label>
+		        <input type="number" name="pack_quantity" min="1" required><br>
+
+		        <label>안전재고:</label>
+		        <input type="number" name="safety_stock" min="0" required><br>
+
+		        <label>기본 단가:</label>
+		        <input type="number" name="base_price" min="0" step="0.01" required><br>
+
+				<label>과세 여부:</label>
+				<select name="taxable" required>
+				    <option value="">선택</option>
+				    <option value="true">과세</option>
+				    <option value="false">비과세</option>
+				</select><br>
+
+
+		        <button type="submit">요청</button>
+		        <button type="button" class="closeBtn">닫기</button>
+		    </form>
+		</div>
 
 		<!-- 입고등록 폼 (초기에는 숨김) -->
 		<div id="stockInForm" class="popup-form" style="display:none;">
@@ -463,6 +512,8 @@
 		const adjustForm = document.getElementById("adjustForm");
 		
 		const newItemForm = document.getElementById("newItemForm");
+		const purchaseRequestBtn = document.getElementById("purchaseRequestBtn");
+		const purchaseForm = document.getElementById("purchaseForm");
 		
 		let selectedStockId = null; // 폐기,수량조절
 		let selectedItemCode = null;
@@ -480,6 +531,11 @@
 		    totalPriceInput.value = total.toLocaleString(); // 보기 좋게
 		});
 
+		//신규등록요청 폼
+		purchaseRequestBtn.addEventListener("click", (e) => {
+		    e.preventDefault(); // 혹시 모를 submit 방지
+		    purchaseForm.style.display = "block";
+		});
 
 
 		// location 불러오기
@@ -530,7 +586,7 @@
 		    }
 		});
 
-
+		
 	    // 닫기 버튼
 	    document.querySelectorAll(".closeBtn").forEach(btn => {
 	        btn.addEventListener("click", (e) => {
@@ -538,7 +594,30 @@
 	        });
 	    });
 
-		
+		//신규등록요청폼
+		newItemForm.addEventListener("submit", (e) => {
+		    e.preventDefault(); // 기본 submit 막기
+
+		    const formData = new FormData(newItemForm);
+
+		    fetch("/logis/item/new", {
+		        method: "POST",
+		        body: formData
+		    })
+		    .then(res => {
+		        if (!res.ok) throw new Error("요청 실패");
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert(msg); // "신규 등록 요청 완료"
+		        purchaseForm.style.display = "none";
+		        newItemForm.reset();
+		    })
+		    .catch(err => {
+		        console.error(err);
+		        alert("신규 등록 요청 중 오류가 발생했습니다.");
+		    });
+		});
 	    
 		//상세보기 클릭시 로트 리스트
 	    document.querySelectorAll(".show-lot-btn").forEach(btn => {

@@ -147,15 +147,15 @@ public class logisController {
 	        @RequestParam("issueRequestId") Long issueRequestId,
 	        @RequestParam("itemCode") String itemCode) {
 
-	    // 1️⃣ stockService에서 기존 출고 정보 가져오기 (lot 리스트 등)
+	    //  stockService에서 기존 출고 정보 가져오기 (lot 리스트 등)
 	    StockDTO stockData = stockService.getOutboundExtra(issueRequestId, itemCode);
 
-	    // 2️⃣ Issue_request_item에서 요청 환산 수량, 승인 수량 가져오기
+	    // Issue_request_item에서 요청 환산 수량, 승인 수량 가져오기
 	    Issue_request_item iri = issue_request_itemRepository
 	            .findByIssueRequestId(issueRequestId)
 	            .orElseThrow(() -> new RuntimeException("Issue_request_item 없음"));
 
-	    // 3️⃣ Map으로 만들어서 반환
+	    // Map으로 만들어서 반환
 	    Map<String, Object> result = new HashMap<>();
 	    result.put("totalAvailableQty", stockData.getTotalAvailableQty()); //총 가용재고
 	    result.put("lotList", stockData.getLotList()); //stockId,lotCode,outboundDeadline,availableQty
@@ -168,81 +168,126 @@ public class logisController {
 	}
 
 	
-	//물류->불출요청리스트-부분출고
-	@PostMapping("/logis/itemRequest/outbound/partial")
-	@Transactional
-	public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> param) {
-	    try {
-	        Long issueRequestId = ((Number)param.get("issueRequestId")).longValue();
-	        List<Map<String, Object>> lotList = (List<Map<String, Object>>) param.get("lotList");
-	        boolean isPartial = param.getOrDefault("isPartial", false).equals(true); // 부분출고 여부
-	        
-	        BigDecimal totalQty = BigDecimal.ZERO;
-	
-	        for (Map<String, Object> lot : lotList) {
-	        	Long stockId = ((Number) lot.get("stockId")).longValue();
-	            BigDecimal qty = new BigDecimal(lot.get("qty").toString());
-	
-	            //재고 차감
-	            Stock stock = stockRepository.findById(stockId)
-	                    .orElseThrow(() -> new RuntimeException("Stock 없음: " + stockId));
-	
-	            stock.setQuantity(stock.getQuantity().subtract(qty));
-	            stockRepository.save(stock);
-	
-	            totalQty = totalQty.add(qty);
-	
-	            //재고 이동
-	            Stock_move move = new Stock_move();
-	            move.setMove_type("transfer");
-	            move.setFrom_warehouse_code(stock.getWarehouse_code());
-	            move.setIssue_request_id(issueRequestId);
-	            move.setStatus_code("SM_request");
-	            move.setMoved_at(LocalDateTime.now());
-	            //move.setQuantity("-" + qty); // 빠져나간 수량 기록
-	            stock_moveRepository.save(move);
-	            
-	            //item조회
-	            Item item = itemRepository.findById(stock.getItem_code())
-	                    .orElseThrow(() -> new RuntimeException("Item 없음: " + stock.getItem_code()));
-	            // unit_price(정가) × qty 계산
-	            BigDecimal pricePerUnit = item.getUnit_price();
-	            BigDecimal totalPrice = pricePerUnit.multiply(qty);
-	            // Integer로 변환 (소수점 없는 구조라고 가정)
-	            Integer finalUnitPrice = totalPrice.intValue();
+	// 물류 -> 불출요청리스트 - 부분출고
+@PostMapping("/logis/itemRequest/outbound/partial")
+@Transactional
+public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> param) {
 
-	            // ====== 5) Stock_move_item 생성 ======
-	            Stock_move_item smi = new Stock_move_item();
-	            smi.setStock_move_id(move.getStock_move_id());   // FK
-	            smi.setItem_code(stock.getItem_code());
-	            smi.setLot_code(stock.getLot_code());
-	            smi.setQuantity(qty);
-	            smi.setUnit_price(finalUnitPrice);
-	            smi.setExpiry_date(LocalDate.now());
+    try {
+        Long issueRequestId = ((Number) param.get("issueRequestId")).longValue();
+        List<Map<String, Object>> lotList =
+                (List<Map<String, Object>>) param.get("lotList");
 
-	            stock_move_itemRepository.save(smi);
-	            
-	        }
-	
-	        Issue_request_item iri = issue_request_itemRepository
-	                .findByIssueRequestId(issueRequestId)
-	                .orElseThrow(() -> new RuntimeException("Issue_request_item 없음"));
-	        
-	        iri.setApproved_qty(iri.getRequested_qty());
-	        issue_request_itemRepository.save(iri);
-	
-	        Issue_request issue = issue_requestRepository.findById(issueRequestId)
-	                .orElseThrow(() -> new RuntimeException("Issue_request 없음"));
-	        issue.setStatus_code("IR_DONE");
-	        issue_requestRepository.save(issue);
-	
-	        return ResponseEntity.ok("출고 완료");
-	
-	    } catch (Exception e) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                .body(e.getMessage());
-	    }
-	}
+        BigDecimal totalQty = BigDecimal.ZERO; // ✅ 이번 출고 수량 (기본단위)
+
+        // =========================
+        // 1. 재고 차감 + 이동 기록
+        // =========================
+        for (Map<String, Object> lot : lotList) {
+
+            Long stockId = ((Number) lot.get("stockId")).longValue();
+            BigDecimal qty = new BigDecimal(lot.get("qty").toString()); // 기본단위
+
+            Stock stock = stockRepository.findById(stockId)
+                    .orElseThrow(() -> new RuntimeException("Stock 없음: " + stockId));
+
+            if (stock.getQuantity().compareTo(qty) < 0) {
+                throw new RuntimeException("재고 부족");
+            }
+
+            stock.setQuantity(stock.getQuantity().subtract(qty));
+            stockRepository.save(stock);
+
+            totalQty = totalQty.add(qty); // ✅ 기본단위 누적
+
+            Stock_move move = new Stock_move();
+            move.setMove_type("transfer");
+            move.setFrom_warehouse_code(stock.getWarehouse_code());
+            move.setIssue_request_id(issueRequestId);
+            move.setStatus_code("SM_request");
+            move.setMoved_at(LocalDateTime.now());
+            stock_moveRepository.save(move);
+
+            Item item = itemRepository.findById(stock.getItem_code())
+                    .orElseThrow(() -> new RuntimeException("Item 없음"));
+
+            Stock_move_item smi = new Stock_move_item();
+            smi.setStock_move_id(move.getStock_move_id());
+            smi.setItem_code(stock.getItem_code());
+            smi.setLot_code(stock.getLot_code());
+            smi.setQuantity(qty);
+            smi.setUnit_price(
+                    item.getUnit_price().multiply(qty).intValue()
+            );
+            smi.setExpiry_date(LocalDate.now());
+
+            stock_move_itemRepository.save(smi);
+        }
+
+        // =========================
+        // 2. Issue_request_item 승인 수량 처리 (🔥 핵심 수정 구간)
+        // =========================
+        Issue_request_item iri = issue_request_itemRepository
+                .findByIssueRequestId(issueRequestId)
+                .orElseThrow(() -> new RuntimeException("Issue_request_item 없음"));
+
+        // 👉 Item 조회 (pack_unit_qty 필요)
+        Item item = itemRepository.findById(iri.getItem_code())
+                .orElseThrow(() -> new RuntimeException("Item 없음"));
+
+        BigDecimal packUnitQty = BigDecimal.valueOf(item.getPack_unit_qty()); // 포장당 기본단위 수량
+
+        // 👉 요청 수량을 기본단위로 변환
+        BigDecimal requestedBaseQty =
+                iri.getRequested_qty().multiply(packUnitQty);
+
+        // 👉 기존 승인 수량 (기본단위)
+        BigDecimal approvedQty =
+                iri.getApproved_qty() == null
+                        ? BigDecimal.ZERO
+                        : iri.getApproved_qty();
+
+        approvedQty = approvedQty.add(totalQty); // 이번 출고 반영
+
+        // ❗ 요청 수량 초과 방지 (기본단위 기준)
+        if (approvedQty.compareTo(requestedBaseQty) > 0) {
+            throw new RuntimeException("요청 수량 초과 출고");
+        }
+
+        iri.setApproved_qty(approvedQty);
+        issue_request_itemRepository.save(iri);
+
+        // =========================
+        // 3. Issue 상태 처리 (🔥 단위 수정)
+        // =========================
+        Issue_request issue = issue_requestRepository.findById(issueRequestId)
+                .orElseThrow(() -> new RuntimeException("Issue_request 없음"));
+
+        if (approvedQty.compareTo(requestedBaseQty) < 0) {
+            issue.setStatus_code("IR_PICKING"); // 부분 출고
+        } else {
+            issue.setStatus_code("IR_DONE"); // 전량 출고
+        }
+
+        issue_requestRepository.save(issue);
+
+        // =========================
+        // 4. 응답
+        // =========================
+        return ResponseEntity.ok(
+                issue.getStatus_code().equals("IR_DONE")
+                        ? "출고 완료"
+                        : "부분 출고 완료"
+        );
+
+    } catch (Exception e) {
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(e.getMessage());
+    }
+}
+
+
 
 	//물류-> 전체 재고 현황 by 은서
 	@GetMapping("/logis/item")
