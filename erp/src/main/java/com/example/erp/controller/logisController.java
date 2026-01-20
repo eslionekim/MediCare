@@ -147,15 +147,15 @@ public class logisController {
 	        @RequestParam("issueRequestId") Long issueRequestId,
 	        @RequestParam("itemCode") String itemCode) {
 
-	    // 1️⃣ stockService에서 기존 출고 정보 가져오기 (lot 리스트 등)
+	    //  stockService에서 기존 출고 정보 가져오기 (lot 리스트 등)
 	    StockDTO stockData = stockService.getOutboundExtra(issueRequestId, itemCode);
 
-	    // 2️⃣ Issue_request_item에서 요청 환산 수량, 승인 수량 가져오기
+	    // Issue_request_item에서 요청 환산 수량, 승인 수량 가져오기
 	    Issue_request_item iri = issue_request_itemRepository
 	            .findByIssueRequestId(issueRequestId)
 	            .orElseThrow(() -> new RuntimeException("Issue_request_item 없음"));
 
-	    // 3️⃣ Map으로 만들어서 반환
+	    // Map으로 만들어서 반환
 	    Map<String, Object> result = new HashMap<>();
 	    result.put("totalAvailableQty", stockData.getTotalAvailableQty()); //총 가용재고
 	    result.put("lotList", stockData.getLotList()); //stockId,lotCode,outboundDeadline,availableQty

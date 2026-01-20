@@ -21,7 +21,10 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 		    JOIN Warehouse w
 			  ON s.warehouse_code = w.warehouse_code
 		    where s.item_code = :itemCode
-		      and s.outbound_deadline >= CURRENT_DATE
+		      and (
+			        s.outbound_deadline is null
+			        or s.outbound_deadline >= CURRENT_DATE
+			      )
 		     AND w.name = '물류창고'
 		""")
 	BigDecimal findTotalAvailableQty(@Param("itemCode") String itemCode);
