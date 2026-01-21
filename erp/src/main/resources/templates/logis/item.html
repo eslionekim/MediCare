@@ -444,8 +444,16 @@
 		        <label>출고마감일:</label>
 		        <input type="date" name="outbound_deadline"><br>
 
-		        <label>수량:</label>
-		        <input type="number" name="quantity" min="1" required><br>
+				<label>포장 수량:</label>
+				<input type="number" id="packQtyInput" min="1" required><br>
+
+				<div style="color:#333; margin-bottom:5px;">
+				    총 입고 수량:
+				    <strong><span id="realQtyText">0</span></strong> 개
+				</div>
+
+				<!-- 서버로 실제 들어갈 quantity -->
+				<input type="hidden" name="quantity" id="realQtyInput">
 
 				<label>총액:</label>
 				<input type="text" id="totalPrice" readonly><br>
@@ -531,6 +539,22 @@ document.addEventListener("DOMContentLoaded", () => {
 	const lotSearchInput = document.getElementById("lotSearchInput"); //로트코드 검색창
 	const lotSearchBtn = document.getElementById("lotSearchBtn"); //검색버튼
 
+	let packUnitQty = 0; // 1포장당 개수
+
+	const packQtyInput = document.getElementById("packQtyInput");
+	const realQtyText = document.getElementById("realQtyText");
+	const realQtyInput = document.getElementById("realQtyInput");
+
+	function updateRealQty() {
+	    const packCount = Number(packQtyInput.value || 0);
+	    const realQty = packCount * packUnitQty;
+
+	    realQtyText.textContent = realQty.toLocaleString();
+	    realQtyInput.value = realQty; // 서버로 전송될 값
+	}
+	packQtyInput.addEventListener("input", updateRealQty);
+
+	
     qtyInput.addEventListener("input", () => {
         const qty = parseInt(qtyInput.value || 0);
         totalPriceInput.value = (unitPrice * qty).toLocaleString();
@@ -638,6 +662,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 .then(price => { unitPrice = Number(price); totalPriceInput.value = "0"; })
                 .catch(err => { console.error(err); unitPrice = 0; });
 
+			// 포장 단위 수량 조회
+			fetch(`/logis/item/${itemCode}/pack-unit-qty`)
+			    .then(res => res.json())
+			    .then(qty => {
+			        packUnitQty = Number(qty) || 0;
+			        updateRealQty(); // 이미 입력된 값 있으면 재계산
+			    })
+			    .catch(() => {
+			        packUnitQty = 0;
+			        realQtyText.textContent = "0";
+			    });
+	
+				
             // LOT 조회
             fetch(`/logis/item/${itemCode}/lots`)
                 .then(res => res.json())

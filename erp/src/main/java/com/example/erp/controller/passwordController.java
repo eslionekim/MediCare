@@ -18,7 +18,7 @@ public class passwordController {
     @GetMapping("/test/bcrypt")
 	@ResponseBody
 	public String testBcrypt() {
-	    System.out.println(encoder.encode("ssss"));
+	    System.out.println(encoder.encode("llll"));
 	    return "check console";
 	}
 }

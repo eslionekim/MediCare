@@ -225,7 +225,7 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
         }
 
         // =========================
-        // 2. Issue_request_item 승인 수량 처리 (🔥 핵심 수정 구간)
+        // 2. Issue_request_item 승인 수량 처리
         // =========================
         Issue_request_item iri = issue_request_itemRepository
                 .findByIssueRequestId(issueRequestId)
@@ -379,6 +379,16 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
         model.addAttribute("itemList", filteredList);
         return "logis/item";
     }
+	
+	//약사->불출요청->수량
+    @GetMapping("/logis/item/{selectedItemCode}/pack-unit-qty")
+    @ResponseBody
+    public Integer getPackUnitQty(@PathVariable("selectedItemCode") String selectedItemCode) {
+        return itemRepository.findById(selectedItemCode)
+                .orElseThrow()
+                .getPack_unit_qty(); // 필드명 맞게
+    }
+	
 	
 	// 물류 -> 전체 LOT 조회 (초기 표시용) by 은서
 	@GetMapping("/logis/lots")
@@ -943,7 +953,8 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
   	            return "이미 사용 중인 비밀번호입니다.";
   	        }
 
-  	        account.setPassword(dto.getPassword());
+  	      String encodedPassword = passwordEncoder.encode(dto.getPassword());
+  	      account.setPassword(encodedPassword);
   	    }
 
   	    user_accountRepository.save(account);
