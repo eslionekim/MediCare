@@ -120,11 +120,7 @@ public class hrController {
 	            .toList();
 	
 	    // 근무과 select 옵션 (String 리스트!)
-	    List<String> departmentList = list.stream()
-	            .map(sp -> sp.getDepartment().getName())
-	            .distinct()
-	            .sorted()
-	            .toList();
+	    List<String> departmentList = departmentRepository.findAllDepartmentNames();
 	
 	    model.addAttribute("staffList", filteredList);
 	    model.addAttribute("departments", departmentList);

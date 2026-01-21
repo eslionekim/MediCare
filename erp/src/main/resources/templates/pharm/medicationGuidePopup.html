@@ -1,323 +1,308 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-
+<meta charset="UTF-8">
 <title>복약지도</title>
 
 <style>
-body {
-    font-family: 'Inter', '맑은 고딕';
-    background: #f5f6fa;
-    color: #333;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    width: 95%;
-    max-width: 1000px;
-    margin: 20px auto;
-    padding: 0 10px;
-}
-
-.box {
-    background: #fff;
-    border-radius: 12px;
-    padding: 15px 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 15px;
-}
-
-.flex {
-    display: flex;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
-.left {
-    flex: 3;
-    min-width: 300px;
-}
-
-.right {
-    flex: 1.2;
-    min-width: 220px;
-}
-
-.title {
-    font-weight: 600;
-    margin-bottom: 10px;
-    font-size: 16px;
-    border-bottom: 2px solid #879BD5;
-    padding-bottom: 4px;
-}
-
-.patient-header div {
-    margin-bottom: 5px;
-    font-size: 14px;
-}
-
-.patient-header span {
-    font-weight: 600;
-}
-
-.patient-header hr {
-    border: 0;
-    border-top: 1px dashed #bbb;
-    margin: 10px 0;
-}
-
-/* 표 스타일 */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-    table-layout: fixed;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 6px 8px;
-    text-align: center;
-    vertical-align: middle;
-}
-
-th {
-    background-color: #879BD5;
-    color: white;
-    font-weight: 600;
-}
-
-td small {
-    color: #555;
-    display: block;
-    margin-top: 2px;
-    font-size: 12px;
-}
-
-.box table tbody tr:nth-child(even) {
-    background: #f7f9ff;
-}
-
-/* 우측 요약 박스 */
-.right .box div {
-    margin-bottom: 8px;
-    font-size: 14px;
-}
-
-.right .box b {
-    font-weight: 600;
-    color: #222;
-}
-
-/* 버튼 */
-button {
-    background-color: #879BD5;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 14px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin: 0 5px;
-}
-
-button:hover {
-    background-color: #6a7fc1;
-}
-
-/* PDF 버튼 구분 */
-button:nth-child(2) {
-    background-color: #4caf50;
-}
-
-button:nth-child(2):hover {
-    background-color: #3b8b3b;
-}
-
-/* 반응형 */
-@media(max-width: 800px){
-    .flex {
-        flex-direction: column;
+    :root {
+        --primary: #879BD5;
+        --bg: #f1f3f6;
+        --card-bg: #ffffff;
+        --text-dark: #2f3542;
+        --text-gray: #747d8c;
+        --border: #dfe4ea;
+        --accent: #ebf0f7;
     }
-}
+
+    body {
+        font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+        background: var(--bg);
+        color: var(--text-dark);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.5;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    /* 상단 타이틀 영역 */
+    .page-header {
+        margin-bottom: 20px;
+        border-left: 5px solid var(--primary);
+        padding-left: 15px;
+    }
+    .page-header h2 {
+        margin: 0;
+        font-size: 22px;
+        color: var(--primary);
+    }
+
+    .flex-layout {
+        display: flex;
+        gap: 20px;
+        align-items: flex-start;
+    }
+
+    /* 왼쪽 영역 (환자정보 + 약 목록) */
+    .left-panel {
+        flex: 3;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* 오른쪽 영역 (금액 요약) */
+    .right-panel {
+        flex: 1.2;
+        position: sticky;
+        top: 20px;
+    }
+
+    .box {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        border: 1px solid var(--border);
+    }
+
+    .box-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--accent);
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /* 환자 정보 카드 */
+    .patient-header {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .patient-header .name-tag {
+        grid-column: span 2;
+        font-size: 20px;
+        font-weight: 800;
+        margin-bottom: 5px;
+    }
+    .info-row {
+        font-size: 14px;
+        color: var(--text-gray);
+    }
+    .info-row span {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-left: 5px;
+    }
+
+    /* 약품 리스트 테이블 */
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 10px;
+    }
+    th {
+        background: var(--accent);
+        color: var(--primary);
+        font-weight: 700;
+        padding: 12px 10px;
+        font-size: 13px;
+        text-align: left;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    td {
+        padding: 15px 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 14px;
+        vertical-align: middle;
+    }
+    .drug-name {
+        font-weight: 700;
+        color: #1e272e;
+        display: block;
+    }
+    .drug-desc {
+        font-size: 12px;
+        color: var(--text-gray);
+        display: block;
+        margin-top: 4px;
+    }
+    .guidance-tag {
+        display: inline-block;
+        background: #f1f2f6;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+        color: var(--primary);
+        font-size: 13px;
+    }
+
+    /* 금액 정보 */
+    .price-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+        font-size: 14px;
+    }
+    .price-row b {
+        font-size: 15px;
+    }
+    .total-price {
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 2px dashed var(--border);
+        color: #eb4d4b;
+    }
+    .total-price b {
+        font-size: 20px;
+    }
+
+    /* 버튼 섹션 */
+    .btn-group {
+        margin-top: 25px;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+    button {
+        padding: 12px 24px;
+        border-radius: 8px;
+        border: none;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+    .btn-complete { background: var(--primary); color: white; }
+    .btn-pdf { background: #697fc1; color: white; }
+    button:hover { opacity: 0.85}
+
+    @media (max-width: 850px) {
+        .flex-layout { flex-direction: column; }
+        .right-panel { position: static; width: 100%; }
+    }
 </style>
 
-<link rel="stylesheet" th:href="@{/css/common-base.css}">
-<!--pdf-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
-
 </head>
 
 <body>
-<div class="container">
+<div class="container" id="pdfArea">
+    <div class="page-header">
+        <h2>복약안내서 <small style="font-size: 12px; color: var(--text-gray); font-weight: normal;">| Medication Guide</small></h2>
+    </div>
 
-    <div class="flex">
-
-        <!-- 좌측 전체 -->
-        <div class="left">
-
-            <!-- 좌측 상단 환자 정보 -->
-            <div class="box patient-header">
-				<input type="hidden" id="prescriptionId" th:value="${prescriptionId}">
-
-                <div>
-                    <span th:text="${guide.patientName}"></span> 님
+    <div class="flex-layout">
+        <div class="left-panel">
+            <div class="box">
+                <input type="hidden" id="prescriptionId" th:value="${prescriptionId}">
+                <div class="patient-header">
+                    <div class="name-tag"><span th:text="${guide.patientName}">환자명</span> 님</div>
+                    <div class="info-row">생년월일/성별 <span><th:block th:text="${guide.birth}"></th:block> / <th:block th:text="${guide.gender}"></th:block></span></div>
+                    <div class="info-row">조제일자 <span>[[${guide.dispensedAt}]]</span></div>
+                    <div class="info-row">담당약사 <span>[[${guide.pharmacistName}]]</span></div>
+                    <div class="info-row">처방번호 <span>[[${guide.prescriptionId}]]</span></div>
                 </div>
-
-                <div>
-                    <span th:text="${guide.birth}"></span> /
-                    <span th:text="${guide.gender}"></span>
-                </div>
-
-                <hr/>
-
-                <div>
-                    조제일
-                    <span th:text="${guide.dispensedAt}"></span>
-                </div>
-
-                <div>
-                    조제약사
-                    <span th:text="${guide.pharmacistName}"></span>
-                </div>
-
-                <div>
-                    ID
-                    <span th:text="${guide.prescriptionId}"></span>
-                </div>
-
             </div>
 
-            <!-- 좌측 중앙 약품 리스트 -->
             <div class="box">
-
-                <div class="title">처방 약품 목록</div>
-
+                <div class="box-title">처방 약품 및 복용 방법</div>
                 <table>
                     <thead>
                         <tr>
-                            <th>약품명 / 설명</th>
-                            <th>복약안내</th>
-                            <th>투약량</th>
-                            <th>횟수</th>
-                            <th>일수</th>
+                            <th width="40%">약품명 / 설명</th>
+                            <th width="25%">복약안내</th>
+                            <th>1회분량</th>
+                            <th>일횟수</th>
+                            <th>총일수</th>
                         </tr>
                     </thead>
-
                     <tbody>
                         <tr th:each="i : ${guide.items}">
-
                             <td>
-                                <div th:text="${i.name}"></div>
-                                <small th:text="${i.description}"></small>
+                                <span class="drug-name" th:text="${i.name}">약품명</span>
+                                <span class="drug-desc" th:text="${i.description}">설명</span>
                             </td>
-
-                            <td th:text="${i.guidance}"></td>
-
-                            <td th:text="${i.dose}"></td>
-                            <td th:text="${i.frequency}"></td>
-                            <td th:text="${i.days}"></td>
+                            <td><span th:text="${i.guidance}">식후 30분</span></td>
+                            <td align="center"><b th:text="${i.dose}">1</b></td>
+                            <td align="center"><b th:text="${i.frequency}">3</b>회</td>
+                            <td align="center"><b th:text="${i.days}">3</b>일</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
         </div>
 
-        <!-- 우측 상단 금액 요약 -->
-        <div class="right">
-
+        <div class="right-panel">
             <div class="box">
-                <div class="title">금액 요약</div>
-
-                <div>총액
-                    <b th:text="${#numbers.formatDecimal(guide.totalAmount, 0, 0)}"></b> 원
+                <div class="box-title">수납 상세</div>
+                
+                <div class="price-row">총액 <span th:text="${#numbers.formatDecimal(guide.totalAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
+                <div class="price-row">과세 <span th:text="${#numbers.formatDecimal(guide.taxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
+                <div class="price-row">비과세 <span th:text="${#numbers.formatDecimal(guide.nonTaxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
+                <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+                <div class="price-row" style="font-size: 13px; color: var(--text-gray);">
+                    <span>보험: [[${guide.insuranceName}]]</span>
+                    <span>([[${100 - (guide.discountRate * 100)}]]%)</span>
                 </div>
-
-                <div>과세 총액
-                    <b th:text="${#numbers.formatDecimal(guide.taxAmount, 0, 0)}"></b> 원
-                </div>
-
-                <div>비과세 총액
-                    <b th:text="${#numbers.formatDecimal(guide.nonTaxAmount, 0, 0)}"></b> 원
-                </div>
-				
-				<div>보험명
-                    <b th:text="${guide.insuranceName}"></b>
-                </div>
-				
-				<div>보험율
-                    <b th:text="${100 - (guide.discountRate * 100)}"></b>%
-                </div>
-				
-                <div>보험부담금
-                    <b th:text="${#numbers.formatDecimal(guide.insurerAmount, 0, 0)}"></b> 원
-                </div>
-
-                <div>본인 부담금
-                    <b th:text="${#numbers.formatDecimal(guide.patientAmount, 0, 0)}"></b> 원
+                <div class="price-row">보험부담금 <span th:text="${#numbers.formatDecimal(guide.insurerAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
+                
+                <div class="price-row total-price">
+                    <b>본인 부담금</b>
+                    <b th:text="${#numbers.formatDecimal(guide.patientAmount, 0, 'COMMA', 0, 'POINT')} + '원'">0원</b>
                 </div>
             </div>
-
+            
+            <div class="btn-group">
+                <button class="btn-complete" onclick="completeDispense()">투약 완료</button>
+                <button class="btn-pdf" onclick="downloadPdf()">PDF 출력</button>
+            </div>
         </div>
     </div>
-	<div id="actionButtons" style="margin-top: 15px; text-align: center;">
-	    <button onclick="completeDispense()">투약 완료</button>
-	    <button onclick="downloadPdf()">복약지도 출력(PDF)</button>
-	</div>
-
 </div>
+
 <script>
-	// 투약
-	function completeDispense() {
-	
-	    const prescriptionId = document.getElementById("prescriptionId").value;
-	
-	    if (!prescriptionId) {
-	        alert("처방 ID를 찾을 수 없습니다.");
-	        return;
-	    }
-	
-	    fetch(`/pharm/dispense/complete/${prescriptionId}`, {
-	        method: "POST"
-	    })
-	    .then(res => {
-	        if (!res.ok) throw new Error("투약 처리 실패");
-	        return res.text();
-	    })
-	    .then(() => {
-	        alert("투약 완료되었습니다.");
-	        window.close();
-	        opener.location.reload();
-	    })
-	    .catch(err => alert(err.message));
-	}
-	
-	function downloadPdf() { 
-	    const element = document.body;
-	    const buttons = document.getElementById("actionButtons");
+    function completeDispense() {
+        const prescriptionId = document.getElementById("prescriptionId").value;
+        if (!prescriptionId) { alert("ID 오류"); return; }
 
-	    buttons.style.display = "none";
+        fetch(`/pharm/dispense/complete/${prescriptionId}`, { method: "POST" })
+        .then(res => {
+            if (!res.ok) throw new Error("실패");
+            alert("투약 처리가 완료되었습니다.");
+            window.close();
+            opener.location.reload();
+        })
+        .catch(err => alert(err.message));
+    }
 
-	    const opt = {
-	        filename: 'medication_guide.pdf',
-	        image: { type: 'jpeg', quality: 0.98 },
-	        html2canvas: { scale: 2 },
-	        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-	    };
+    function downloadPdf() {
+        const element = document.getElementById("pdfArea");
+        const buttons = document.querySelector(".btn-group");
+        buttons.style.visibility = "hidden"; // PDF 생성 시 버튼만 가리기
 
-	    html2pdf()
-	        .set(opt)
-	        .from(element)
-	        .save()
-	        .then(() => {
-	            buttons.style.display = "block";
-	        });
-	}
+        const opt = {
+            margin: 5,
+            filename: '복약지도서.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } // 가로가 넓은 레이아웃이라 landscape 추천
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            buttons.style.visibility = "visible";
+        });
+    }
 </script>
-
 </body>
 </html>
