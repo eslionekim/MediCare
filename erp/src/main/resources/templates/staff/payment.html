@@ -32,6 +32,11 @@
     .modal-header { padding:8px 12px; background:var(--ui-panel-title); color:#fff; font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
     .modal-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
     .modal-actions { display:flex; justify-content:flex-end; gap:6px; }
+    .fee-list { border:1px solid #cbd2e1; border-radius:4px; max-height:180px; overflow:auto; padding:0; margin:0; list-style:none; }
+    .fee-item { padding:6px 8px; cursor:pointer; border-bottom:1px solid #eef1f7; font-size:12px; display:flex; justify-content:space-between; gap:8px; }
+    .fee-item:last-child { border-bottom:none; }
+    .fee-item.selected { background:#eef2ff; }
+    .fee-meta { color:#666; font-size:11px; }
   </style>
   <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
@@ -160,7 +165,8 @@
             <div class="modal-body">
               <label>수가항목</label>
               <input type="text" id="claim-modal-search" placeholder="코드/항목명 검색">
-              <select id="claim-modal-fee"></select>
+              <input type="hidden" id="claim-modal-selected">
+              <ul id="claim-modal-fee-list" class="fee-list"></ul>
               <label>수량</label>
               <input type="number" id="claim-modal-qty" min="1" value="1">
               <div class="modal-actions">
@@ -296,7 +302,8 @@
   const modal = document.getElementById("claim-modal");
   const modalClose = document.getElementById("claim-modal-close");
   const modalAdd = document.getElementById("claim-modal-add");
-  const modalFee = document.getElementById("claim-modal-fee");
+  const modalFeeList = document.getElementById("claim-modal-fee-list");
+  const modalSelected = document.getElementById("claim-modal-selected");
   const modalQty = document.getElementById("claim-modal-qty");
   const modalSearch = document.getElementById("claim-modal-search");
   if (!addBtn || !tbody || !template) return;
@@ -327,8 +334,8 @@
     select.removeAttribute("id");
     select.style.display = "";
     select.name = "newFeeItemCode";
-    if (modalFee && modalFee.value) {
-      select.value = modalFee.value;
+    if (modalSelected && modalSelected.value) {
+      select.value = modalSelected.value;
     }
     row.appendChild(document.createElement("td")).appendChild(select);
     row.appendChild(document.createElement("td")).className = "new-name";
@@ -359,12 +366,34 @@
   }
 
   function openModal() {
-    if (!modal || !modalFee) {
+    if (!modal || !modalFeeList || !modalSelected) {
       addRow();
       return;
     }
-    modalFee.innerHTML = template.innerHTML;
-    modalFee.value = "";
+    modalSelected.value = "";
+    modalFeeList.innerHTML = "";
+    for (let i = 0; i < template.options.length; i++) {
+      const opt = template.options[i];
+      if (!opt.value) continue;
+      const item = document.createElement("li");
+      item.className = "fee-item";
+      item.dataset.code = opt.value;
+      item.dataset.name = opt.dataset.name || "";
+      item.dataset.price = opt.dataset.price || "0";
+      item.dataset.covered = opt.dataset.covered || "";
+      item.textContent = opt.textContent || opt.value;
+      const meta = document.createElement("span");
+      meta.className = "fee-meta";
+      meta.textContent = opt.dataset.category ? opt.dataset.category : "";
+      item.appendChild(meta);
+      item.addEventListener("click", function() {
+        const items = modalFeeList.querySelectorAll(".fee-item");
+        items.forEach(x => x.classList.remove("selected"));
+        item.classList.add("selected");
+        modalSelected.value = item.dataset.code;
+      });
+      modalFeeList.appendChild(item);
+    }
     if (modalQty) modalQty.value = "1";
     if (modalSearch) modalSearch.value = "";
     modal.style.display = "flex";
@@ -379,23 +408,23 @@
   if (modal) modal.addEventListener("click", function(e) { if (e.target === modal) closeModal(); });
   if (modalAdd) {
     modalAdd.addEventListener("click", function() {
+      if (modalSelected && !modalSelected.value) {
+        alert("수가항목을 선택하세요.");
+        return;
+      }
       addRow();
       closeModal();
     });
   }
 
-  if (modalSearch && modalFee) {
+  if (modalSearch && modalFeeList) {
     modalSearch.addEventListener("input", function() {
       const keyword = (modalSearch.value || "").toLowerCase();
-      const options = modalFee.options;
-      for (let i = 0; i < options.length; i++) {
-        const opt = options[i];
-        const text = (opt.textContent || "").toLowerCase();
-        opt.hidden = keyword !== "" && !text.includes(keyword);
-      }
-      if (modalFee.selectedOptions.length && modalFee.selectedOptions[0].hidden) {
-        modalFee.value = "";
-      }
+      const items = modalFeeList.querySelectorAll(".fee-item");
+      items.forEach(item => {
+        const text = (item.textContent || "").toLowerCase();
+        item.style.display = keyword !== "" && !text.includes(keyword) ? "none" : "";
+      });
     });
   }
 })();
