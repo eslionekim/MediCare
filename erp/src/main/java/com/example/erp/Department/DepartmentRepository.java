@@ -18,4 +18,8 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     // 인사->직원 등록-> 진료과 이름으로 진료과 찾기
     @Query("SELECT d FROM Department d WHERE d.name = :name")
     Optional<Department> findByName(@Param("name") String name);
+    
+    //인사->직원등록->진료과 드롭다운
+    @Query("SELECT DISTINCT d.name FROM Department d ORDER BY d.name")
+    List<String> findAllDepartmentNames();
 }
