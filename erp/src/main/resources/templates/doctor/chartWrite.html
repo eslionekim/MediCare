@@ -527,7 +527,7 @@
 		
 		<!-- 4. 상병코드 폼 -->
 		<div class="box diseases" style="max-height:100px; overflow-y:auto;">
-			<p class="title">상병코드</p>
+			<p class="title">진단코드</p>
 			<button type="button" onclick="addDiseasesRow()">+</button>
 			<table id="diseases">
 			            <thead>
@@ -805,7 +805,7 @@
 			});
 
 			if (!hasDisease) {
-			    alert("질병 정보를 최소 1개 이상 입력하세요.");
+			    alert("진단 정보를 최소 1개 이상 입력하세요.");
 			    return false;
 			}
 
@@ -863,11 +863,6 @@
 			    }
 
 			    hasValidDrug = true;
-			}
-
-			if (!hasValidDrug) {
-			    alert("약품 처방을 최소 1개 이상 입력하세요.");
-			    return false;
 			}
 
 		    return true;
