@@ -25,8 +25,8 @@ public class WorkScheduleStatusBatch {
     private final VacationRepository vacationRepository;
     private final Status_codeRepository statusCodeRepository;
 
-    //@Scheduled(cron = "0 10 0 * * *") // 매일 00:10
-    @Scheduled(cron = "*/10 * * * * *") // 10초마다 테스트용
+    @Scheduled(cron = "0 10 0 * * *") // 매일 00:10
+    //@Scheduled(cron = "*/10 * * * * *") // 10초마다 테스트용
 	public void updateScheduleStatus() {    	
 	    LocalDate targetDate = LocalDate.now().minusDays(1);
 	

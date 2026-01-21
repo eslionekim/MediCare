@@ -320,6 +320,7 @@
 			        <input type="hidden" id="issueRequestId">
 			        <button id="approveBtn">승인</button>
 			        <button id="rejectBtn">반려</button>
+					<button id="adminApproveBtn">관리자 승인 요청</button>
 			    </div>
 
 			    <!-- ✅ 승인 상태 전용 출고 영역 (추가된 부분) -->
@@ -377,7 +378,9 @@
 	
 	    const requestActionArea = document.getElementById("requestActionArea");
 	    const outboundArea = document.getElementById("outboundArea");
-	
+		const adminApproveBtn = document.getElementById("adminApproveBtn");
+
+		
 	    approveBtn.addEventListener("click", () => {
 	        updateStatus("IR_APPROVED");
 	    });
@@ -385,6 +388,11 @@
 	    rejectBtn.addEventListener("click", () => {
 	        updateStatus("IR_REJECTED");
 	    });
+	
+		adminApproveBtn.addEventListener("click", () => {
+		    updateStatus("IR_WAIT_APPROVAL");
+		});
+
 	
 	    document.querySelectorAll(".detail-btn").forEach(btn => {
 	        btn.addEventListener("click", () => {

@@ -190,5 +190,14 @@ public class Issue_requestService {
 
         issue_request_itemRepository.save(itemReq);
     }
+    
+    @Transactional
+    public void waitApproval(Long issueRequestId) {
+        Issue_request ir = issue_requestRepository.findById(issueRequestId)
+                .orElseThrow(() -> new RuntimeException("불출 요청 없음"));
+
+        ir.setStatus_code("IR_WAIT_APPROVAL");
+    }
+
 
 }

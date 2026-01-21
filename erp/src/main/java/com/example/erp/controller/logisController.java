@@ -133,6 +133,9 @@ public class logisController {
 	    else if ("IR_REJECTED".equals(statusCode)) {
 	        issue_requestService.reject(issueRequestId);
 	    } 
+	    else if ("IR_WAIT_APPROVAL".equals(statusCode)) {
+	        issue_requestService.waitApproval(issueRequestId); 
+	    }
 	    else {
 	        return ResponseEntity.badRequest().build();
 	    }
