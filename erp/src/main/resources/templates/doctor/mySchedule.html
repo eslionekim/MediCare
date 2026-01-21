@@ -364,78 +364,137 @@
 	  
 
 	  /* ───────── 요일 헤더 (Sun Mon Tue ...) ───────── */
+	  /* ───────── FullCalendar 디자인 커스텀 ───────── */
+
+	  /* 1. 달력 전체 테두리 제거 및 그림자 */
+	  #calendar {
+	      background: #fff;
+	      padding: 15px;
+	      border-radius: 12px;
+	      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+	      border: 1px solid #e2e8f0;
+		      overflow-y: auto !important;
+	  }
+
+	  /* 2. 요일 헤더 (Sun, Mon...) 배경색 변경 ⭐ */
 	  .fc-col-header-cell {
-	      background:#C9D9FF;   /* 더 진한 파스텔 톤 */
-	      color:#333;
-	      font-weight:400;
-	      border:1px solid #D8D4CC;
-	  }
-	  /* < 2026년 1월 > 버튼 */
-	  .fc-toolbar-chunk:first-child button,
-	  .fc-toolbar-chunk:last-child button {
-	      background:#FFFFFF;
-	      border:1px solid #E2E2E2;
-	      border-radius:8px;
-	      font-size:16px;
-	      color:#555;
-	      padding:2px 8px;
-	      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+	      background-color: #879BD5 !important; /* 요청하신 색상 */
+	      padding: 10px 0 !important;
 	  }
 
-	  .fc-toolbar-chunk:first-child button:hover,
-	  .fc-toolbar-chunk:last-child button:hover {
-	      background:#F3F2ED;
+	  .fc-col-header-cell-cushion {
+	      color: #ffffff !important; /* 글자색 흰색 */
+	      font-weight: 600 !important;
+	      text-decoration: none !important;
 	  }
 
-	  /* today 버튼 없어지면 여백 맞추기 */
-	  .fc-toolbar-chunk:nth-child(2){
-	      text-align:center;
-	      flex-grow:1;
+	  /* 3. 상단 툴바 (2026년 1월) 스타일 */
+	  .fc-toolbar-title {
+	      font-size: 1.2rem !important;
+	      font-weight: 700 !important;
+	      color: #333;
 	  }
 
-	  /* 날짜 칸 : 카드 느낌 */
-	  .fc-daygrid-day {
-	      background:#FFFFFF;
-	      border-radius:12px;
-	      border:1px solid #F0EEE8;
-	      transition:0.15s;
+	  /* 4. 버튼 스타일 커스텀 */
+	  .fc-button-primary {
+	      background-color: #ffffff !important;
+	      border: 1px solid #dcdde1 !important;
+	      color: #555 !important;
+	      text-transform: capitalize;
+	      font-weight: 600 !important;
+	      box-shadow: none !important;
 	  }
 
-	  /* ───────── 칸 높이 줄이기 (달력 압축) ───────── */
-	  .fc-daygrid-day-frame {
-	      min-height:3px;    /* 더 줄이고 싶으면 55~60 추천 */
-	  }
-	  
-	  /* 오늘 날짜 강조 */
-	  .fc-day-today {
-	      background:rgb(238, 242, 255) !important;
-	      border:1px solid #C9D9FF !important;
-		  border-radius:0
+	  .fc-button-primary:hover {
+	      background-color: #f5f6fa !important;
+	      border-color: #879BD5 !important;
 	  }
 
-	  /* 날짜 숫자 */
+	  /* 5. 날짜 칸(Day) 스타일 */
 	  .fc-daygrid-day-number {
-	      color:#555;
-	      font-weight:600;
+	      padding: 8px !important;
+	      color: #444 !important;
+	      font-weight: 500;
+	      text-decoration: none !important;
 	  }
 
-	  /* 이벤트 전체 박스 (파스텔 칩 느낌) */
+	  .fc-day-today {
+	      background: #f0f4ff !important; /* 오늘 날짜 연한 강조 */
+	  }
+
+	  /* 6. 이벤트(스케줄) 칩 스타일 */
 	  .fc-daygrid-event {
-	      border-radius:10px;
-	      background:#C9D9FF;  /* 파스텔 블루 */
-	      color:#2F2F2F;
-	      padding:3px 4px;
-	      white-space:pre-line;
-	      font-size:11px;
-	      line-height:1.25;
-	      border:1px solid #C9D9FF;
-		  border-radius:0
+	      border: none !important;
+	      padding: 2px 6px !important;
+	      margin: 1px 4px !important;
+	      border-radius: 4px !important;
+	      background-color: #e8ecf8 !important; /* 연한 파스텔 블루 */
+	      color: #4a69bd !important; /* 글자는 진한 블루 */
+	      font-size: 11px !important;
+	      font-weight: 500;
 	  }
 
-	  /* 이벤트 텍스트 줄바꿈 보장 */
-	  .fc-daygrid-event .fc-event-title {
-	      white-space:pre-line !important;
+	  /* 7. 달력 내부 선 투명도 조절 */
+	  .fc-theme-standard td, .fc-theme-standard th {
+	      border: 1px solid #ebeef5 !important;
 	  }
+
+	  /* 8. 일요일/토요일 색상 강조 (선택 사항) */
+	  .fc-day-sun .fc-daygrid-day-number { color: #eb4d4b !important; } /* 일요일 빨간색 */
+	  .fc-day-sat .fc-daygrid-day-number { color: #4834d4 !important; } /* 토요일 파란색 */
+
+	  /* 9. 달력 내부 스크롤 활성화 ⭐ */
+	  .fc-scroller-harness {
+	      overflow: hidden !important;
+	  }
+
+	  .fc-scroller {
+	      /* 내부 데이터가 많아질 때만 세로 스크롤 생성 */
+	      overflow-y: auto !important; 
+	      overflow-x: hidden !important;
+	  }
+
+	  /* 스크롤바를 조금 더 얇고 예쁘게 (선택사항) */
+	  .fc-scroller::-webkit-scrollbar {
+	      width: 5px;
+	  }
+	  .fc-scroller::-webkit-scrollbar-thumb {
+	      background: #d1d8e0;
+	      border-radius: 10px;
+	  }
+	  /* 6. 데이터 박스: 너비 꽉 채우고 줄바꿈 허용 ⭐ */
+	  .fc-daygrid-event-harness {
+	      display: block !important;
+	      width: 100% !important;
+	      clear: both !important;
+	  }
+
+	  .fc-daygrid-event {
+	      display: block !important;       /* 내부 요소를 아래로 흐르게 함 */
+	      background-color: #ffffff !important; 
+	      border: 1px solid #e2e8f0 !important;
+	      padding: 4px 8px !important;     /* 안쪽 여백을 조금 더 줌 */
+	      margin: 3px 2px !important;      /* 데이터와 데이터 사이의 수직 간격 */
+	      border-radius: 4px !important;
+	      white-space: normal !important;  /* ⭐ 핵심: 글자가 길면 다음 줄로 넘김 */
+	      word-break: break-all !important; /* 단어가 길어도 칸에 맞춰 자름 */
+	      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+	  }
+
+	  /* 데이터 내부 텍스트 스타일 */
+	  .fc-event-main, .fc-event-title {
+	      color: #000000 !important;       /* 글씨 검정색 */
+	      font-size: 11.5px !important;
+	      font-weight: 500;
+	      line-height: 1.4 !important;    /* 줄 간격을 주어 가독성 높임 */
+	      display: block !important;
+	  }
+
+	  /* 7. 날짜 칸 높이 최적화 (데이터가 많아질 것에 대비) */
+	  .fc-daygrid-day-frame {
+	      min-height: 100px !important;    /* 칸이 너무 납작해지지 않게 최소 높이 지정 */
+	  }
+
 
 	  /* 드롭다운 옆 버튼 */
 	  	  .btn-submit {
@@ -603,7 +662,7 @@
 		    const calendar = new FullCalendar.Calendar(calendarEl, {
 		        initialView: 'dayGridMonth',
 		        locale: 'en',
-		        height: 'auto',
+		        contentHeight: 450,
 		        headerToolbar: {
 					left: 'prev',
 				    center: 'title',

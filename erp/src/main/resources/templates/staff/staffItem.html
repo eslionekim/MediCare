@@ -665,8 +665,8 @@
 		                .then(res => res.json())
 		                .then(data => {
 		                    renderLotList(data);
-							purchaseBtn.style.display = (data && data.length > 0) ? "inline-block" : "none";
-		                    stockBtn.style.display = (data && data.length > 0) ? "inline-block" : "none";
+							purchaseBtn.style.display = "inline-block";
+							stockBtn.style.display = "inline-block";
 		                })
 		                .catch(err => { console.error(err); alert("LOT 데이터를 불러오지 못했습니다."); });
 		        });
