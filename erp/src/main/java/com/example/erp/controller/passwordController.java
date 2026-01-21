@@ -12,13 +12,12 @@ import lombok.RequiredArgsConstructor;
 public class passwordController {
 
 	@Autowired
-    private BCryptPasswordEncoder encoder;
+	private BCryptPasswordEncoder encoder;
 
-
-    @GetMapping("/test/bcrypt")
+	@GetMapping("/test/bcrypt")
 	@ResponseBody
 	public String testBcrypt() {
-	    System.out.println(encoder.encode("ssss"));
-	    return "check console";
+		System.out.println(encoder.encode("1234"));
+		return "check console";
 	}
 }

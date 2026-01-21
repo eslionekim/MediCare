@@ -78,11 +78,12 @@
                             <td th:text="${row.quantity}">-</td>
                             <td th:text="${row.safetyStock}">-</td>
                             <td th:text="${row.warehouseName}">-</td>
+                            <td th:text="${row.locationZone}">-</td>
                             <td><span class="pill" th:text="${row.status}">정상</span></td>
                             <td th:text="${row.lastMove}">-</td>
                         </tr>
                         <tr th:if="${inventoryRows == null or #lists.isEmpty(inventoryRows)}">
-                            <td colspan="6">검색 결과 없음</td>
+                            <td colspan="7">검색 결과 없음</td>
                         </tr>
                         </tbody>
                     </table>
