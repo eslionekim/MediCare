@@ -18,9 +18,9 @@ public class PaymentController {
     @GetMapping
     public String page(@RequestParam(value = "visitId", required = false) Long visitId, Model model) {
 
-        var todayVisits = paymentService.getTodayVisits();
-        model.addAttribute("todayVisits", todayVisits);
-        model.addAttribute("paymentStatusByVisitId", paymentService.getPaymentStatusByVisitIds(todayVisits));
+        var visits = paymentService.getAllVisits();
+        model.addAttribute("todayVisits", visits);
+        model.addAttribute("paymentStatusByVisitId", paymentService.getPaymentStatusByVisitIds(visits));
 
         PaymentPageModel m = paymentService.loadPaymentPage(visitId);
 
@@ -37,6 +37,7 @@ public class PaymentController {
         model.addAttribute("claimReady", m.claimReady());
         model.addAttribute("itemCount", m.itemCount());
         model.addAttribute("claimItems", m.claimItems());
+        model.addAttribute("feeItems", paymentService.getFeeItemOptions());
 
         return "staff/payment";
     }
@@ -52,6 +53,18 @@ public class PaymentController {
     @PostMapping("/refund")
     public String refund(@RequestParam("visitId") Long visitId) {
         paymentService.refund(visitId);
+        return "redirect:/payments?visitId=" + visitId;
+    }
+
+    @PostMapping("/claim-items")
+    public String updateClaimItems(
+            @RequestParam("visitId") Long visitId,
+            @RequestParam(value = "itemId", required = false) java.util.List<Long> itemIds,
+            @RequestParam(value = "quantity", required = false) java.util.List<Integer> quantities,
+            @RequestParam(value = "deleteIds", required = false) java.util.List<Long> deleteIds,
+            @RequestParam(value = "newFeeItemCode", required = false) java.util.List<String> newFeeItemCodes,
+            @RequestParam(value = "newQuantity", required = false) java.util.List<Integer> newQuantities) {
+        paymentService.updateClaimItems(visitId, itemIds, quantities, deleteIds, newFeeItemCodes, newQuantities);
         return "redirect:/payments?visitId=" + visitId;
     }
 }

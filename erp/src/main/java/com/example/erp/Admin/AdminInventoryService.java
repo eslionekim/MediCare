@@ -176,7 +176,7 @@ public class AdminInventoryService {
 
     private List<Option> queryWarehouseOptions() {
         Query query = entityManager.createNativeQuery("""
-                select name, name
+                select distinct name, name
                 from warehouse
                 where is_active = 1
                   and name in ('\uC6D0\uBB34\uCC3D\uACE0','\uBB3C\uB958\uCC3D\uACE0','\uC57D\uC81C\uCC3D\uACE0')

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,8 @@ import com.example.erp.Claim.Claim;
 import com.example.erp.Claim.ClaimRepository;
 import com.example.erp.Claim_item.Claim_item;
 import com.example.erp.Claim_item.Claim_itemRepository;
+import com.example.erp.Fee_item.Fee_item;
+import com.example.erp.Fee_item.Fee_itemRepository;
 import com.example.erp.Insurance_code.Insurance_code;
 import com.example.erp.Payment_method.Payment_method;
 import com.example.erp.Payment_method.Payment_methodRepository;
@@ -35,12 +38,21 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final Payment_methodRepository paymentMethodRepository;
     private final Status_codeRepository statusCodeRepository;
+    private final Fee_itemRepository feeItemRepository;
 
     public List<Visit> getTodayVisits() {
         LocalDate today = LocalDate.now();
         LocalDateTime start = today.atStartOfDay();
         LocalDateTime end = today.plusDays(1).atStartOfDay().minusNanos(1);
         return visitRepository.findTodaysVisits(start, end);
+    }
+
+    public List<Visit> getAllVisits() {
+        return visitRepository.findAllVisits();
+    }
+
+    public List<Fee_item> getFeeItemOptions() {
+        return feeItemRepository.findAll();
     }
 
     public Map<Long, String> getPaymentStatusByVisitIds(List<Visit> visits) {
@@ -82,7 +94,10 @@ public class PaymentService {
 
         List<Claim> claims = claimRepository.findAllByVisitId(visitId);
         Claim claim = claims.isEmpty() ? null : claims.get(0);
-        Payment payment = paymentRepository.findByVisitId(visitId).orElse(null);
+        Payment payment = paymentRepository.findLatestByVisitId(visitId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
 
         int itemsTotal = 0;
         int itemsDiscount = 0;
@@ -169,8 +184,102 @@ public class PaymentService {
     }
 
     @Transactional
+    public void updateClaimItems(Long visitId,
+            List<Long> itemIds,
+            List<Integer> quantities,
+            List<Long> deleteIds,
+            List<String> newFeeItemCodes,
+            List<Integer> newQuantities) {
+        if (visitId == null) {
+            return;
+        }
+
+        Payment existing = paymentRepository.findLatestByVisitId(visitId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
+        if (existing != null
+                && existing.getStatus_code() != null
+                && "PAY_COMPLETED".equalsIgnoreCase(existing.getStatus_code().getStatus_code())) {
+            throw new IllegalStateException("payment already completed");
+        }
+
+        Visit visit = visitRepository.findDetail(visitId);
+        if (visit == null) {
+            throw new IllegalArgumentException("visit not found");
+        }
+
+        List<Claim> claims = claimRepository.findAllByVisitId(visitId);
+        Claim targetClaim = claims.isEmpty() ? null : claims.get(0);
+        if (targetClaim == null) {
+            Claim newClaim = new Claim();
+            newClaim.setVisit(visit);
+            newClaim.setCreated_at(LocalDateTime.now());
+            targetClaim = claimRepository.save(newClaim);
+        }
+
+        if (itemIds != null && quantities != null && !itemIds.isEmpty()) {
+            Map<Long, Claim_item> existingItems = new HashMap<>();
+            for (Claim_item ci : claimItemRepository.findAllById(itemIds)) {
+                if (ci.getClaim_item_id() != null) {
+                    existingItems.put(ci.getClaim_item_id(), ci);
+                }
+            }
+            for (int i = 0; i < itemIds.size(); i++) {
+                Long id = itemIds.get(i);
+                Claim_item ci = existingItems.get(id);
+                if (ci == null) {
+                    continue;
+                }
+                if (deleteIds != null && deleteIds.contains(id)) {
+                    claimItemRepository.delete(ci);
+                    continue;
+                }
+                int qty = quantities.size() > i && quantities.get(i) != null ? quantities.get(i) : 0;
+                if (qty <= 0) {
+                    qty = 1;
+                }
+                ci.setQuantity(qty);
+                if (ci.getFee_item() != null) {
+                    ci.setUnit_price(ci.getFee_item().getBase_price());
+                }
+            }
+        }
+
+        if (newFeeItemCodes != null && newQuantities != null) {
+            int count = Math.min(newFeeItemCodes.size(), newQuantities.size());
+            for (int i = 0; i < count; i++) {
+                String code = newFeeItemCodes.get(i);
+                Integer qtyValue = newQuantities.get(i);
+                if (code == null || code.isBlank()) {
+                    continue;
+                }
+                Fee_item feeItem = feeItemRepository.findById(code).orElse(null);
+                if (feeItem == null) {
+                    continue;
+                }
+                int qty = qtyValue != null ? qtyValue : 0;
+                if (qty <= 0) {
+                    qty = 1;
+                }
+                Claim_item newItem = new Claim_item();
+                newItem.setClaim(targetClaim);
+                newItem.setFee_item(feeItem);
+                newItem.setUnit_price(feeItem.getBase_price());
+                newItem.setQuantity(qty);
+                newItem.setDiscount(0);
+                newItem.setTotal(0);
+                claimItemRepository.save(newItem);
+            }
+        }
+    }
+
+    @Transactional
     public void pay(Long visitId, String paymentMethodCode) {
-        Payment existing = paymentRepository.findByVisitId(visitId).orElse(null);
+        Payment existing = paymentRepository.findLatestByVisitId(visitId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
+                .orElse(null);
         if (existing != null
                 && existing.getStatus_code() != null
                 && !"PAY_REFUND".equalsIgnoreCase(existing.getStatus_code().getStatus_code())) {
@@ -203,7 +312,9 @@ public class PaymentService {
 
     @Transactional
     public void refund(Long visitId) {
-        Payment payment = paymentRepository.findByVisitId(visitId)
+        Payment payment = paymentRepository.findLatestByVisitId(visitId, PageRequest.of(0, 1))
+                .stream()
+                .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("payment not found"));
         if (payment.getStatus_code() == null
                 || !"PAY_COMPLETED".equalsIgnoreCase(payment.getStatus_code().getStatus_code())) {
