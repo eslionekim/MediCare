@@ -340,9 +340,15 @@
 				</div>
 		</div>
 		<div class="lot">
-		    <div class="lotList" style="display: none;">
-		        <button id="stockInBtn">입고등록</button>
+		    <div class="lotList">
+				<div style="width:90%; margin:5px auto; display:flex; justify-content:center; gap:5px;">
+					<button id="stockInBtn" style="display:none;">입고등록</button>
+				    <input type="text" id="lotSearchInput" placeholder="로트코드 검색">
+					<button type="button" id="lotSearchBtn">검색</button>
+				</div>
+				<div class="section-title" style="width:90%; margin:5px auto 0;">입고 목록</div>
 
+				<div class="item-scroll">
 		        <table id="lotTable" border="1">
 		            <thead>
 
@@ -360,6 +366,7 @@
 		            </thead>
 		            <tbody id="lotTableBody"></tbody>
 		        </table>
+				</div>
 		    </div>
 		</div>
 
@@ -498,360 +505,239 @@
 	</div>
 	</div>
 	<script>
-	document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-	    const lotListDiv = document.querySelector(".lotList");
-	    const lotTableBody = document.getElementById("lotTableBody");
-		
-	    const stockBtn = document.getElementById("stockInBtn");
-		const discardBtn = document.getElementById("discardBtn");
-		const adjustBtn = document.getElementById("adjustBtn");
+    const lotListDiv = document.querySelector(".lotList");
+    const lotTableBody = document.getElementById("lotTableBody");
 
-	    const stockForm = document.getElementById("stockInForm");
-		const discardForm = document.getElementById("discardForm");
-		const adjustForm = document.getElementById("adjustForm");
-		
-		const newItemForm = document.getElementById("newItemForm");
-		const purchaseRequestBtn = document.getElementById("purchaseRequestBtn");
-		const purchaseForm = document.getElementById("purchaseForm");
-		
-		let selectedStockId = null; // 폐기,수량조절
-		let selectedItemCode = null;
+    const stockBtn = document.getElementById("stockInBtn");
+    stockBtn.style.display = "none"; // 초기엔 숨김
 
-		
-		let unitPrice = 0; //단가
-		
-		const qtyInput = document.querySelector('input[name="quantity"]'); //수랭
-		const totalPriceInput = document.getElementById("totalPrice"); //전체 금액
+    const stockForm = document.getElementById("stockInForm");
+    const discardForm = document.getElementById("discardForm");
+    const adjustForm = document.getElementById("adjustForm");
 
-		qtyInput.addEventListener("input", () => { //총액계산
-		    const qty = parseInt(qtyInput.value || 0);
-		    const total = unitPrice * qty;
+    const newItemForm = document.getElementById("newItemForm");
+    const purchaseRequestBtn = document.getElementById("purchaseRequestBtn");
+    const purchaseForm = document.getElementById("purchaseForm");
 
-		    totalPriceInput.value = total.toLocaleString(); // 보기 좋게
-		});
+    let selectedStockId = null; 
+    let selectedItemCode = null;
+    let unitPrice = 0; 
 
-		//신규등록요청 폼
-		purchaseRequestBtn.addEventListener("click", (e) => {
-		    e.preventDefault(); // 혹시 모를 submit 방지
-		    purchaseForm.style.display = "block";
-		});
+    const qtyInput = document.querySelector('input[name="quantity"]');
+    const totalPriceInput = document.getElementById("totalPrice");
+	
+	const lotSearchInput = document.getElementById("lotSearchInput"); //로트코드 검색창
+	const lotSearchBtn = document.getElementById("lotSearchBtn"); //검색버튼
 
+    qtyInput.addEventListener("input", () => {
+        const qty = parseInt(qtyInput.value || 0);
+        totalPriceInput.value = (unitPrice * qty).toLocaleString();
+    });
 
-		// location 불러오기
-	    fetch("/logis/warehouse/locations")
-	        .then(res => res.json())
-	        .then(data => {
-	            const locationSelect = document.getElementById("locationSelect");
-	            locationSelect.innerHTML = '<option value="">선택</option>';
-	            data.forEach(loc => {
-	                locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
-	            });
-	        });
+    purchaseRequestBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        purchaseForm.style.display = "block";
+    });
 
-	    // location 선택 시 zone 불러오기
-	    document.getElementById("locationSelect").addEventListener("change", function () {
-	        const location = this.value;
-	        const zoneSelect = document.getElementById("zoneSelect");
-	        zoneSelect.innerHTML = '<option value="">선택</option>';
+    // LOT 렌더 함수
+    function renderLotList(data) {
+        lotTableBody.innerHTML = "";
+        if (!data || data.length === 0) {
+            lotTableBody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align:center; height:200px;">재고가 없습니다.</td>
+                </tr>
+            `;
+            stockBtn.style.display = "none"; // LOT 없으면 입고 버튼 숨김
+        } else {
+            data.forEach(lot => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${lot.lot_code}</td>
+                    <td>${lot.created_at ?? "-"}</td>
+                    <td>${lot.location}</td>
+                    <td>${lot.expiry_date ?? "-"}</td>
+                    <td>${lot.outbound_deadline ?? "-"}</td>
+                    <td>${lot.quantity}</td>
+                    <td>${lot.status}</td>
+                    <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+                    <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+                `;
+                lotTableBody.appendChild(tr);
+            });
+        }
+        lotListDiv.style.display = "block";
+    }
 
-	        if (!location) return;
+    // 초기 전체 LOT
+    fetch("/logis/lots")
+        .then(res => res.json())
+        .then(data => renderLotList(data))
+        .catch(err => { console.error(err); alert("전체 LOT 데이터를 불러오지 못했습니다."); });
 
-	        fetch(`/logis/warehouse/zones?location=${location}`)
-	            .then(res => res.json())
-	            .then(data => {
-	                data.forEach(zone => {
-	                    zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`;
-	                });
-	            });
-	    });
+    // Location & Zone
+    fetch("/logis/warehouse/locations")
+        .then(res => res.json())
+        .then(data => {
+            const locationSelect = document.getElementById("locationSelect");
+            locationSelect.innerHTML = '<option value="">선택</option>';
+            data.forEach(loc => locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`);
+        });
 
-	    
+    document.getElementById("locationSelect").addEventListener("change", function () {
+        const location = this.value;
+        const zoneSelect = document.getElementById("zoneSelect");
+        zoneSelect.innerHTML = '<option value="">선택</option>';
+        if (!location) return;
+        fetch(`/logis/warehouse/zones?location=${location}`)
+            .then(res => res.json())
+            .then(data => data.forEach(zone => zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`));
+    });
 
-	    stockBtn.addEventListener("click", () => {
-	        stockForm.style.display = "block";
-			qtyInput.value = "";
-			totalPriceInput.value = "0";
-	    });
-		
-		// 이벤트 위임
-		lotTableBody.addEventListener("click", (e) => {
-		    if (e.target.classList.contains("discardBtn")) {
-				selectedStockId = e.target.dataset.stockId;
-		        discardForm.style.display = "block";
-		    }
-		    if (e.target.classList.contains("adjustBtn")) {
-				selectedStockId = e.target.dataset.stockId;
-		        adjustForm.style.display = "block";
-		    }
-		});
+    // 이벤트 위임: 폐기, 수량조정
+    lotTableBody.addEventListener("click", (e) => {
+        if (e.target.classList.contains("discardBtn")) {
+            selectedStockId = e.target.dataset.stockId;
+            discardForm.style.display = "block";
+        }
+        if (e.target.classList.contains("adjustBtn")) {
+            selectedStockId = e.target.dataset.stockId;
+            adjustForm.style.display = "block";
+        }
+    });
 
-		
-	    // 닫기 버튼
-	    document.querySelectorAll(".closeBtn").forEach(btn => {
-	        btn.addEventListener("click", (e) => {
-	            e.target.closest(".popup-form").style.display = "none";
-	        });
-	    });
+    // 닫기 버튼
+    document.querySelectorAll(".closeBtn").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.target.closest(".popup-form").style.display = "none";
+        });
+    });
 
-		//신규등록요청폼
-		newItemForm.addEventListener("submit", (e) => {
-		    e.preventDefault(); // 기본 submit 막기
+    // 신규 등록 요청
+    newItemForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const formData = new FormData(newItemForm);
+        fetch("/logis/item/new", { method: "POST", body: formData })
+            .then(res => { if(!res.ok) throw new Error("요청 실패"); return res.text(); })
+            .then(msg => { alert(msg); purchaseForm.style.display = "none"; newItemForm.reset(); })
+            .catch(err => { console.error(err); alert("신규 등록 요청 중 오류가 발생했습니다."); });
+    });
 
-		    const formData = new FormData(newItemForm);
+    // 상세보기 클릭
+    document.querySelectorAll(".show-lot-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const itemCode = btn.dataset.itemCode;
+            selectedItemCode = itemCode;
+            document.getElementById("stockInItemCode").value = itemCode;
 
-		    fetch("/logis/item/new", {
-		        method: "POST",
-		        body: formData
-		    })
-		    .then(res => {
-		        if (!res.ok) throw new Error("요청 실패");
-		        return res.text();
-		    })
-		    .then(msg => {
-		        alert(msg); // "신규 등록 요청 완료"
-		        purchaseForm.style.display = "none";
-		        newItemForm.reset();
-		    })
-		    .catch(err => {
-		        console.error(err);
-		        alert("신규 등록 요청 중 오류가 발생했습니다.");
-		    });
-		});
-	    
-		//상세보기 클릭시 로트 리스트
-	    document.querySelectorAll(".show-lot-btn").forEach(btn => {
-	        btn.addEventListener("click", () => {
-	            const itemCode = btn.dataset.itemCode;
-				selectedItemCode = itemCode;
-				document.getElementById("stockInItemCode").value = itemCode;
-				
-				fetch(`/logis/item/${itemCode}/price`) //입고등록->단가 조회
-				    .then(res => res.json())
-				    .then(price => {
-						console.log(price);
-						unitPrice = Number(price); // ⭐ 중요
-						totalPriceInput.value = "0";
-				    })
-					.catch(err => {
-					        console.error(err);
-					        unitPrice = 0;
-				});
+            // 단가 조회
+            fetch(`/logis/item/${itemCode}/price`)
+                .then(res => res.json())
+                .then(price => { unitPrice = Number(price); totalPriceInput.value = "0"; })
+                .catch(err => { console.error(err); unitPrice = 0; });
 
-	            fetch(`/logis/item/${itemCode}/lots`)
+            // LOT 조회
+            fetch(`/logis/item/${itemCode}/lots`)
+                .then(res => res.json())
+                .then(data => {
+                    renderLotList(data);
+                    stockBtn.style.display = (data && data.length > 0) ? "inline-block" : "none";
+                })
+                .catch(err => { console.error(err); alert("LOT 데이터를 불러오지 못했습니다."); });
+        });
+    });
+
+	// 입고등록 버튼 클릭 시 폼 띄우기
+	stockBtn.addEventListener("click", () => {
+	    if(!selectedItemCode) return alert("항목을 먼저 선택하세요.");
+	    stockForm.style.display = "block";
+	});
+
+	
+    // 입고 등록
+	document.getElementById("stockInFormElement").addEventListener("submit", function(e) {
+	    e.preventDefault();
+	    const formData = new FormData(this); // now 'this' is the form element
+	    fetch("/logis/stock/in", { method: "POST", body: formData })
+	        .then(res => { if(!res.ok) throw new Error("입고 실패"); return res.text(); })
+	        .then(msg => {
+	            alert(msg);
+	            this.reset();
+	            stockForm.style.display = "none";
+	            if (selectedItemCode) fetch(`/logis/item/${selectedItemCode}/lots`)
 	                .then(res => res.json())
-	                .then(data => {
-	                    // LOT 테이블 초기화
-	                    lotTableBody.innerHTML = "";
-						lotListDiv.style.display = "block";
-						if (data.length === 0) {
-				            const tr = document.createElement("tr");
-				            tr.innerHTML = `
-				                <td colspan="9" style="text-align:center; height:500px;">
-				                    재고가 없습니다.
-				                </td>
-				            `;
-				            lotTableBody.appendChild(tr);
-				            return;
-				        }
+	                .then(data => renderLotList(data));
+	        })
+	        .catch(err => { console.error(err); alert("입고 중 오류 발생"); });
+	});
 
-	                    data.forEach(lot => {
-							console.log(lot);
-	                        const tr = document.createElement("tr");
-	                        tr.innerHTML = `
-	                            <td>${lot.lot_code}</td>
-	                            <td>${lot.created_at ? lot.created_at : "-"}</td>
-	                            <td>${lot.location}</td>
-	                            <td>${lot.expiry_date ? lot.expiry_date : "-"}</td>
-	                            <td>${lot.outbound_deadline ? lot.outbound_deadline : "-"}</td>
-	                            <td>${lot.quantity}</td>
-	                            <td>${lot.status}</td>
-	                            <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
-	                            <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
-	                        `;
-	                        lotTableBody.appendChild(tr);
-	                    });
-	                });
-	        });
+
+    // 폐기 등록
+    document.getElementById("discardFormElement").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const reason = document.getElementById("discardReason").value;
+        const detail = document.getElementById("discardDetail").value;
+        if (!reason) return alert("폐기 사유를 선택하세요");
+        if (reason === "기타" && !detail) return alert("기타 사유를 입력하세요");
+
+        const params = new URLSearchParams();
+        params.append("reason", reason);
+        if (detail) params.append("detail", detail);
+
+        fetch(`/logis/stock/${selectedStockId}/discard`, { method: "POST", body: params })
+            .then(res => { if(!res.ok) throw new Error(); return res.text(); })
+            .then(msg => {
+                alert(msg);
+                discardForm.style.display = "none";
+                if (selectedItemCode) fetch(`/logis/item/${selectedItemCode}/lots`)
+                    .then(res => res.json())
+                    .then(data => renderLotList(data));
+            })
+            .catch(() => alert("폐기 중 오류 발생"));
+    });
+
+    // 수량 조정
+    document.getElementById("adjustFormElement").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const type = document.getElementById("adjustType").value;
+        const qty = document.getElementById("adjustQty").value;
+        const reason = document.getElementById("adjustReason").value;
+        const detail = document.getElementById("adjustDetail").value;
+        if (!type || !qty || qty <= 0) return alert("유형과 수량을 입력하세요");
+
+        const params = new URLSearchParams();
+        params.append("type", type);
+        params.append("quantity", qty);
+        if (reason) params.append("reason", reason);
+        if (detail) params.append("detail", detail);
+
+        fetch(`/logis/stock/${selectedStockId}/adjust`, { method: "POST", body: params })
+            .then(res => { if(!res.ok) throw new Error(); return res.text(); })
+            .then(msg => {
+                alert(msg);
+                adjustForm.style.display = "none";
+                if (selectedItemCode) fetch(`/logis/item/${selectedItemCode}/lots`)
+                    .then(res => res.json())
+                    .then(data => renderLotList(data));
+            })
+            .catch(() => alert("수량 조정 중 오류 발생"));
+    });
+	
+	lotSearchBtn.addEventListener("click", () => {
+	    const keyword = lotSearchInput.value.toLowerCase();
+	    const rows = lotTableBody.querySelectorAll("tr");
+
+	    rows.forEach(row => {
+	        const lotCode = row.querySelector("td:first-child")?.textContent.toLowerCase() || "";
+	        row.style.display = lotCode.includes(keyword) ? "" : "none";
 	    });
-		
-		document.getElementById("stockInFormElement").addEventListener("submit", function (e) {
-		    e.preventDefault(); // 기본 submit 막기
+	});
 
-		    const form = e.target;
-		    const data = new FormData(form);
-
-
-		    fetch("/logis/stock/in", {
-		        method: "POST",
-		        body: data
-		    })
-		    .then(res => {
-		        if (!res.ok) throw new Error("입고 실패");
-		        return res.text();
-		    })
-		    .then(msg => {
-		        alert(msg);
-		        form.reset();
-		        document.getElementById("stockInForm").style.display = "none";
-
-		        // 입고 후 로트 리스트 갱신
-				const itemCode = document.getElementById("stockInItemCode").value;
-				loadLotList(itemCode);
-		    })
-		    .catch(err => {
-		        console.error(err);
-		        alert("입고 중 오류 발생");
-		    });
-		});
-		
-
-		
-		function loadLotList(itemCode) {
-			    fetch(`/hr/item/${itemCode}/lots`)
-			        .then(res => res.json())
-			        .then(data => {
-			            lotTableBody.innerHTML = "";
-			            lotListDiv.style.display = "block";
-			
-			            if (data.length === 0) {
-			                lotTableBody.innerHTML = `
-			                    <tr>
-			                        <td colspan="8" style="text-align:center; height:200px;">
-			                            재고가 없습니다.
-			                        </td>
-			                    </tr>
-			                `;
-			                return;
-			            }
-			
-			            data.forEach(lot => {
-			                const tr = document.createElement("tr");
-			                tr.innerHTML = `
-			                    <td>${lot.lot_code}</td>
-			                    <td>${lot.created_at ?? "-"}</td>
-			                    <td>${lot.location}</td>
-			                    <td>${lot.expiry_date ?? "-"}</td>
-			                    <td>${lot.quantity}</td>
-			                    <td>${lot.status}</td>
-			                    <td><button class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
-			                    <td><button class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
-			                `;
-			                lotTableBody.appendChild(tr);
-			            });
-			        });
-			
-
-		    fetch(`/logis/item/${itemCode}/lots`)
-		        .then(res => res.json())
-		        .then(data => {
-		            lotTableBody.innerHTML = "";
-
-		            if (data.length === 0) {
-		                lotListDiv.style.display = "none";
-		                return;
-		            }
-
-		            data.forEach(lot => {
-						console.log(lot);
-		                const tr = document.createElement("tr");
-		                tr.innerHTML = `
-		                    <td>${lot.lot_code}</td>
-		                    <td>${lot.created_at ?? "-"}</td>
-		                    <td>${lot.location}</td>
-		                    <td>${lot.expiry_date ?? "-"}</td>
-		                    <td>${lot.outbound_deadline ?? "-"}</td>
-		                    <td>${lot.quantity}</td>
-		                    <td>${lot.status}</td>
-		                    <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
-		                    <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
-		                `;
-		                lotTableBody.appendChild(tr);
-		            });
-
-		            lotListDiv.style.display = "block";
-		        })
-		        .catch(err => {
-		            console.error(err);
-		            alert("LOT 데이터를 불러오지 못했습니다.");
-		        });
-		}
-
-	
-		document.getElementById("discardFormElement").addEventListener("submit", (e) => {
-		    e.preventDefault();
-
-		    const reason = document.getElementById("discardReason").value;
-		    const detail = document.getElementById("discardDetail").value;
-
-		    if (!reason) {
-		        alert("폐기 사유를 선택하세요");
-		        return;
-		    }
-
-		    if (reason === "기타" && !detail) {
-		        alert("기타 사유를 입력하세요");
-		        return;
-		    }
-
-		    const params = new URLSearchParams();
-		    params.append("reason", reason);
-		    if (detail) params.append("detail", detail);
-
-		    fetch(`/logis/stock/${selectedStockId}/discard`, {
-		        method: "POST",
-		        body: params
-		    })
-		    .then(res => {
-		        if (!res.ok) throw new Error();
-		        return res.text();
-		    })
-		    .then(msg => {
-		        alert(msg);
-		        discardForm.style.display = "none";
-		        loadLotList(selectedItemCode); // 재조회
-		    })
-		    .catch(() => alert("폐기 중 오류 발생"));
-			});
-
-		// 수량조절
-		document.getElementById("adjustFormElement").addEventListener("submit", (e) => {
-		    e.preventDefault();
-		
-		    const type = document.getElementById("adjustType").value;
-		    const qty = document.getElementById("adjustQty").value;
-		    const reason = document.getElementById("adjustReason").value;
-		    const detail = document.getElementById("adjustDetail").value;
-		
-		    if (!type || !qty || qty <= 0) {
-		        alert("유형과 수량을 입력하세요");
-		        return;
-		    }
-		
-		    const params = new URLSearchParams();
-		    params.append("type", type);
-		    params.append("quantity", qty);
-		    if (reason) params.append("reason", reason);
-		    if (detail) params.append("detail", detail);
-		
-		    fetch(`/logis/stock/${selectedStockId}/adjust`, {
-		        method: "POST",
-		        body: params
-		    })
-		    .then(res => {
-		        if (!res.ok) throw new Error();
-		        return res.text();
-		    })
-		    .then(msg => {
-		        alert(msg);
-		        adjustForm.style.display = "none";
-		        loadLotList(selectedItemCode);
-		    })
-		    .catch(() => alert("수량 조정 중 오류 발생"));
-		});
 });
+</script>
 
-	
-	</script>
+
 </body>
 </html>

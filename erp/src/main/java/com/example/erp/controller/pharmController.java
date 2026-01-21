@@ -453,6 +453,52 @@ public class pharmController {
 	    return ResponseEntity.ok("DIS_DONE 업데이트 완료");
 	}
 	
+	// 약사 -> 전체 LOT 조회 (초기 표시용) by 은서
+	@GetMapping("/pharm/lots")
+	@ResponseBody
+	public List<Map<String, Object>> getAllDrugLots() {
+	    LocalDate today = LocalDate.now();
+
+	    // 물류창고에 있는 모든 Stock
+	    List<Stock> stocks = stockRepository.findAll()
+	            .stream()
+	            .filter(s -> {
+	                Warehouse w = warehouseRepository.findById(s.getWarehouse_code()).orElse(null);
+	                return w != null && "약제창고".equals(w.getName());
+	            })
+	            .collect(Collectors.toList());
+
+	    List<Map<String, Object>> result = new ArrayList<>();
+
+	    for (Stock s : stocks) {
+	        Warehouse w = warehouseRepository.findById(s.getWarehouse_code()).orElse(null);
+	        if (w == null) continue;
+
+	        Map<String, Object> lot = new HashMap<>();
+	        lot.put("stock_id", s.getStock_id());
+	        lot.put("lot_code", s.getLot_code());
+	        lot.put("created_at", s.getCreated_at());
+	        lot.put("location", w.getLocation() + "-" + w.getZone());
+	        lot.put("expiry_date", s.getExpiry_date());
+	        lot.put("outbound_deadline", s.getOutbound_deadline());
+	        lot.put("quantity", s.getQuantity());
+
+	        // 상태 계산
+	        String status = "안전";
+	        if (s.getOutbound_deadline() != null && !s.getOutbound_deadline().isAfter(today)
+	                && (s.getExpiry_date() == null || s.getExpiry_date().isAfter(today))) {
+	            status = "임박";
+	        } else if (s.getExpiry_date() != null && !s.getExpiry_date().isAfter(today)) {
+	            status = "만료";
+	        }
+	        lot.put("status", status);
+
+	        result.add(lot);
+	    }
+
+	    return result;
+	}
+	
 	//약사-> 전체 재고 현황 by 은서
 	@GetMapping("/pharm/pharmItem")
 	public String pharmItem(

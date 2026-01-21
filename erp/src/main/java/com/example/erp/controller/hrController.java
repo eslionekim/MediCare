@@ -9,10 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -47,6 +49,7 @@ import com.example.erp.Stock_move.Stock_moveService;
 import com.example.erp.Stock_move_item.Stock_move_itemRepository;
 import com.example.erp.User_account.EmployeeCreateDTO;
 import com.example.erp.User_account.User_account;
+import com.example.erp.User_account.EmployeeService;
 import com.example.erp.User_account.User_accountRepository;
 import com.example.erp.User_role.User_role;
 import com.example.erp.User_role.User_roleRepository;
@@ -78,9 +81,9 @@ public class hrController {
 	private final VacationRepository vacationRepository;
     private final Vacation_typeRepository vacation_typeRepository;
     private final Work_scheduleService work_scheduleService;
+    private final EmployeeService employeeService;
     private final Status_codeRepository status_codeRepository;
-
-
+    
 	@GetMapping("/hr/employee")
 	public String employeeList( //직원 리스트
 	        @RequestParam(name="department", required = false) String department,
@@ -134,77 +137,16 @@ public class hrController {
 	    return "hr/employee";
 	}
 
-	
 	//인사->직원 등록
 	@PostMapping("/hr/employee")
 	@ResponseBody
 	public ResponseEntity<?> saveEmployee(@RequestBody EmployeeCreateDTO dto) {
+		employeeService.saveEmployee(dto);
 
-	    // 1) User_account 생성
-	    User_account user = new User_account();
-	    user.setUser_id(dto.getUserId());
-	    user.setName(dto.getName());
-	    user.setPassword(dto.getPassword());
-	    user.set_active(true);
-	    user.setCreated_at(LocalDateTime.now());
-
-	    user_accountRepository.save(user);
-
-	    // 2) Department 찾기 (name으로 조회)
-	    Department department =
-	            departmentRepository.findByName(dto.getDepartmentName())
-	                    .orElseThrow(() -> new RuntimeException("부서 없음"));
-
-	    // 3) Staff_profile 생성
-	    Staff_profile sp = new Staff_profile();
-	    sp.setUser_account(user);
-	    sp.setDepartment(department);
-	    sp.setHire_date(dto.getHireDate());
-
-	    staff_profileRepository.save(sp);
-
-	    // 4) Role_code 결정
-	    String roleValue = convertDepartmentToRole(department.getDepartment_code());
-
-	    Role_code roleCode =
-	            role_codeRepository.findById(roleValue)
-	                    .orElseThrow(() -> new RuntimeException("역할 없음"));
-
-	    // 5) User_role 저장
-	    User_role ur = new User_role();
-	    ur.setUser_account(user);
-	    ur.setRole_code(roleCode);
-
-	    user_roleRepository.save(ur);
-
-	    return ResponseEntity.ok().body("ok");
+        return ResponseEntity.ok("ok");
 	}
-	// 인사 -> 직원등록 -> 진료과별로 role_code부여
-	public static String convertDepartmentToRole(String deptName) {
-
-        if (deptName == null) {
-            return "STAFF";
-        }
-
-        // 의사과목 ⇒ DOCTOR
-        if (deptName.equals("ENDO") ||
-            deptName.equals("GS") ||
-            deptName.equals("ORTHO") ||
-            deptName.equals("PULMO")) {
-            return "DOCTOR";
-        }
-
-        switch (deptName) {
-            case "STAFF": return "STAFF";
-            case "HR": return "HR";
-            case "LOGIS": return "LOGIS";
-            case "PHARM": return "PHARM";
-            default: return "STAFF";
-        }
-    }
 	
 	// 스케줄 조회
-	
 	@GetMapping("/hr/mySchedule") // 인사 -> 스케줄 조회 by 은서
     public String getMySchedulePage(Model model) {
     	String user_id = SecurityContextHolder.getContext().getAuthentication().getName();

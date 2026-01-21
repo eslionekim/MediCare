@@ -29,15 +29,26 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) //CSRF 보호 비활성화 (개발/테스트용) role_code대로
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/logout").permitAll()
-                .requestMatchers("/doctor/**").hasRole("DOCTOR")
-                .requestMatchers("/pharm/**").hasRole("PHARM")
-                .requestMatchers("/logis/**").hasRole("logis")
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/hr/**").hasRole("HR")
-                .requestMatchers("/patients/**").hasRole("STAFF")
-                .anyRequest().authenticated()
-            )
+            		 // ⭐ 추가 START
+                    .requestMatchers(
+                        "/login",
+                        "/logout",
+                        "/css/**",
+                        "/js/**",
+                        "/images/**",
+                        "/webjars/**",
+                        "/test/bcrypt"
+                    ).permitAll()
+                    // ⭐ 추가 END
+
+                    .requestMatchers("/doctor/**").hasRole("DOCTOR")
+                    .requestMatchers("/pharm/**").hasRole("PHARM")
+                    .requestMatchers("/logis/**").hasRole("logis") // 대문자 권장
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .requestMatchers("/hr/**").hasRole("HR")
+                    .requestMatchers("/patients/**").hasRole("STAFF")
+                    .anyRequest().authenticated()
+                )
             .formLogin(form -> form
                 .loginPage("/login") //로그인 페이지 설정
                 .successHandler(successHandler) //역할별 리다이렉트
@@ -70,7 +81,7 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() { //User_account 테이블에 저장할 때 반드시 BCrypt로 암호화
         // return new BCryptPasswordEncoder();
-        return NoOpPasswordEncoder.getInstance();
+        return new BCryptPasswordEncoder();
     }
     
     

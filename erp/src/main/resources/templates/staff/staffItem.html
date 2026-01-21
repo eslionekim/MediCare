@@ -353,29 +353,36 @@
 				</div>
 		</div>
 		<div class="lot">
-		    <div class="lotList" style="display: none;">
-		        <button id="purchaseRequestBtn">불출요청</button>
-		        <button id="stockInBtn">입고등록</button>
-		
-		        <table id="lotTable" border="1">
-		            <thead>
+		    <div class="lotList">
+				<div style="width:90%; margin:5px auto; display:flex; justify-content:center; gap:5px;">
+			        <button id="purchaseRequestBtn" style="display:none;">불출요청</button>
+			        <button id="stockInBtn" style="display:none;">입고등록</button>
+					<input type="text" id="lotSearchInput" placeholder="로트코드 검색">
+					<button type="button" id="lotSearchBtn">검색</button>
+					</div>
+					<div class="section-title" style="width:90%; margin:5px auto 0;">입고 목록</div>
+			        
+					<div class="item-scroll">
+			        <table id="lotTable" border="1">
+			            <thead>
 
-		                <tr>
-		                    <th>로트코드</th>
-		                    <th>입고일</th>
-		                    <th>위치</th>
-		                    <th>유통기한</th>
-		                    <th>수량</th>
-		                    <th>상태</th>
-		                    <th>폐기</th>
-		                    <th>수량조정</th>
-		                </tr>
-		            </thead>
-		            <tbody id="lotTableBody"></tbody>
-		        </table>
-		    </div>
-
-		</div>
+			                <tr>
+			                    <th>로트코드</th>
+			                    <th>입고일</th>
+			                    <th>위치</th>
+			                    <th>유통기한</th>
+								<th>출고마감일</th>
+			                    <th>수량</th>
+			                    <th>상태</th>
+			                    <th>폐기</th>
+			                    <th>수량조정</th>
+			                </tr>
+			            </thead>
+			            <tbody id="lotTableBody"></tbody>
+			        </table>
+					</div>
+			    </div>
+			</div>
 
 		
 		<!-- 신규등록요청 폼 (초기에는 숨김) -->
@@ -536,7 +543,7 @@
 		    const purchaseBtn = document.getElementById("purchaseRequestBtn");
 		    const stockBtn = document.getElementById("stockInBtn");
 		
-		    const purchaseForm = document.getElementById("purchaseForm");
+		    const purchaseForm = document.getElementById("requestModal");
 		    const stockForm = document.getElementById("stockInForm");
 		    const discardForm = document.getElementById("discardForm");
 		    const adjustForm = document.getElementById("adjustForm");
@@ -550,118 +557,122 @@
 		    const qtyInput = document.querySelector('input[name="quantity"]');
 		    const totalPriceInput = document.getElementById("totalPrice");
 		
-		    // 수량 변경 시 총액 계산
-		    if (qtyInput) {
-		        qtyInput.addEventListener("input", () => {
-		            const qty = parseInt(qtyInput.value || 0);
-		            totalPriceInput.value = (unitPrice * qty).toLocaleString();
-		        });
+			const lotSearchInput = document.getElementById("lotSearchInput"); //로트코드 검색창
+			const lotSearchBtn = document.getElementById("lotSearchBtn"); //검색버튼
+
+
+		    qtyInput.addEventListener("input", () => {
+		        const qty = parseInt(qtyInput.value || 0);
+		        totalPriceInput.value = (unitPrice * qty).toLocaleString();
+		    });
+
+		    purchaseRequestBtn.addEventListener("click", (e) => {
+		        e.preventDefault();
+		        purchaseForm.style.display = "block";
+		    });
+
+		    // LOT 렌더 함수
+		    function renderLotList(data) {
+		        lotTableBody.innerHTML = "";
+		        if (!data || data.length === 0) {
+		            lotTableBody.innerHTML = `
+		                <tr>
+		                    <td colspan="9" style="text-align:center; height:200px;">재고가 없습니다.</td>
+		                </tr>
+		            `;
+					purchaseBtn.style.display="none";
+		            stockBtn.style.display = "none"; // LOT 없으면 입고 버튼 숨김
+		        } else {
+		            data.forEach(lot => {
+		                const tr = document.createElement("tr");
+		                tr.innerHTML = `
+		                    <td>${lot.lot_code}</td>
+		                    <td>${lot.created_at ?? "-"}</td>
+		                    <td>${lot.location}</td>
+		                    <td>${lot.expiry_date ?? "-"}</td>
+		                    <td>${lot.outbound_deadline ?? "-"}</td>
+		                    <td>${lot.quantity}</td>
+		                    <td>${lot.status}</td>
+		                    <td><button type="button" class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+		                    <td><button type="button" class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+		                `;
+		                lotTableBody.appendChild(tr);
+		            });
+		        }
+		        lotListDiv.style.display = "block";
 		    }
-		
-		    // location 불러오기
+
+		    // 초기 전체 LOT
+		    fetch("/staff/lots")
+		        .then(res => res.json())
+		        .then(data => renderLotList(data))
+		        .catch(err => { console.error(err); alert("전체 LOT 데이터를 불러오지 못했습니다."); });
+
+		    // Location & Zone
 		    fetch("/staff/warehouse/locations")
 		        .then(res => res.json())
 		        .then(data => {
 		            const locationSelect = document.getElementById("locationSelect");
 		            locationSelect.innerHTML = '<option value="">선택</option>';
-		            data.forEach(loc => {
-		                locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`;
-		            });
+		            data.forEach(loc => locationSelect.innerHTML += `<option value="${loc}">${loc}</option>`);
 		        });
-		
-		    // location 선택 시 zone 불러오기
-		    const locationSelect = document.getElementById("locationSelect");
-		    if (locationSelect) {
-		        locationSelect.addEventListener("change", function () {
-					const location = this.value;
-		           const zoneSelect = document.getElementById("zoneSelect");
-		           if (!zoneSelect) return;
-		           zoneSelect.innerHTML = '<option value="">선택</option>';
-		
-		            if (!location) return;
-		
-		            fetch(`/staff/warehouse/zones?location=${location}`)
-		                .then(res => res.json())
-		                .then(data => {
-		                    data.forEach(zone => {
-		                        zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`;
-		                    });
-		                });
+
+		    document.getElementById("locationSelect").addEventListener("change", function () {
+		        const location = this.value;
+		        const zoneSelect = document.getElementById("zoneSelect");
+		        zoneSelect.innerHTML = '<option value="">선택</option>';
+		        if (!location) return;
+		        fetch(`/staff/warehouse/zones?location=${location}`)
+		            .then(res => res.json())
+		            .then(data => data.forEach(zone => zoneSelect.innerHTML += `<option value="${zone}">${zone}</option>`));
+		    });
+
+		    // 이벤트 위임: 폐기, 수량조정
+		    lotTableBody.addEventListener("click", (e) => {
+		        if (e.target.classList.contains("discardBtn")) {
+		            selectedStockId = e.target.dataset.stockId;
+		            discardForm.style.display = "block";
+		        }
+		        if (e.target.classList.contains("adjustBtn")) {
+		            selectedStockId = e.target.dataset.stockId;
+		            adjustForm.style.display = "block";
+		        }
+		    });
+
+		    // 닫기 버튼
+		    document.querySelectorAll(".closeBtn").forEach(btn => {
+		        btn.addEventListener("click", (e) => {
+		            e.target.closest(".popup-form").style.display = "none";
 		        });
-		    }
-		
-		    // 상세보기 버튼 클릭 (LOT 불러오기)
+		    });
+
+
+		    // 상세보기 클릭
 		    document.querySelectorAll(".show-lot-btn").forEach(btn => {
 		        btn.addEventListener("click", () => {
 		            const itemCode = btn.dataset.itemCode;
 		            selectedItemCode = itemCode;
-		
+		            document.getElementById("stockInItemCode").value = itemCode;
+
 		            // 단가 조회
 		            fetch(`/staff/item/${itemCode}/price`)
 		                .then(res => res.json())
-		                .then(price => {
-		                    unitPrice = Number(price);
-		                    if(totalPriceInput) totalPriceInput.value = "0";
+		                .then(price => { unitPrice = Number(price); totalPriceInput.value = "0"; })
+		                .catch(err => { console.error(err); unitPrice = 0; });
+
+		            // LOT 조회
+		            fetch(`/staff/item/${itemCode}/lots`)
+		                .then(res => res.json())
+		                .then(data => {
+		                    renderLotList(data);
+							purchaseBtn.style.display = (data && data.length > 0) ? "inline-block" : "none";
+		                    stockBtn.style.display = (data && data.length > 0) ? "inline-block" : "none";
 		                })
-		                .catch(() => unitPrice = 0);
-		
-		            // LOT 테이블 로딩
-		            loadLotList(itemCode);
+		                .catch(err => { console.error(err); alert("LOT 데이터를 불러오지 못했습니다."); });
 		        });
 		    });
-		
-		    // LOT 테이블 불러오기
-		    function loadLotList(itemCode) {
-		        fetch(`/staff/item/${itemCode}/lots`)
-		            .then(res => res.json())
-		            .then(data => {
-						if(!lotTableBody) return;
-		                lotTableBody.innerHTML = "";
-		                if(!lotListDiv) return;
-		                lotListDiv.style.display = "block";
-		
-		                if (data.length === 0) {
-		                    lotTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; height:200px;">재고가 없습니다.</td></tr>`;
-		                    return;
-		                }
-		
-		                data.forEach(lot => {
-		                    const tr = document.createElement("tr");
-		                    tr.innerHTML = `
-		                        <td>${lot.lot_code}</td>
-		                        <td>${lot.created_at ?? "-"}</td>
-		                        <td>${lot.location}</td>
-		                        <td>${lot.expiry_date ?? "-"}</td>
-		                        <td>${lot.quantity}</td>
-		                        <td>${lot.status}</td>
-		                        <td><button class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
-		                        <td><button class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
-		                    `;
-		                    lotTableBody.appendChild(tr);
-		                });
-		            })
-		            .catch(err => { console.error(err); alert("LOT 데이터를 불러오지 못했습니다."); });
-		    }
-		
-			// 이벤트 위임
-		    if(lotListDiv){
-		        lotListDiv.addEventListener("click", (e) => {
-		            if (e.target.classList.contains("discardBtn")) {
-		                selectedStockId = e.target.dataset.stockId;
-		                if(discardForm) discardForm.style.display = "block";
-		            }
-		            if (e.target.classList.contains("adjustBtn")) {
-		                selectedStockId = e.target.dataset.stockId;
-		                if(adjustForm) adjustForm.style.display = "block";
-		            }
-		            if (e.target.id === "purchaseRequestBtn") {
-		                if (!selectedItemCode) { alert("먼저 상세보기에서 항목을 선택하세요."); return; }
-		                const requestModal = document.getElementById("requestModal");
-		                if(requestModal) requestModal.style.display = "block";
-		            }
-		        });
-		    }
-			
+
+
 			// 입고등록 버튼 클릭 -> 폼 열기
 			if (stockBtn) {
 			    stockBtn.addEventListener("click", () => {
@@ -699,8 +710,7 @@
 		            })
 		            .catch(err => console.error(err));
 		    }
-		
-		    // 불출요청 등록
+			// 불출요청 등록
 		    document.getElementById("submitRequestBtn").addEventListener("click", () => {
 		        const qty = Number(document.getElementById("reqQtyInput").value);
 		        const note = document.getElementById("reqReasonInput").value;
@@ -717,49 +727,59 @@
 		        .then(msg => { alert("불출 요청이 등록되었습니다!"); document.getElementById("requestModal").style.display="none"; })
 		        .catch(err => { console.error(err); alert("오류 발생"); });
 		    });
-		
-		    // 폐기
+
+		    // 폐기 등록
 		    document.getElementById("discardFormElement").addEventListener("submit", (e) => {
 		        e.preventDefault();
 		        const reason = document.getElementById("discardReason").value;
 		        const detail = document.getElementById("discardDetail").value;
-		
-		        if (!reason) { alert("폐기 사유 선택"); return; }
-		        if (reason === "기타" && !detail) { alert("기타 사유 입력"); return; }
-		
+		        if (!reason) return alert("폐기 사유를 선택하세요");
+		        if (reason === "기타" && !detail) return alert("기타 사유를 입력하세요");
+
 		        const params = new URLSearchParams();
 		        params.append("reason", reason);
-		        if(detail) params.append("detail", detail);
-		
+		        if (detail) params.append("detail", detail);
+
 		        fetch(`/staff/stock/${selectedStockId}/discard`, { method: "POST", body: params })
-		            .then(res => res.ok ? res.text() : Promise.reject())
-		            .then(msg => { alert(msg); discardForm.style.display="none"; loadLotList(selectedItemCode); })
+		            .then(res => { if(!res.ok) throw new Error(); return res.text(); })
+		            .then(msg => {
+		                alert(msg);
+		                discardForm.style.display = "none";
+		                if (selectedItemCode) fetch(`/staff/item/${selectedItemCode}/lots`)
+		                    .then(res => res.json())
+		                    .then(data => renderLotList(data));
+		            })
 		            .catch(() => alert("폐기 중 오류 발생"));
 		    });
-		
-		    // 수량조정
+
+		    // 수량 조정
 		    document.getElementById("adjustFormElement").addEventListener("submit", (e) => {
 		        e.preventDefault();
 		        const type = document.getElementById("adjustType").value;
 		        const qty = document.getElementById("adjustQty").value;
 		        const reason = document.getElementById("adjustReason").value;
 		        const detail = document.getElementById("adjustDetail").value;
-		
-		        if (!type || !qty || qty <= 0) { alert("유형과 수량을 입력하세요"); return; }
-		
+		        if (!type || !qty || qty <= 0) return alert("유형과 수량을 입력하세요");
+
 		        const params = new URLSearchParams();
 		        params.append("type", type);
 		        params.append("quantity", qty);
-		        if(reason) params.append("reason", reason);
-		        if(detail) params.append("detail", detail);
-		
+		        if (reason) params.append("reason", reason);
+		        if (detail) params.append("detail", detail);
+
 		        fetch(`/staff/stock/${selectedStockId}/adjust`, { method: "POST", body: params })
-		            .then(res => res.ok ? res.text() : Promise.reject())
-		            .then(msg => { alert(msg); adjustForm.style.display="none"; loadLotList(selectedItemCode); })
+		            .then(res => { if(!res.ok) throw new Error(); return res.text(); })
+		            .then(msg => {
+		                alert(msg);
+		                adjustForm.style.display = "none";
+		                if (selectedItemCode) fetch(`/staff/item/${selectedItemCode}/lots`)
+		                    .then(res => res.json())
+		                    .then(data => renderLotList(data));
+		            })
 		            .catch(() => alert("수량 조정 중 오류 발생"));
 		    });
-		
-		    // 입고등록
+			
+			// 입고등록
 		    document.getElementById("stockInFormElement").addEventListener("submit", function(e){
 		        e.preventDefault();
 		        const data = new FormData(this);
@@ -768,12 +788,50 @@
 		        .then(msg => { alert(msg); this.reset(); stockForm.style.display="none"; loadLotList(document.getElementById("stockInItemCode").value); })
 		        .catch(err => { console.error(err); alert("입고 중 오류 발생"); });
 		    });
+			
+			// LOT 테이블 불러오기
+		    function loadLotList(itemCode) {
+		        fetch(`/staff/item/${itemCode}/lots`)
+		            .then(res => res.json())
+		            .then(data => {
+						if(!lotTableBody) return;
+		                lotTableBody.innerHTML = "";
+		                if(!lotListDiv) return;
+		                lotListDiv.style.display = "block";
 		
-		    // 팝업 닫기
-		    document.querySelectorAll(".closeBtn").forEach(btn => {
-		        btn.addEventListener("click", e => e.target.closest(".popup-form").style.display = "none");
-		    });
+		                if (data.length === 0) {
+		                    lotTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; height:200px;">재고가 없습니다.</td></tr>`;
+		                    return;
+		                }
 		
+		                data.forEach(lot => {
+		                    const tr = document.createElement("tr");
+		                    tr.innerHTML = `
+		                        <td>${lot.lot_code}</td>
+		                        <td>${lot.created_at ?? "-"}</td>
+		                        <td>${lot.location}</td>
+		                        <td>${lot.expiry_date ?? "-"}</td>
+		                        <td>${lot.quantity}</td>
+		                        <td>${lot.status}</td>
+		                        <td><button class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>
+		                        <td><button class="adjustBtn" data-stock-id="${lot.stock_id}">수량조정</button></td>
+		                    `;
+		                    lotTableBody.appendChild(tr);
+		                });
+		            })
+		            .catch(err => { console.error(err); alert("LOT 데이터를 불러오지 못했습니다."); });
+		    }
+			
+			lotSearchBtn.addEventListener("click", () => {
+			    const keyword = lotSearchInput.value.toLowerCase();
+			    const rows = lotTableBody.querySelectorAll("tr");
+
+			    rows.forEach(row => {
+			        const lotCode = row.querySelector("td:first-child")?.textContent.toLowerCase() || "";
+			        row.style.display = lotCode.includes(keyword) ? "" : "none";
+			    });
+			});
+
 		});
 		</script>
 </body>
