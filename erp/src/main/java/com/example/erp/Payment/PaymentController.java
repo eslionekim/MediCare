@@ -3,6 +3,7 @@ package com.example.erp.Payment;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.example.erp.Payment.PaymentService.PaymentPageModel;
 
@@ -44,9 +45,14 @@ public class PaymentController {
 
     @PostMapping("/pay")
     public String pay(@RequestParam("visitId") Long visitId,
-            @RequestParam("paymentMethodCode") String paymentMethodCode) {
+            @RequestParam("paymentMethodCode") String paymentMethodCode,
+            RedirectAttributes redirectAttributes) {
 
-        paymentService.pay(visitId, paymentMethodCode);
+        try {
+            paymentService.pay(visitId, paymentMethodCode);
+        } catch (IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("paymentError", e.getMessage());
+        }
         return "redirect:/payments?visitId=" + visitId;
     }
 

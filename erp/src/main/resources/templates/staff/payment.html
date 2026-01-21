@@ -26,6 +26,7 @@
     .summary-grid .form-row { margin-bottom:0; }
     .pay-btn { padding:8px 16px; border:1px solid #7B7B7B; border-radius:6px; background: var(--ui-panel-title); color:#fff; cursor:pointer; font-weight:600; }
     .pay-btn[disabled] { opacity:.5; cursor:not-allowed; }
+    .alert { margin-bottom:10px; padding:8px 12px; background:#ffe7e7; border:1px solid #f5b5b5; color:#7a1f1f; border-radius:4px; font-size:13px; }
     .hint { font-size:12px; color:#666; margin-top:6px; }
     .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center; z-index:1000; }
     .modal { background:#fff; border:1px solid #b0b7c7; border-radius:8px; width:360px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
@@ -45,6 +46,7 @@
   <div th:replace="~{fragments/staff-header :: header(title='수납 결제', activeTab='payments')}"></div>
 
   <div class="content-area">
+    <div class="alert" th:if="${paymentError}" th:text="${paymentError}"></div>
     <div class="layout">
 
       <!-- 왼쪽: 금일 수납 대기 리스트 -->
