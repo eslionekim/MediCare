@@ -115,11 +115,19 @@ public class AdminController {
                 .mapToLong(AdminReportService.DailySalesRow::totalAmount)
                 .max()
                 .orElse(0);
+        long deptRankMax = data.deptRankRows().stream()
+                .mapToLong(AdminReportService.RankRow::amount)
+                .max()
+                .orElse(0);
         model.addAttribute("summary", data.summary());
         model.addAttribute("dailyRows", data.dailyRows());
         model.addAttribute("dailyMaxTotal", dailyMaxTotal);
+        model.addAttribute("deptDailySeries", data.deptDailySeries());
+        model.addAttribute("dailyLabels", data.dailyLabels());
         model.addAttribute("paymentRows", data.paymentMethods());
         model.addAttribute("rankRows", data.rankRows());
+        model.addAttribute("deptRankRows", data.deptRankRows());
+        model.addAttribute("deptRankMax", deptRankMax);
         model.addAttribute("paymentMethodOptions", data.paymentMethodOptions());
         model.addAttribute("departmentOptions", adminDashboardService.getDepartmentOptions());
         model.addAttribute("doctorOptions", adminDashboardService.getDoctorOptions());

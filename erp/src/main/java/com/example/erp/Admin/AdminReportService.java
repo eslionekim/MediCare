@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
@@ -42,9 +44,17 @@ public class AdminReportService {
         List<DailySalesRow> dailyRows = queryDailySales(start, end, dept, doctor, insurance, paymentMethod, visit);
         List<PaymentMethodRow> paymentRows = queryPaymentMethods(start, end, dept, doctor, insurance, paymentMethod, visit);
         List<RankRow> rankRows = queryTopRanks(start, end, dept, doctor, insurance, paymentMethod, visit);
+        List<DeptDailySeries> deptDailySeries = dept == null
+                ? queryDeptDailySeries(startBase, endBase, doctor, insurance, paymentMethod, visit)
+                : List.of();
+        List<String> dailyLabels = dept == null
+                ? buildDailyLabels(startBase, endBase)
+                : List.of();
+        List<RankRow> deptRankRows = queryTopDepartments(start, end, dept, doctor, insurance, paymentMethod, visit);
 
         List<Option> paymentMethodOptions = loadPaymentMethodOptions();
-        return new SalesReportData(summary, dailyRows, paymentRows, rankRows, paymentMethodOptions);
+        return new SalesReportData(summary, dailyRows, deptDailySeries, dailyLabels, paymentRows, rankRows, deptRankRows,
+                paymentMethodOptions);
     }
 
     public InsuranceSalesData loadInsuranceSales(
@@ -192,6 +202,91 @@ public class AdminReportService {
         return results;
     }
 
+    private List<RankRow> queryTopDepartments(LocalDateTime start, LocalDateTime end, String dept,
+            String doctor, String insurance, String paymentMethod, String visitType) {
+        String sql = buildVisitSql("""
+                select d.name as name, coalesce(sum(c.total_amount),0) as amount
+                from visit v
+                join department d on v.department_code = d.department_code
+                join claim c on c.visit_id = v.visit_id
+                join payment p on p.visit_id = v.visit_id
+                where v.visit_datetime between :start and :end
+                  and p.status_code = 'PAY_COMPLETED'
+                group by d.name
+                order by amount desc
+                limit 6
+                """, dept, doctor, insurance, paymentMethod, visitType);
+        Query query = entityManager.createNativeQuery(sql);
+        applyFilters(query, start, end, dept, doctor, insurance, paymentMethod, visitType);
+        List<Object[]> rows = query.getResultList();
+        List<RankRow> results = new ArrayList<>();
+        for (Object[] row : rows) {
+            String name = row[0] != null ? row[0].toString() : "";
+            long amount = toLong(row[1]);
+            results.add(new RankRow("dept", name, amount));
+        }
+        return results;
+    }
+
+    private List<DeptDailySeries> queryDeptDailySeries(LocalDate startDate, LocalDate endDate, String doctor,
+            String insurance, String paymentMethod, String visitType) {
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+        List<String> labels = buildDailyLabels(startDate, endDate);
+        String sql = buildVisitSql("""
+                select date(v.visit_datetime) as day,
+                       d.name as dept_name,
+                       coalesce(sum(c.total_amount),0) as total_amount
+                from visit v
+                join department d on v.department_code = d.department_code
+                join claim c on c.visit_id = v.visit_id
+                join payment p on p.visit_id = v.visit_id
+                where v.visit_datetime between :start and :end
+                  and p.status_code = 'PAY_COMPLETED'
+                group by date(v.visit_datetime), d.name
+                order by d.name, day
+                """, null, doctor, insurance, paymentMethod, visitType);
+        Query query = entityManager.createNativeQuery(sql);
+        applyFilters(query, start, end, null, doctor, insurance, paymentMethod, visitType);
+        List<Object[]> rows = query.getResultList();
+        List<DeptDailySeries> results = new ArrayList<>();
+        List<String> deptNames = new ArrayList<>();
+        List<List<Long>> totals = new ArrayList<>();
+        for (Object[] row : rows) {
+            String day = row[0] != null ? row[0].toString() : "";
+            String deptName = row[1] != null ? row[1].toString() : "";
+            long amount = toLong(row[2]);
+            int deptIdx = deptNames.indexOf(deptName);
+            if (deptIdx < 0) {
+                deptNames.add(deptName);
+                List<Long> values = new ArrayList<>();
+                for (int i = 0; i < labels.size(); i++) {
+                    values.add(0L);
+                }
+                totals.add(values);
+                deptIdx = deptNames.size() - 1;
+            }
+            int dayIdx = labels.indexOf(day);
+            if (dayIdx >= 0) {
+                totals.get(deptIdx).set(dayIdx, amount);
+            }
+        }
+        for (int i = 0; i < deptNames.size(); i++) {
+            results.add(new DeptDailySeries(deptNames.get(i), totals.get(i)));
+        }
+        return results;
+    }
+
+    private List<String> buildDailyLabels(LocalDate startDate, LocalDate endDate) {
+        List<String> labels = new ArrayList<>();
+        LocalDate cursor = startDate;
+        while (!cursor.isAfter(endDate)) {
+            labels.add(cursor.toString());
+            cursor = cursor.plusDays(1);
+        }
+        return labels;
+    }
+
     private List<InsuranceRow> queryInsuranceSales(LocalDateTime start, LocalDateTime end, String dept,
             String doctor, String insurance) {
         String sql = buildVisitSql("""
@@ -261,7 +356,23 @@ public class AdminReportService {
         if (visitType != null) {
             sb.append(" and v.visit_type = :visitType");
         }
-        return sql + sb;
+        if (sb.length() == 0) {
+            return sql;
+        }
+        int insertIdx = findClauseIndex(sql);
+        if (insertIdx < 0) {
+            return sql + sb;
+        }
+        return sql.substring(0, insertIdx) + sb + " " + sql.substring(insertIdx);
+    }
+
+    private int findClauseIndex(String sql) {
+        Matcher matcher = Pattern.compile("\\b(group\\s+by|order\\s+by)\\b", Pattern.CASE_INSENSITIVE)
+                .matcher(sql);
+        if (matcher.find()) {
+            return matcher.start();
+        }
+        return -1;
     }
 
     private void applyFilters(Query query, LocalDateTime start, LocalDateTime end, String dept,
@@ -302,8 +413,11 @@ public class AdminReportService {
     public record SalesReportData(
             Summary summary,
             List<DailySalesRow> dailyRows,
+            List<DeptDailySeries> deptDailySeries,
+            List<String> dailyLabels,
             List<PaymentMethodRow> paymentMethods,
             List<RankRow> rankRows,
+            List<RankRow> deptRankRows,
             List<Option> paymentMethodOptions) {
     }
 
@@ -312,6 +426,9 @@ public class AdminReportService {
     }
 
     public record DailySalesRow(String day, long totalAmount, long coveredAmount, long noncoveredAmount) {
+    }
+
+    public record DeptDailySeries(String departmentName, List<Long> totals) {
     }
 
     public record PaymentMethodRow(String paymentMethodName, long amount) {

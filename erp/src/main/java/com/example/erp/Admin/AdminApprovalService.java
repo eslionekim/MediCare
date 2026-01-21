@@ -77,6 +77,7 @@ public class AdminApprovalService {
                        ir.requested_at
                 from issue_request ir
                 left join issue_request_item iri on ir.issue_request_id = iri.issue_request_id
+                where ir.status_code = 'IR_WAIT_APPROVAL'
                 order by ir.requested_at desc
                 """);
         List<Object[]> rows = query.getResultList();
@@ -95,11 +96,14 @@ public class AdminApprovalService {
 
     public List<PriceExceptionRow> loadPriceExceptionApprovals() {
         Query query = entityManager.createNativeQuery("""
-                select item_code, name, unit_price, safety_stock, is_active
-                from item
-                where unit_price is not null
-                order by unit_price desc
-                limit 20
+                select distinct i.item_code, i.name, i.unit_price, i.safety_stock, i.is_active
+                from issue_request ir
+                join issue_request_item iri on ir.issue_request_id = iri.issue_request_id
+                join item i on i.item_code = iri.item_code
+                where ir.status_code = 'IR_WAIT_APPROVAL'
+                  and i.unit_price is not null
+                  and (i.unit_price * ifnull(iri.requested_qty, 0)) >= 10000000
+                order by i.unit_price desc
                 """);
         List<Object[]> rows = query.getResultList();
         List<PriceExceptionRow> results = new ArrayList<>();

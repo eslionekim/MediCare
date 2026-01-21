@@ -20,13 +20,18 @@
         th, td { border:1px solid #c9cfde; padding:4px 6px; text-align:center; }
         th { background:#e9edf7; }
 
-        .chart-box { border:1px dashed #c9cfde; background:#f8f9fd; padding:10px; }
+        .chart-box { border:1px dashed #c9cfde; background:linear-gradient(180deg,#f8f9fd 0%,#eef1fb 100%); padding:10px; }
         .chart-row { display:flex; align-items:center; gap:8px; margin:6px 0; }
         .chart-label { width:120px; font-size:11px; color:#4b5678; }
-        .chart-bar { flex:1; height:14px; background:#d9deef; border-radius:999px; position:relative; overflow:hidden; }
+        .chart-bar { flex:1; height:14px; background:#d9deef; border-radius:999px; position:relative; overflow:hidden; box-shadow:inset 0 1px 2px rgba(76,86,130,0.25); }
         .chart-bar span { position:absolute; right:6px; top:-2px; font-size:10px; color:#4b5678; }
-        .chart-fill { height:100%; background:#6c7ec3; border-radius:999px; }
+        .chart-fill { height:100%; background:linear-gradient(90deg,#6c7ec3 0%,#4f5fa8 100%); border-radius:999px; }
         .chart-empty { color:#7a86a8; text-align:center; padding:16px 0; }
+        .chart-row:nth-child(5n+1) .chart-fill { background:linear-gradient(90deg,#5f7fd6 0%,#4660b6 100%); }
+        .chart-row:nth-child(5n+2) .chart-fill { background:linear-gradient(90deg,#58b3c4 0%,#3b8fa5 100%); }
+        .chart-row:nth-child(5n+3) .chart-fill { background:linear-gradient(90deg,#7bc47f 0%,#4d9a62 100%); }
+        .chart-row:nth-child(5n+4) .chart-fill { background:linear-gradient(90deg,#f0b766 0%,#d48a34 100%); }
+        .chart-row:nth-child(5n+5) .chart-fill { background:linear-gradient(90deg,#d77aa8 0%,#b65787 100%); }
     </style>
     <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
