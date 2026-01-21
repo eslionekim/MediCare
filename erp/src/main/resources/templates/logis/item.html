@@ -546,11 +546,14 @@ document.addEventListener("DOMContentLoaded", () => {
 	const realQtyInput = document.getElementById("realQtyInput");
 
 	function updateRealQty() {
-	    const packCount = Number(packQtyInput.value || 0);
+		const packCount = Number(packQtyInput.value || 0);
 	    const realQty = packCount * packUnitQty;
 
 	    realQtyText.textContent = realQty.toLocaleString();
-	    realQtyInput.value = realQty; // 서버로 전송될 값
+	    realQtyInput.value = realQty;
+
+	    const totalPrice = unitPrice * realQty;
+	    totalPriceInput.value = totalPrice.toLocaleString();
 	}
 	packQtyInput.addEventListener("input", updateRealQty);
 
@@ -659,7 +662,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // 단가 조회
             fetch(`/logis/item/${itemCode}/price`)
                 .then(res => res.json())
-                .then(price => { unitPrice = Number(price); totalPriceInput.value = "0"; })
+                .then(price => { unitPrice = Number(price); updateRealQty(); })
                 .catch(err => { console.error(err); unitPrice = 0; });
 
 			// 포장 단위 수량 조회
