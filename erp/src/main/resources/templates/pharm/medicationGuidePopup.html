@@ -242,31 +242,60 @@
             </div>
         </div>
 
-        <div class="right-panel">
-            <div class="box">
-                <div class="box-title">수납 상세</div>
-                
-                <div class="price-row">총액 <span th:text="${#numbers.formatDecimal(guide.totalAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
-                <div class="price-row">과세 <span th:text="${#numbers.formatDecimal(guide.taxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
-                <div class="price-row">비과세 <span th:text="${#numbers.formatDecimal(guide.nonTaxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
-                <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
-                <div class="price-row" style="font-size: 13px; color: var(--text-gray);">
-                    <span>보험: [[${guide.insuranceName}]]</span>
-                    <span>([[${100 - (guide.discountRate * 100)}]]%)</span>
-                </div>
-                <div class="price-row">보험부담금 <span th:text="${#numbers.formatDecimal(guide.insurerAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span></div>
-                
-                <div class="price-row total-price">
-                    <b>본인 부담금</b>
-                    <b th:text="${#numbers.formatDecimal(guide.patientAmount, 0, 'COMMA', 0, 'POINT')} + '원'">0원</b>
-                </div>
-            </div>
-            
-            <div class="btn-group">
-                <button class="btn-complete" onclick="completeDispense()">투약 완료</button>
-                <button class="btn-pdf" onclick="downloadPdf()">PDF 출력</button>
-            </div>
-        </div>
+		<div class="right-panel">
+		    <div class="box">
+		        <div class="box-title">수납 상세</div>
+
+		    
+		        <!-- 기존 총액 + 조제비 -->
+		        <div class="price-row">
+		            총액
+		            <span th:text="${#numbers.formatDecimal(guide.totalAmount + 1000, 0, 'COMMA', 0, 'POINT')} + '원'"></span>
+		        </div>
+
+		        <div class="price-row">
+		            과세
+		            <span th:text="${#numbers.formatDecimal(guide.taxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span>
+		        </div>
+
+		        <div class="price-row">
+		            비과세
+		            <span th:text="${#numbers.formatDecimal(guide.nonTaxAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span>
+		        </div>
+				
+				<!-- 조제비 (고정값 가정) -->
+		        <div class="price-row">
+		            조제비
+		            <span th:text="${#numbers.formatDecimal(1000, 0, 'COMMA', 0, 'POINT')} + '원'"></span>
+		        </div>
+
+
+		        <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+
+		        <div class="price-row" style="font-size: 13px; color: var(--text-gray);">
+		            <span>보험: [[${guide.insuranceName}]]</span>
+		            <span>([[${100 - (guide.discountRate * 100)}]]%)</span>
+		        </div>
+
+		        <div class="price-row">
+		            보험부담금
+		            <span th:text="${#numbers.formatDecimal(guide.insurerAmount, 0, 'COMMA', 0, 'POINT')} + '원'"></span>
+		        </div>
+
+		        <div class="price-row total-price">
+		            <b>본인 부담금</b>
+		            <b th:text="${#numbers.formatDecimal(guide.patientAmount + 1000, 0, 'COMMA', 0, 'POINT')} + '원'">
+		                0원
+		            </b>
+		        </div>
+		    </div>
+
+		    <div class="btn-group">
+		        <button class="btn-complete" onclick="completeDispense()">투약 완료</button>
+		        <button class="btn-pdf" onclick="downloadPdf()">PDF 출력</button>
+		    </div>
+		</div>
+
     </div>
 </div>
 
