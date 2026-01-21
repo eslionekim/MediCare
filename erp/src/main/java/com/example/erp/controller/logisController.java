@@ -488,30 +488,14 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
     @ResponseBody
     public ResponseEntity<?> requestNewItem(@RequestParam Map<String, String> param) {
 
-    	String Code = param.get("code");      // 일반 물품 코드
         String madeCode = param.get("madecode");     // 제조사 물품 코드
 
-        if (Code == null || Code.isBlank()) {
-            throw new RuntimeException("일반 물품 코드는 필수입니다.");
-        }
         if (madeCode == null || madeCode.isBlank()) {
-            throw new RuntimeException("제조사 물품 코드는 필수입니다.");
+            throw new RuntimeException("물품 코드는 필수입니다.");
         }
-        /* =======================
-         * 1. FeeItem 저장 (여기 판매가로 들어가야하는데 어떡하지,그리고 기타는..?)
-         * ======================= */
-        Fee_item feeItem = new Fee_item();
-        feeItem.setCategory(param.get("item_type"));
-        feeItem.setName(param.get("name"));
-        feeItem.setBase_price(Integer.parseInt(param.get("base_price")));
-        feeItem.set_active(Boolean.parseBoolean(param.get("taxable"))); // 과세=true
-        String feeItemCode = param.get("fee_item_code");
-        feeItem.setFee_item_code(Code);
-
-        fee_itemRepository.save(feeItem);
 
         /* =======================
-         * 2. Item 저장
+         *  Item 저장
          * ======================= */
         Item item = new Item();
         item.setItem_code(madeCode);
@@ -524,11 +508,10 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
         item.setUnit_price(new BigDecimal(param.get("base_price")));
         item.setIs_active(false); // 관리자 승인 전
         item.setCreated_at(LocalDateTime.now());
-        item.setFee_item_code(Code);
         itemRepository.save(item);
         
         /* =======================
-         * 3. Issue_request 생성
+         *  Issue_request 생성
          * ======================= */
         String userId = SecurityContextHolder.getContext()
                 .getAuthentication()
@@ -543,7 +526,7 @@ public ResponseEntity<String> partialOutbound(@RequestBody Map<String, Object> p
 
 
         /* =======================
-         * 4. Issue_request_item 생성
+         *  Issue_request_item 생성
          * ======================= */
         Issue_request_item issueRequestItem = new Issue_request_item();
         issueRequestItem.setIssue_request_id(issueRequest.getIssue_request_id()); // FK
