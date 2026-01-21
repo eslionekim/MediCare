@@ -436,10 +436,13 @@ private List<StockAlert> queryStockAlerts() {
 
     public List<DoctorOption> getDoctorOptions() {
         Query query = entityManager.createNativeQuery("""
-                select u.user_id, u.name, sp.department_code, d.name
+                select distinct u.user_id, u.name, sp.department_code, d.name
                 from staff_profile sp
                 join user_account u on sp.user_id = u.user_id
+                join user_role ur on u.user_id = ur.user_id
+                join role_code rc on ur.role_code = rc.role_code
                 left join department d on sp.department_code = d.department_code
+                where rc.role_code = 'DOCTOR'
                 order by u.name
                 """);
         List<Object[]> rows = query.getResultList();

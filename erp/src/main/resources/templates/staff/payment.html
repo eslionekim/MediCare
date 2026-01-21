@@ -27,9 +27,18 @@
     .pay-btn { padding:8px 16px; border:1px solid #7B7B7B; border-radius:6px; background: var(--ui-panel-title); color:#fff; cursor:pointer; font-weight:600; }
     .pay-btn[disabled] { opacity:.5; cursor:not-allowed; }
     .hint { font-size:12px; color:#666; margin-top:6px; }
-  
-    </style>
-<link rel="stylesheet" th:href="@{/css/common-base.css}">
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center; z-index:1000; }
+    .modal { background:#fff; border:1px solid #b0b7c7; border-radius:8px; width:360px; box-shadow:0 10px 30px rgba(0,0,0,0.2); }
+    .modal-header { padding:8px 12px; background:var(--ui-panel-title); color:#fff; font-weight:600; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+    .modal-body { padding:12px; display:flex; flex-direction:column; gap:10px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:6px; }
+    .fee-list { border:1px solid #cbd2e1; border-radius:4px; max-height:180px; overflow:auto; padding:0; margin:0; list-style:none; }
+    .fee-item { padding:6px 8px; cursor:pointer; border-bottom:1px solid #eef1f7; font-size:12px; display:flex; justify-content:space-between; gap:8px; }
+    .fee-item:last-child { border-bottom:none; }
+    .fee-item.selected { background:#eef2ff; }
+    .fee-meta { color:#666; font-size:11px; }
+  </style>
+  <link rel="stylesheet" th:href="@{/css/common-base.css}">
 </head>
 <body>
 <div class="erp-page">
@@ -85,35 +94,85 @@
       <!-- 가운데: 청구항목 + 금액요약 -->
       <section class="center-panel">
         <div class="box" th:if="${claimItems != null}">
-          <div class="box-header"><span>청구항목</span></div>
+          <div class="box-header">
+            <span>청구항목</span>
+            <button class="btn-xs" type="button" id="add-claim-row"
+                    th:disabled="${visit == null or paymentCompleted}">추가</button>
+          </div>
           <div class="box-body scroll" style="max-height:260px;">
-            <table>
-              <thead>
-              <tr>
-                <th>수가코드</th>
-                <th>항목명</th>
-                <th>구분</th>
-                <th>단가</th>
-                <th>수량</th>
-                <th>할인</th>
-                <th>합계</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr th:each="ci : ${claimItems}">
-                <td th:text="${ci.fee_item != null ? ci.fee_item.fee_item_code : ''}">F001</td>
-                <td th:text="${ci.fee_item != null ? ci.fee_item.name : ''}">항목명</td>
-                <td th:text="${ci.fee_item != null && ci.fee_item.is_active() ? '급여' : '비급여'}">구분</td>
-                <td th:text="${ci.unit_price}">0</td>
-                <td th:text="${ci.quantity}">1</td>
-                <td th:text="${ci.discount}">0</td>
-                <td th:text="${ci.total}">0</td>
-              </tr>
-              <tr th:if="${claimItems == null or #lists.isEmpty(claimItems)}">
-                <td colspan="6">&nbsp;</td>
-              </tr>
-              </tbody>
-            </table>
+            <form th:action="@{/payments/claim-items}" method="post">
+              <input type="hidden" name="visitId" th:value="${visit != null ? visit.visit_id : ''}">
+              <select id="fee-item-select-template" style="display:none;">
+                <option value="">선택</option>
+                <option th:each="f : ${feeItems}"
+                        th:value="${f.fee_item_code}"
+                        th:text="${f.fee_item_code + ' - ' + f.name}"
+                        th:attr="data-name=${f.name},data-category=${f.category},data-price=${f.base_price},data-covered=${f.is_active()}">
+                </option>
+              </select>
+              <table>
+                <thead>
+                <tr>
+                  <th>수가코드</th>
+                  <th>항목명</th>
+                  <th>구분</th>
+                  <th>단가</th>
+                  <th>수량</th>
+                  <th>할인</th>
+                  <th>합계</th>
+                  <th>삭제</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="ci : ${claimItems}">
+                  <td th:text="${ci.fee_item != null ? ci.fee_item.fee_item_code : ''}">F001</td>
+                  <td th:text="${ci.fee_item != null ? ci.fee_item.name : ''}">항목</td>
+                  <td th:text="${ci.fee_item != null && ci.fee_item.is_active() ? '급여' : '비급여'}">구분</td>
+                  <td th:text="${ci.unit_price}">0</td>
+                  <td>
+                    <input type="hidden" name="itemId" th:value="${ci.claim_item_id}">
+                    <input type="number" name="quantity" min="1" th:value="${ci.quantity}"
+                           th:disabled="${paymentCompleted}">
+                  </td>
+                  <td th:text="${ci.discount}">0</td>
+                  <td th:text="${ci.total}">0</td>
+                  <td>
+                    <input type="checkbox" name="deleteIds" th:value="${ci.claim_item_id}"
+                           th:disabled="${paymentCompleted}">
+                  </td>
+                </tr>
+                <tr th:if="${claimItems == null or #lists.isEmpty(claimItems)}">
+                  <td colspan="8">&nbsp;</td>
+                </tr>
+                </tbody>
+                <tbody id="claim-new-rows"></tbody>
+              </table>
+              <div style="text-align:right; margin-top:6px;">
+                <button class="btn-xs" type="submit"
+                        th:disabled="${visit == null or paymentCompleted}">저장</button>
+              </div>
+              <div class="hint" th:if="${paymentCompleted}">결제 완료 후 수정 불가</div>
+            </form>
+          </div>
+        </div>
+
+        <div class="modal-backdrop" id="claim-modal">
+          <div class="modal" role="dialog" aria-modal="true" aria-labelledby="claim-modal-title">
+            <div class="modal-header">
+              <span id="claim-modal-title">청구항목 추가</span>
+              <button class="btn-xs" type="button" id="claim-modal-close">닫기</button>
+            </div>
+            <div class="modal-body">
+              <label>수가항목</label>
+              <input type="text" id="claim-modal-search" placeholder="코드/항목명 검색">
+              <input type="hidden" id="claim-modal-selected">
+              <ul id="claim-modal-fee-list" class="fee-list"></ul>
+              <label>수량</label>
+              <input type="number" id="claim-modal-qty" min="1" value="1">
+              <div class="modal-actions">
+                <button class="btn-xs" type="button" id="claim-modal-add">추가</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -122,7 +181,7 @@
           <div class="box-body">
             <div class="summary-grid">
               <div class="form-row">
-                <label>진료비 총계</label>
+                <label>진료비총계</label>
                 <input readonly th:value="${totalAmount}">
               </div>
               <div class="form-row">
@@ -142,7 +201,7 @@
                 <input readonly th:value="${finalAmount}">
               </div>
             </div>
-            <div class="hint">보험 할인은 보험코드(discount_rate)를 기준으로 서버에서 강제 적용됩니다.</div>
+            <div class="hint">보험 할인은 보험코드(discount_rate) 기준으로 자동 적용됩니다.</div>
           </div>
         </div>
       </section>
@@ -176,7 +235,7 @@
             </div>
 
             <div class="form-row">
-              <label>방문시각</label>
+              <label>방문일시</label>
               <input readonly th:value="${visit != null ? #temporals.format(visit.visit_datetime,'yyyy-MM-dd HH:mm') : ''}">
             </div>
 
@@ -235,5 +294,140 @@
     </div>
   </div>
 </div>
+<script>
+(function() {
+  const addBtn = document.getElementById("add-claim-row");
+  const tbody = document.getElementById("claim-new-rows");
+  const template = document.getElementById("fee-item-select-template");
+  const modal = document.getElementById("claim-modal");
+  const modalClose = document.getElementById("claim-modal-close");
+  const modalAdd = document.getElementById("claim-modal-add");
+  const modalFeeList = document.getElementById("claim-modal-fee-list");
+  const modalSelected = document.getElementById("claim-modal-selected");
+  const modalQty = document.getElementById("claim-modal-qty");
+  const modalSearch = document.getElementById("claim-modal-search");
+  if (!addBtn || !tbody || !template) return;
+
+  function updateRow(row) {
+    const select = row.querySelector("select");
+    const qtyInput = row.querySelector("input[name=\"newQuantity\"]");
+    const nameCell = row.querySelector(".new-name");
+    const coveredCell = row.querySelector(".new-covered");
+    const priceCell = row.querySelector(".new-price");
+    const totalCell = row.querySelector(".new-total");
+    if (!select || !qtyInput) return;
+    const opt = select.options[select.selectedIndex];
+    const price = opt ? parseInt(opt.dataset.price || "0", 10) : 0;
+    const qty = parseInt(qtyInput.value || "0", 10);
+    if (nameCell) nameCell.textContent = opt ? (opt.dataset.name || "") : "";
+    if (coveredCell) coveredCell.textContent =
+      opt && (opt.dataset.covered === "true" || opt.dataset.covered === "1")
+        ? "급여"
+        : "비급여";
+    if (priceCell) priceCell.textContent = isNaN(price) ? "" : price;
+    if (totalCell) totalCell.textContent = isNaN(price) || isNaN(qty) ? "" : (price * qty);
+  }
+
+  function addRow() {
+    const row = document.createElement("tr");
+    const select = template.cloneNode(true);
+    select.removeAttribute("id");
+    select.style.display = "";
+    select.name = "newFeeItemCode";
+    if (modalSelected && modalSelected.value) {
+      select.value = modalSelected.value;
+    }
+    row.appendChild(document.createElement("td")).appendChild(select);
+    row.appendChild(document.createElement("td")).className = "new-name";
+    row.appendChild(document.createElement("td")).className = "new-covered";
+    row.appendChild(document.createElement("td")).className = "new-price";
+    const qtyTd = document.createElement("td");
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.name = "newQuantity";
+    qtyInput.min = "1";
+    qtyInput.value = modalQty && modalQty.value ? modalQty.value : "1";
+    qtyTd.appendChild(qtyInput);
+    row.appendChild(qtyTd);
+    row.appendChild(document.createElement("td")).textContent = "0";
+    row.appendChild(document.createElement("td")).className = "new-total";
+    const removeTd = document.createElement("td");
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.className = "btn-xs";
+    removeBtn.textContent = "삭제";
+    removeBtn.addEventListener("click", function() { row.remove(); });
+    removeTd.appendChild(removeBtn);
+    row.appendChild(removeTd);
+    tbody.appendChild(row);
+    select.addEventListener("change", function() { updateRow(row); });
+    qtyInput.addEventListener("input", function() { updateRow(row); });
+    updateRow(row);
+  }
+
+  function openModal() {
+    if (!modal || !modalFeeList || !modalSelected) {
+      addRow();
+      return;
+    }
+    modalSelected.value = "";
+    modalFeeList.innerHTML = "";
+    for (let i = 0; i < template.options.length; i++) {
+      const opt = template.options[i];
+      if (!opt.value) continue;
+      const item = document.createElement("li");
+      item.className = "fee-item";
+      item.dataset.code = opt.value;
+      item.dataset.name = opt.dataset.name || "";
+      item.dataset.price = opt.dataset.price || "0";
+      item.dataset.covered = opt.dataset.covered || "";
+      item.textContent = opt.textContent || opt.value;
+      const meta = document.createElement("span");
+      meta.className = "fee-meta";
+      meta.textContent = opt.dataset.category ? opt.dataset.category : "";
+      item.appendChild(meta);
+      item.addEventListener("click", function() {
+        const items = modalFeeList.querySelectorAll(".fee-item");
+        items.forEach(x => x.classList.remove("selected"));
+        item.classList.add("selected");
+        modalSelected.value = item.dataset.code;
+      });
+      modalFeeList.appendChild(item);
+    }
+    if (modalQty) modalQty.value = "1";
+    if (modalSearch) modalSearch.value = "";
+    modal.style.display = "flex";
+  }
+
+  function closeModal() {
+    if (modal) modal.style.display = "none";
+  }
+
+  addBtn.addEventListener("click", openModal);
+  if (modalClose) modalClose.addEventListener("click", closeModal);
+  if (modal) modal.addEventListener("click", function(e) { if (e.target === modal) closeModal(); });
+  if (modalAdd) {
+    modalAdd.addEventListener("click", function() {
+      if (modalSelected && !modalSelected.value) {
+        alert("수가항목을 선택하세요.");
+        return;
+      }
+      addRow();
+      closeModal();
+    });
+  }
+
+  if (modalSearch && modalFeeList) {
+    modalSearch.addEventListener("input", function() {
+      const keyword = (modalSearch.value || "").toLowerCase();
+      const items = modalFeeList.querySelectorAll(".fee-item");
+      items.forEach(item => {
+        const text = (item.textContent || "").toLowerCase();
+        item.style.display = keyword !== "" && !text.includes(keyword) ? "none" : "";
+      });
+    });
+  }
+})();
+</script>
 </body>
 </html>
