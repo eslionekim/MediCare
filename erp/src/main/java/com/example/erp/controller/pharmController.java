@@ -713,7 +713,15 @@ public class pharmController {
         return ResponseEntity.ok("수량 조정 완료");
     }
     
-   
+    //약사->불출요청->수량
+    @GetMapping("/pharm/item/{selectedItemCode}/pack-unit-qty")
+    @ResponseBody
+    public Integer getPackUnitQty(@PathVariable("selectedItemCode") String selectedItemCode) {
+        return itemRepository.findById(selectedItemCode)
+                .orElseThrow()
+                .getPack_unit_qty(); // 필드명 맞게
+    }
+
     
     //약사 -> 불출요청
     @PostMapping("/pharm/issue-request")
@@ -1004,7 +1012,8 @@ public class pharmController {
   	            return "이미 사용 중인 비밀번호입니다.";
   	        }
 
-  	        account.setPassword(dto.getPassword());
+  	      String encodedPassword = passwordEncoder.encode(dto.getPassword());
+  	      account.setPassword(encodedPassword);
   	    }
 
   	    user_accountRepository.save(account);

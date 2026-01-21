@@ -399,7 +399,8 @@ public class hrController {
   	            return "이미 사용 중인 비밀번호입니다.";
   	        }
 
-  	        account.setPassword(dto.getPassword());
+  	      String encodedPassword = passwordEncoder.encode(dto.getPassword());
+  	      account.setPassword(encodedPassword);
   	    }
 
   	    user_accountRepository.save(account);

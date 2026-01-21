@@ -129,31 +129,35 @@
         </div>
     </div>
 	<script>
-		document.getElementById("saveBtn").addEventListener("click", function () {
-
+		document.getElementById("mypageForm").addEventListener("submit", function (e) {
+		    e.preventDefault(); // 🔥 이거 없으면 무조건 지금 문제 남
+		
 		    const data = {
 		        password: document.getElementById("password").value,
 		        license: document.getElementById("license").value,
 		        bank: document.getElementById("bank").value,
 		        account: document.getElementById("account").value
 		    };
-
+		
 		    fetch("/staff/staffMyPage", {
 		        method: "PUT",
-		        headers: {"Content-Type": "application/json"},
+		        headers: { "Content-Type": "application/json" },
 		        body: JSON.stringify(data)
 		    })
-			.then(res => res.text())
-		        .then(msg => {
-		            alert(msg);
-		            location.reload();
-		        })
-		        .catch(err => {
-		            console.error(err);
-		            alert("저장 중 오류가 발생했습니다.");
-		        });
+		    .then(res => {
+		        if (!res.ok) throw new Error("서버 오류");
+		        return res.text();
+		    })
+		    .then(msg => {
+		        alert(msg); // "수정 완료"
+		        location.reload();
+		    })
+		    .catch(err => {
+		        console.error(err);
+		        // ❌ 이 alert 뜨면 진짜 서버 문제일 때만
+		        alert("저장 중 오류가 발생했습니다.");
+		    });
 		});
 	</script>
-</body>
 </body>
 </html>

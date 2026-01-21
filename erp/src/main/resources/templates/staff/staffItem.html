@@ -519,11 +519,19 @@
 		<div id="requestModal" style="display:none; border:1px solid #333; padding:15px;">
 		    <h3>불출 요청</h3>
 
-		    <div>
-		        요청 수량
+			<div>
+		        포장 단위 요청 수량
 		        <input type="number" id="reqQtyInput" min="1" value="1">
 		        <span id="packUnitName"></span>
 		    </div>
+
+			<div style="margin-top:8px; color:#333;">
+			    기본 단위 요청 수량:
+			    <strong>
+			        <span id="totalReqQty">0</span>
+			    </strong>
+			</div>
+
 
 		    <div>
 		        사유(선택)
@@ -559,7 +567,18 @@
 		
 			const lotSearchInput = document.getElementById("lotSearchInput"); //로트코드 검색창
 			const lotSearchBtn = document.getElementById("lotSearchBtn"); //검색버튼
+			
+			const reqQtyInput = document.getElementById("reqQtyInput");
+			const totalReqQtyEl = document.getElementById("totalReqQty");
+			const packUnitNameEl = document.getElementById("packUnitName");
 
+			// 총 수량 계산 함수
+			function updateTotalReqQty() {
+			    const packCount = Number(reqQtyInput.value || 0);
+			    const total = packCount * packUnitQty;
+			    totalReqQtyEl.textContent = total.toLocaleString();
+			}
+			reqQtyInput.addEventListener("input", updateTotalReqQty);
 
 		    qtyInput.addEventListener("input", () => {
 		        const qty = parseInt(qtyInput.value || 0);
@@ -569,7 +588,22 @@
 		    purchaseRequestBtn.addEventListener("click", (e) => {
 		        e.preventDefault();
 		        purchaseForm.style.display = "block";
+				// 포장 단위 수량 조회
+			    fetch(`/staff/item/${selectedItemCode}/pack-unit-qty`)
+			        .then(res => res.json())
+			        .then(qty => {
+			            packUnitQty = Number(qty);
+			            packUnitNameEl.textContent = `(1포장 = ${packUnitQty}개)`;
+			            updateTotalReqQty();
+			        })
+			        .catch(err => {
+			            console.error(err);
+			            packUnitQty = 0;
+			            packUnitNameEl.textContent = "";
+			            totalReqQtyEl.textContent = "0";
+			        });
 		    });
+
 
 		    // LOT 렌더 함수
 		    function renderLotList(data) {
@@ -811,6 +845,7 @@
 		                        <td>${lot.created_at ?? "-"}</td>
 		                        <td>${lot.location}</td>
 		                        <td>${lot.expiry_date ?? "-"}</td>
+								<td>${lot.outbound_deadline ?? "-"}</td>
 		                        <td>${lot.quantity}</td>
 		                        <td>${lot.status}</td>
 		                        <td><button class="discardBtn" data-stock-id="${lot.stock_id}">폐기</button></td>

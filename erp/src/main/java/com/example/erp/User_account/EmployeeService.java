@@ -89,7 +89,7 @@ public class EmployeeService {
         switch (deptCode) {
             case "STAFF": return "STAFF";
             case "HR":    return "HR";
-            case "LOGIS": return "LOGIS";
+            case "logis": return "LOGIS";
             case "PHARM": return "PHARM";
             default:      return "STAFF";
         }
