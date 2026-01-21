@@ -52,6 +52,7 @@ public class AdminInventoryService {
                        coalesce(sum(s.quantity),0) as qty,
                        i.safety_stock,
                        coalesce(w.name,'') as warehouse_name,
+                       coalesce(group_concat(distinct concat(w.location, '-', w.zone) order by w.location, w.zone separator ', '),'') as location_zone,
                        (
                          select max(sm.moved_at)
                          from stock_move sm
@@ -67,7 +68,7 @@ public class AdminInventoryService {
             sql.append(" and i.item_type = :itemType");
         }
         if (warehouseCode != null) {
-            sql.append(" and s.warehouse_code = :warehouseCode");
+            sql.append(" and w.name = :warehouseName");
         }
         sql.append(" group by i.item_code, i.name, i.item_type, i.safety_stock, w.name");
         sql.append(" order by i.name");
@@ -76,7 +77,7 @@ public class AdminInventoryService {
             query.setParameter("itemType", itemType);
         }
         if (warehouseCode != null) {
-            query.setParameter("warehouseCode", warehouseCode);
+            query.setParameter("warehouseName", warehouseCode);
         }
         List<Object[]> rows = query.getResultList();
         List<InventoryRow> results = new ArrayList<>();
@@ -87,7 +88,8 @@ public class AdminInventoryService {
             BigDecimal qty = row[3] == null ? BigDecimal.ZERO : new BigDecimal(row[3].toString());
             BigDecimal safety = row[4] == null ? BigDecimal.ZERO : new BigDecimal(row[4].toString());
             String warehouseName = row[5] != null ? row[5].toString() : "";
-            String lastMove = row[6] != null ? row[6].toString() : "";
+            String locationZone = row[6] != null ? row[6].toString() : "";
+            String lastMove = row[7] != null ? row[7].toString() : "";
             String statusLabel = resolveStatus(qty, safety);
             if (status != null) {
                 boolean isLow = "LOW".equals(status);
@@ -99,7 +101,7 @@ public class AdminInventoryService {
                     continue;
                 }
             }
-            results.add(new InventoryRow(itemCode, name, type, qty, safety, warehouseName, lastMove, statusLabel));
+            results.add(new InventoryRow(itemCode, name, type, qty, safety, warehouseName, locationZone, lastMove, statusLabel));
         }
         return results;
     }
@@ -174,9 +176,10 @@ public class AdminInventoryService {
 
     private List<Option> queryWarehouseOptions() {
         Query query = entityManager.createNativeQuery("""
-                select warehouse_code, name
+                select name, name
                 from warehouse
                 where is_active = 1
+                  and name in ('\uC6D0\uBB34\uCC3D\uACE0','\uBB3C\uB958\uCC3D\uACE0','\uC57D\uC81C\uCC3D\uACE0')
                 order by name
                 """);
         List<Object[]> rows = query.getResultList();
@@ -220,6 +223,7 @@ public class AdminInventoryService {
             BigDecimal quantity,
             BigDecimal safetyStock,
             String warehouseName,
+            String locationZone,
             String lastMove,
             String status) {
     }
