@@ -19,10 +19,14 @@ import com.example.erp.Claim_item.Claim_itemRepository;
 import com.example.erp.Fee_item.Fee_item;
 import com.example.erp.Fee_item.Fee_itemRepository;
 import com.example.erp.Insurance_code.Insurance_code;
+import com.example.erp.Item.Item;
+import com.example.erp.Item.ItemRepository;
 import com.example.erp.Payment_method.Payment_method;
 import com.example.erp.Payment_method.Payment_methodRepository;
 import com.example.erp.Status_code.Status_code;
 import com.example.erp.Status_code.Status_codeRepository;
+import com.example.erp.Stock.Stock;
+import com.example.erp.Stock.StockRepository;
 import com.example.erp.Visit.Visit;
 import com.example.erp.Visit.VisitRepository;
 
@@ -39,6 +43,8 @@ public class PaymentService {
     private final Payment_methodRepository paymentMethodRepository;
     private final Status_codeRepository statusCodeRepository;
     private final Fee_itemRepository feeItemRepository;
+    private final ItemRepository itemRepository;
+    private final StockRepository stockRepository;
 
     public List<Visit> getTodayVisits() {
         LocalDate today = LocalDate.now();
@@ -52,7 +58,9 @@ public class PaymentService {
     }
 
     public List<Fee_item> getFeeItemOptions() {
-        return feeItemRepository.findAll();
+        return feeItemRepository.findAll().stream()
+                .filter(item -> item.getCategory() == null || !"약품".equals(item.getCategory()))
+                .toList();
     }
 
     public Map<Long, String> getPaymentStatusByVisitIds(List<Visit> visits) {
@@ -258,6 +266,9 @@ public class PaymentService {
                 if (feeItem == null) {
                     continue;
                 }
+                if ("약품".equals(feeItem.getCategory())) {
+                    continue;
+                }
                 int qty = qtyValue != null ? qtyValue : 0;
                 if (qty <= 0) {
                     qty = 1;
@@ -308,6 +319,8 @@ public class PaymentService {
         payment.setStatus_code(paid);
 
         paymentRepository.saveAndFlush(payment);
+
+        deductExWarehouseStock(visitId);
     }
 
     @Transactional
@@ -325,6 +338,58 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("status_code PAY_REFUND not found"));
         payment.setStatus_code(refunded);
         paymentRepository.save(payment);
+    }
+
+    private void deductExWarehouseStock(Long visitId) {
+        if (visitId == null) {
+            return;
+        }
+
+        List<Claim_item> items = claimItemRepository.findAllByVisitId(visitId);
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+
+        for (Claim_item ci : items) {
+            Fee_item feeItem = ci.getFee_item();
+            if (feeItem == null) {
+                continue;
+            }
+
+            String category = feeItem.getCategory();
+            if (category != null && (category.contains("약품") || category.contains("대여"))) {
+                continue;
+            }
+
+            Item item = itemRepository.findByFeeItemCode(feeItem.getFee_item_code()).orElse(null);
+            if (item == null) {
+                continue;
+            }
+
+            List<Stock> stocks = stockRepository.findExWarehouseStockByItemCode(item.getItem_code());
+            if (stocks == null || stocks.isEmpty()) {
+                continue;
+            }
+
+            BigDecimal remaining = BigDecimal.valueOf(ci.getQuantity());
+            for (Stock stock : stocks) {
+                if (remaining.signum() <= 0) {
+                    break;
+                }
+                BigDecimal available = stock.getQuantity();
+                if (available == null || available.signum() <= 0) {
+                    continue;
+                }
+                BigDecimal used = available.min(remaining);
+                stock.setQuantity(available.subtract(used));
+                remaining = remaining.subtract(used);
+                stockRepository.save(stock);
+            }
+
+            if (remaining.signum() > 0) {
+                throw new IllegalStateException("원무창고 재고 부족: " + item.getItem_code());
+            }
+        }
     }
 
     public record PaymentPageModel(
