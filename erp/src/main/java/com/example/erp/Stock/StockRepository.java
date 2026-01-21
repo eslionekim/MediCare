@@ -53,7 +53,7 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
     Optional<Stock> findByLotCode(@Param("lotCode") String lotCode);
 	
 	// 물류 -> 전체재고현황 -> lot를 물류창고에서만 가져오기 by 은서
-	@Query("SELECT s FROM Stock s JOIN Warehouse w ON s.warehouse_code = w.warehouse_code WHERE s.item_code = :itemCode AND w.name = '물류창고'")
+	@Query("SELECT s FROM Stock s JOIN Warehouse w ON s.warehouse_code = w.warehouse_code WHERE s.item_code = :itemCode AND w.name = '물류창고' AND s.quantity > 0")
     List<Stock> findByItemCode(@Param("itemCode") String itemCode);
 	
 	// 약사-> 조제리스트-> 조제 팝업창->유통기한을 넘기지 않은 해당 아이템 구하기 by은서
@@ -93,14 +93,14 @@ public interface StockRepository extends JpaRepository<Stock,Long>{
 	@Query("SELECT s FROM Stock s " +
 		       "JOIN Warehouse w ON s.warehouse_code = w.warehouse_code " +
 		       "WHERE s.item_code = :itemCode " +
-		       "AND w.name = '약제창고'")
+		       "AND w.name = '약제창고' AND s.quantity > 0")
 		List<Stock> findDrugWarehouseStockByItemCode(@Param("itemCode") String itemCode);
 	
 	//원무->전체재고현황->약제창고인 것만 가져오기->by은서
 	@Query("SELECT s FROM Stock s " +
 		       "JOIN Warehouse w ON s.warehouse_code = w.warehouse_code " +
 		       "WHERE s.item_code = :itemCode " +
-		       "AND w.name = '원무창고'")
+		       "AND w.name = '원무창고' AND s.quantity > 0")
 		List<Stock> findExWarehouseStockByItemCode(@Param("itemCode") String itemCode);
 
 	//원무->출고리스트

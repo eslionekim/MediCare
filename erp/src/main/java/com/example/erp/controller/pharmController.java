@@ -462,6 +462,7 @@ public class pharmController {
 	    // 물류창고에 있는 모든 Stock
 	    List<Stock> stocks = stockRepository.findAll()
 	            .stream()
+	            .filter(s -> s.getQuantity().compareTo(BigDecimal.ZERO) > 0)
 	            .filter(s -> {
 	                Warehouse w = warehouseRepository.findById(s.getWarehouse_code()).orElse(null);
 	                return w != null && "약제창고".equals(w.getName());
